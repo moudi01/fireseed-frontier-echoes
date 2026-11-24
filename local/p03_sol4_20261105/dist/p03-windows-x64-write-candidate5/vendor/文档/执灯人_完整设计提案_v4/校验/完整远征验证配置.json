@@ -1,0 +1,666 @@
+{
+  "version": "RUN-CHECK-1.0",
+  "authority": "专项/完整远征代表队伍与验证方案.md",
+  "scope": "document fixtures and conditional accounting; no combat/playtime simulation",
+  "runtime_implemented": false,
+  "teams": [
+    {
+      "team_id": "T01",
+      "name": "早期纯士兵",
+      "chapter": 1,
+      "facts": [
+        "ST-101",
+        "ST-102"
+      ],
+      "level": 1,
+      "members": [
+        {
+          "instance_id": "T01-01",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T01-02",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T01-03",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T01-04",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T01-05",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T01-06",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T01-07",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T01-08",
+          "unit_id": "S03"
+        }
+      ],
+      "initial_deployed_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reserve_indices": [
+        6,
+        7
+      ],
+      "equipped_books": [],
+      "starting_plans": [],
+      "initial_erosion": 0,
+      "initial_hp": "full after legal town recovery; no downed or injured members",
+      "acquisition": "controlled owned-roster fixture; not free recruits, not assumed chapter reward",
+      "note": "用于早期无职业治疗来源对照，最低资质另外检查。"
+    },
+    {
+      "team_id": "T02",
+      "name": "中期纯士兵",
+      "chapter": 2,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104"
+      ],
+      "level": 2,
+      "members": [
+        {
+          "instance_id": "T02-01",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T02-02",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T02-03",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T02-04",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T02-05",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T02-06",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T02-07",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T02-08",
+          "unit_id": "S03"
+        }
+      ],
+      "initial_deployed_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reserve_indices": [
+        6,
+        7
+      ],
+      "equipped_books": [],
+      "starting_plans": [],
+      "initial_erosion": 0,
+      "initial_hp": "full after legal town recovery; no downed or injured members",
+      "acquisition": "controlled owned-roster fixture; not free recruits, not assumed chapter reward",
+      "note": "检验普通成长路径，不要求凑满已开放Cost。"
+    },
+    {
+      "team_id": "T03",
+      "name": "中期混编",
+      "chapter": 2,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104"
+      ],
+      "level": 2,
+      "members": [
+        {
+          "instance_id": "T03-01",
+          "unit_id": "M01"
+        },
+        {
+          "instance_id": "T03-02",
+          "unit_id": "M02"
+        },
+        {
+          "instance_id": "T03-03",
+          "unit_id": "M04"
+        },
+        {
+          "instance_id": "T03-04",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T03-05",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T03-06",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T03-07",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T03-08",
+          "unit_id": "S03"
+        }
+      ],
+      "initial_deployed_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reserve_indices": [
+        6,
+        7
+      ],
+      "equipped_books": [],
+      "starting_plans": [],
+      "initial_erosion": 0,
+      "initial_hp": "full after legal town recovery; no downed or injured members",
+      "acquisition": "controlled owned-roster fixture; not free recruits, not assumed chapter reward",
+      "note": "有治疗与魔法核心；自由书槽留空以隔离基础职业作用。"
+    },
+    {
+      "team_id": "T04",
+      "name": "后期纯士兵",
+      "chapter": 3,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104",
+        "CH2_COMPLETE"
+      ],
+      "level": 3,
+      "members": [
+        {
+          "instance_id": "T04-01",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T04-02",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T04-03",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T04-04",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T04-05",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T04-06",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T04-07",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T04-08",
+          "unit_id": "S03"
+        }
+      ],
+      "initial_deployed_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reserve_indices": [
+        6,
+        7
+      ],
+      "equipped_books": [],
+      "starting_plans": [],
+      "initial_erosion": 0,
+      "initial_hp": "full after legal town recovery; no downed or injured members",
+      "acquisition": "controlled owned-roster fixture; not free recruits, not assumed chapter reward",
+      "note": "普通主线低门槛路径探针，不把英雄视为唯一解。"
+    },
+    {
+      "team_id": "T05",
+      "name": "后期纯佣兵",
+      "chapter": 3,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104",
+        "CH2_COMPLETE"
+      ],
+      "level": 3,
+      "members": [
+        {
+          "instance_id": "T05-01",
+          "unit_id": "M01"
+        },
+        {
+          "instance_id": "T05-02",
+          "unit_id": "M01"
+        },
+        {
+          "instance_id": "T05-03",
+          "unit_id": "M02"
+        },
+        {
+          "instance_id": "T05-04",
+          "unit_id": "M03"
+        },
+        {
+          "instance_id": "T05-05",
+          "unit_id": "M04"
+        },
+        {
+          "instance_id": "T05-06",
+          "unit_id": "M04"
+        },
+        {
+          "instance_id": "T05-07",
+          "unit_id": "M02"
+        },
+        {
+          "instance_id": "T05-08",
+          "unit_id": "M03"
+        }
+      ],
+      "initial_deployed_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reserve_indices": [
+        6,
+        7
+      ],
+      "equipped_books": [],
+      "starting_plans": [],
+      "initial_erosion": 0,
+      "initial_hp": "full after legal town recovery; no downed or injured members",
+      "acquisition": "controlled owned-roster fixture; not free recruits, not assumed chapter reward",
+      "note": "出征16、初始部署12；真实轮换与有限治疗另测。"
+    },
+    {
+      "team_id": "T06",
+      "name": "后期双英雄混编",
+      "chapter": 3,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104",
+        "CH2_COMPLETE"
+      ],
+      "level": 3,
+      "members": [
+        {
+          "instance_id": "T06-01",
+          "unit_id": "H01"
+        },
+        {
+          "instance_id": "T06-02",
+          "unit_id": "H03"
+        },
+        {
+          "instance_id": "T06-03",
+          "unit_id": "M01"
+        },
+        {
+          "instance_id": "T06-04",
+          "unit_id": "M04"
+        },
+        {
+          "instance_id": "T06-05",
+          "unit_id": "S02"
+        },
+        {
+          "instance_id": "T06-06",
+          "unit_id": "S03"
+        },
+        {
+          "instance_id": "T06-07",
+          "unit_id": "S01"
+        },
+        {
+          "instance_id": "T06-08",
+          "unit_id": "S03"
+        }
+      ],
+      "initial_deployed_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reserve_indices": [
+        6,
+        7
+      ],
+      "equipped_books": [],
+      "starting_plans": [],
+      "initial_erosion": 0,
+      "initial_hp": "full after legal town recovery; no downed or injured members",
+      "acquisition": "controlled owned-roster fixture; not free recruits, not assumed chapter reward",
+      "note": "只对已实际拥有H01与H03的试验档使用，不要求自然招募必出。"
+    }
+  ],
+  "birth_profiles": {
+    "MID": "floor of each legal range midpoint; fixed templates unchanged",
+    "LOW": "minimum of each legal range; fixed templates unchanged"
+  },
+  "equipment_profiles": {
+    "Q1_CONTROL": {
+      "S01": [
+        "EF06-Q1",
+        "EF07-Q1"
+      ],
+      "S02": [
+        "EF01-Q1",
+        "EF07-Q1"
+      ],
+      "S03": [
+        "EF03-Q1",
+        "EF07-Q1"
+      ],
+      "M01": [
+        "EF02-Q1",
+        "EF07-Q1"
+      ],
+      "M02": [
+        "EF05-Q1",
+        "EF07-Q1"
+      ],
+      "M03": [
+        "EF03-Q1",
+        "EF07-Q1"
+      ],
+      "M04": [
+        "EF04-Q1",
+        "EF07-Q1"
+      ],
+      "H01": [
+        "EF06-Q1",
+        "EF07-Q1"
+      ],
+      "H03": [
+        "EF05-Q1",
+        "EF07-Q1"
+      ]
+    },
+    "NO_GEAR_DIAGNOSTIC": {}
+  },
+  "routes": [
+    {
+      "route_id": "R01",
+      "chapter": 1,
+      "facts": [
+        "ST-101",
+        "ST-102"
+      ],
+      "profile": "SHORT",
+      "selected_path": [
+        "RG01",
+        "RG06"
+      ]
+    },
+    {
+      "route_id": "R02",
+      "chapter": 1,
+      "facts": [
+        "ST-101",
+        "ST-102"
+      ],
+      "profile": "MEDIUM",
+      "selected_path": [
+        "RG01",
+        "RG06",
+        "RG07"
+      ]
+    },
+    {
+      "route_id": "R03",
+      "chapter": 1,
+      "facts": [
+        "ST-101",
+        "ST-102"
+      ],
+      "profile": "LONG",
+      "selected_path": [
+        "RG06",
+        "RG01",
+        "RG08",
+        "RG07"
+      ]
+    },
+    {
+      "route_id": "R04",
+      "chapter": 2,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104"
+      ],
+      "profile": "SHORT",
+      "selected_path": [
+        "RG06",
+        "RG03"
+      ]
+    },
+    {
+      "route_id": "R05",
+      "chapter": 2,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104"
+      ],
+      "profile": "MEDIUM",
+      "selected_path": [
+        "RG01",
+        "RG06",
+        "RG03"
+      ]
+    },
+    {
+      "route_id": "R06",
+      "chapter": 2,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104"
+      ],
+      "profile": "LONG",
+      "selected_path": [
+        "RG06",
+        "RG03",
+        "RG02",
+        "RG07"
+      ]
+    },
+    {
+      "route_id": "R07",
+      "chapter": 3,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104",
+        "CH2_COMPLETE"
+      ],
+      "profile": "SHORT",
+      "selected_path": [
+        "RG04",
+        "RG05"
+      ]
+    },
+    {
+      "route_id": "R08",
+      "chapter": 3,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104",
+        "CH2_COMPLETE"
+      ],
+      "profile": "MEDIUM",
+      "selected_path": [
+        "RG02",
+        "RG04",
+        "RG05"
+      ]
+    },
+    {
+      "route_id": "R09",
+      "chapter": 3,
+      "facts": [
+        "ST-101",
+        "ST-102",
+        "ST-104",
+        "CH2_COMPLETE"
+      ],
+      "profile": "LONG",
+      "selected_path": [
+        "RG03",
+        "RG02",
+        "RG04",
+        "RG05"
+      ]
+    }
+  ],
+  "seeds": [
+    11,
+    29,
+    47
+  ],
+  "loot_difficulty": "D0",
+  "case_state_fixture": "all humanity cases PROTECTED to isolate ordinary resource loop; not required player behavior",
+  "packs": [
+    {
+      "pack_id": "P0",
+      "name": "空袋对照",
+      "items": [],
+      "paid_medical_supply_carried": 0
+    },
+    {
+      "pack_id": "P1",
+      "name": "基础混合准备",
+      "items": [
+        "CO01",
+        "CO01",
+        "CO03",
+        "CO10"
+      ],
+      "paid_medical_supply_carried": 2
+    },
+    {
+      "pack_id": "P2",
+      "name": "群体恢复准备",
+      "items": [
+        "CO02",
+        "CO02",
+        "CO07",
+        "CO08"
+      ],
+      "paid_medical_supply_carried": 2
+    },
+    {
+      "pack_id": "P3",
+      "name": "全准备占位诊断",
+      "items": [
+        "CO03",
+        "CO04",
+        "CO07",
+        "CO10"
+      ],
+      "paid_medical_supply_carried": 2
+    }
+  ],
+  "behavior_sessions": [
+    {
+      "id": "A",
+      "name": "主路推进",
+      "purpose": "自由选取已知主路，跳过普通奖励事件与精英，固定站点和返程仍可自主使用。"
+    },
+    {
+      "id": "B",
+      "name": "主动探索",
+      "purpose": "自由探索事件和可选战；已知不合适时允许跳过，不强迫清图。"
+    },
+    {
+      "id": "C",
+      "name": "先战后事件",
+      "purpose": "先处理可达战斗，再回看服务变化；不恢复已失效侦察或改路。"
+    },
+    {
+      "id": "D",
+      "name": "暂离回访制作",
+      "purpose": "缺材料或空间时暂离，自主寻找可用资源再决定是否返回；没有资源可不完成。"
+    },
+    {
+      "id": "E",
+      "name": "提前返城",
+      "purpose": "在已知信息下自主判断止损，不因配置为LONG强迫清完四区。"
+    }
+  ],
+  "comparison_policy": "same locked manifest and initial fixture across behavior observations; chosen path/order/build recorded, no omniscient simulator and no mandatory player script",
+  "staged_test_order": [
+    "T01/R01/P1 and P0; LOW as diagnostic pair",
+    "T01/R02/R03 versus same-seed short prefix where legal",
+    "T02 versus T03 on middle routes",
+    "T04 versus T05 on late routes; T06 optional owned-hero comparison",
+    "P2/P3, erosion40/80, early return, no-humanity-trade and full-run economy follow-ups"
+  ],
+  "real_measurements_required": [
+    "actual deployment cells and facing",
+    "skill priority and charges",
+    "per-member HP/erosion before and after each action",
+    "actual path traversal and event order",
+    "consumable use and pending/spent preparation occupancy",
+    "earned pending rewards versus banked receipts",
+    "build change and first effective trigger",
+    "logic ticks and separated wall-clock time",
+    "failure/retreat/injury and rescue follow-up"
+  ],
+  "snapshot": "历史材料/文案归档/火种计划_RUN-CHECK-1.0_完整远征验证前_20261027",
+  "snapshot_files": 5
+}

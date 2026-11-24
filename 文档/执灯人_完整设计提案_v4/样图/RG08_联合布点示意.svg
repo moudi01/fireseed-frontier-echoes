@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1360" viewBox="0 0 1420 1360"><rect width="100%" height="100%" fill="#f5f2eb"/>
+<title>炉灰荒径两套联合布点关系图</title>
+<text x="40" y="60" font-family="Microsoft YaHei, sans-serif" font-size="36" text-anchor="start" fill="#263f52">RG08  炉灰荒径  ·  两套联合布点</text>
+<text x="42" y="94" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="start" fill="#263f52">道路关系示意 · 连续行走，不是节点操作界面 · 非米制地形、视线或战场尺寸证明</text>
+<text x="42" y="146" font-family="Microsoft YaHei, sans-serif" font-size="26" text-anchor="start" fill="#263f52">RG08-A  运料双坎</text>
+<text x="550" y="143" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="start" fill="#263f52">A型：侦察点前置，制作点后置</text>
+<line x1="100" y1="370" x2="250" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="250" y1="370" x2="400" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="400" y1="370" x2="550" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="550" y1="370" x2="700" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="700" y1="370" x2="850" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="850" y1="370" x2="1000" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="1000" y1="370" x2="1150" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="1150" y1="370" x2="1300" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="550" y1="370" x2="550" y2="520" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="850" y1="370" x2="940" y2="540" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="940" y1="540" x2="1000" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="100" y1="370" x2="220" y2="540" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="220" y1="540" x2="250" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="100" y1="370" x2="220" y2="235" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="220" y1="235" x2="250" y2="370" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="550" y1="370" x2="670" y2="540" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="670" y1="540" x2="550" y2="520" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="850" y1="370" x2="940" y2="235" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="940" y1="540" x2="940" y2="235" stroke="#b7b5ac" stroke-width="4"/>
+<circle cx="100" cy="370" r="20" fill="#263f52"/>
+<text x="100" y="376" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">I</text>
+<text x="100" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">护运驿口</text>
+<text x="100" y="440" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">入口／提前撤离</text>
+<circle cx="250" cy="370" r="10" fill="#92958e"/>
+<text x="250" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">灰坡分道</text>
+<circle cx="400" cy="370" r="20" fill="#b85138"/>
+<text x="400" y="376" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">B1</text>
+<text x="400" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">料场盾岗</text>
+<text x="400" y="440" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">第1场主路战</text>
+<circle cx="550" cy="370" r="10" fill="#92958e"/>
+<text x="550" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">废棚前坪</text>
+<circle cx="550" cy="520" r="20" fill="#3d846e"/>
+<text x="550" y="526" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">S</text>
+<text x="550" y="566" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">棚内救护箱</text>
+<text x="550" y="590" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">固定恢复30% · 一次</text>
+<circle cx="700" cy="370" r="20" fill="#b85138"/>
+<text x="700" y="376" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">B2</text>
+<text x="700" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">卸料空坪</text>
+<text x="700" y="440" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">第2场主路战</text>
+<circle cx="850" cy="370" r="10" fill="#92958e"/>
+<text x="850" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">炉灰岔路</text>
+<circle cx="1000" cy="370" r="10" fill="#92958e"/>
+<text x="1000" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">高坎便道</text>
+<circle cx="1150" cy="370" r="20" fill="#b85138"/>
+<text x="1150" y="376" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">G</text>
+<text x="1150" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">旧运料哨</text>
+<text x="1150" y="440" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">区域目标战</text>
+<circle cx="1300" cy="370" r="20" fill="#263f52"/>
+<text x="1300" y="376" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">X</text>
+<text x="1300" y="416" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">东荒径出口</text>
+<text x="1300" y="440" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">目标出口／非末区营地</text>
+<circle cx="220" cy="235" r="20" fill="#3f7297"/>
+<text x="220" y="241" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">A</text>
+<text x="220" y="281" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">轮痕记号台</text>
+<text x="220" y="305" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">侦察→B2／可换普通卡</text>
+<circle cx="670" cy="540" r="20" fill="#3f7297"/>
+<text x="670" y="546" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">B</text>
+<text x="670" y="586" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">磨油棚</text>
+<text x="670" y="610" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">制作／可换普通卡</text>
+<circle cx="940" cy="540" r="20" fill="#3f7297"/>
+<text x="940" y="546" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">C</text>
+<text x="940" y="586" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">等风车队坪</text>
+<text x="940" y="610" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">普通或人性事件</text>
+<circle cx="220" cy="540" r="20" fill="#3f7297"/>
+<text x="220" y="546" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">D</text>
+<text x="220" y="586" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">旗板调度口</text>
+<text x="220" y="610" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">可选第4处 · 改路→B1</text>
+<circle cx="940" cy="235" r="20" fill="#a37125"/>
+<text x="940" y="241" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">L</text>
+<text x="940" y="281" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">侧坡刺哨</text>
+<text x="940" y="305" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">可选精英</text>
+<text x="42" y="668" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="start" fill="#263f52">主路3战 · 事件3—4处均可跳过 · S不需要额外战斗 · 同区可回访，确认跨区后不返旧区</text>
+<line x1="40" y1="695" x2="1380" y2="695" stroke="#d4cfc4" stroke-width="2"/>
+<text x="42" y="736" font-family="Microsoft YaHei, sans-serif" font-size="26" text-anchor="start" fill="#263f52">RG08-B  背风棚道</text>
+<text x="550" y="733" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="start" fill="#263f52">B型：制作点前置，侦察点后置</text>
+<line x1="100" y1="960" x2="250" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="250" y1="960" x2="400" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="400" y1="960" x2="550" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="550" y1="960" x2="700" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="700" y1="960" x2="850" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="850" y1="960" x2="1000" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="1000" y1="960" x2="1150" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="1150" y1="960" x2="1300" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="550" y1="960" x2="550" y2="1110" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="850" y1="960" x2="940" y2="1130" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="940" y1="1130" x2="1000" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="100" y1="960" x2="220" y2="1130" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="220" y1="1130" x2="250" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="550" y1="960" x2="600" y2="825" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="600" y1="825" x2="550" y2="1110" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="100" y1="960" x2="220" y2="825" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="220" y1="825" x2="250" y2="960" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="1000" y1="960" x2="1060" y2="825" stroke="#b7b5ac" stroke-width="4"/>
+<line x1="940" y1="1130" x2="1060" y2="825" stroke="#b7b5ac" stroke-width="4"/>
+<circle cx="100" cy="960" r="20" fill="#263f52"/>
+<text x="100" y="966" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">I</text>
+<text x="100" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">护运驿口</text>
+<text x="100" y="1030" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">入口／提前撤离</text>
+<circle cx="250" cy="960" r="10" fill="#92958e"/>
+<text x="250" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">灰坡分道</text>
+<circle cx="400" cy="960" r="20" fill="#b85138"/>
+<text x="400" y="966" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">B1</text>
+<text x="400" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">料场盾岗</text>
+<text x="400" y="1030" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">第1场主路战</text>
+<circle cx="550" cy="960" r="10" fill="#92958e"/>
+<text x="550" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">废棚前坪</text>
+<circle cx="550" cy="1110" r="20" fill="#3d846e"/>
+<text x="550" y="1116" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">S</text>
+<text x="550" y="1156" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">棚内救护箱</text>
+<text x="550" y="1180" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">固定恢复30% · 一次</text>
+<circle cx="700" cy="960" r="20" fill="#b85138"/>
+<text x="700" y="966" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">B2</text>
+<text x="700" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">卸料空坪</text>
+<text x="700" y="1030" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">第2场主路战</text>
+<circle cx="850" cy="960" r="10" fill="#92958e"/>
+<text x="850" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">炉灰岔路</text>
+<circle cx="1000" cy="960" r="10" fill="#92958e"/>
+<text x="1000" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">高坎便道</text>
+<circle cx="1150" cy="960" r="20" fill="#b85138"/>
+<text x="1150" y="966" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">G</text>
+<text x="1150" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">旧运料哨</text>
+<text x="1150" y="1030" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">区域目标战</text>
+<circle cx="1300" cy="960" r="20" fill="#263f52"/>
+<text x="1300" y="966" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">X</text>
+<text x="1300" y="1006" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">东荒径出口</text>
+<text x="1300" y="1030" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">目标出口／非末区营地</text>
+<circle cx="600" cy="825" r="20" fill="#3f7297"/>
+<text x="600" y="831" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">A</text>
+<text x="600" y="871" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">轮痕记号台</text>
+<text x="600" y="895" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">侦察→B2／可换普通卡</text>
+<circle cx="220" cy="825" r="20" fill="#3f7297"/>
+<text x="220" y="831" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">B</text>
+<text x="220" y="871" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">磨油棚</text>
+<text x="220" y="895" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">制作／可换普通卡</text>
+<circle cx="940" cy="1130" r="20" fill="#3f7297"/>
+<text x="940" y="1136" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">C</text>
+<text x="940" y="1176" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">等风车队坪</text>
+<text x="940" y="1200" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">普通或人性事件</text>
+<circle cx="220" cy="1130" r="20" fill="#3f7297"/>
+<text x="220" y="1136" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">D</text>
+<text x="220" y="1176" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">旗板调度口</text>
+<text x="220" y="1200" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">可选第4处 · 改路→B1</text>
+<circle cx="1060" cy="825" r="20" fill="#a37125"/>
+<text x="1060" y="831" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">L</text>
+<text x="1060" y="871" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#263f52">侧坡刺哨</text>
+<text x="1060" y="895" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="middle" fill="#646d70">可选精英</text>
+<text x="42" y="1258" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="start" fill="#263f52">主路3战 · 事件3—4处均可跳过 · S不需要额外战斗 · 同区可回访，确认跨区后不返旧区</text>
+<text x="42" y="1316" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="start" fill="#263f52">蓝：事件地点　绿：固定补给　红：主路战　金：可选精英　深色：出口　灰：连续道路交汇</text>
+<text x="42" y="1342" font-family="Microsoft YaHei, sans-serif" font-size="14" text-anchor="start" fill="#263f52">JOINT-MAP-1.0 · 具体卡片与敌阵为联合抽取候选；图不要求每趟相同投放。</text>
+</svg>

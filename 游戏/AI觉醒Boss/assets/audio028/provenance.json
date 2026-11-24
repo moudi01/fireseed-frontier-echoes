@@ -1,0 +1,17 @@
+{
+  "source": "original local procedural synthesis",
+  "script": "_tools/synthesize_battle_audio.py",
+  "seed": 28028,
+  "format": "mono PCM16 22050Hz",
+  "samples": [
+    "bow",
+    "hit",
+    "shield",
+    "formed",
+    "down",
+    "windup"
+  ],
+  "external_samples": false,
+  "new_paid_calls": 0,
+  "status": "first-pass game feedback; subjective mix pending"
+}

@@ -1,0 +1,3701 @@
+{
+  "version": "TINDER-GREYBOX-0.13",
+  "source_sha256": {
+    "规则样例.json": "482a9d2459fa462b0bbe2a564d5769c5f406897d55eaeddc4b4190db650a2c3d",
+    "多区域远征配置.json": "cddbeff39f21738f28672dda88b4a9336cef3d6823168c20aea91c92e52663e2",
+    "战利品.json": "13af056d16072bb2ae27b6c1a4c5f6397c81651eeef7930561f7711a901d8a46",
+    "构筑与学习.json": "88ada805a1cdc75d21e5d1ba922b7aa5152ff5d26bc7e093c4a9a28a6db52a56",
+    "地图地形.json": "2b871b3e3ed6a664ee96389a89f976fa08d73195dc5d772db91cb532f19bed1f",
+    "远征事件池.json": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6",
+    "普通事件扩展.json": "4243242ea7fddcfcab2836e480e5c4383c51c070d581b2776925f550c9d4c75b",
+    "敌人与遭遇.json": "8077f6ae2be68d13e3dae271a7face5ddaea326e21c91545cc29c962c23e3dc8",
+    "八区联合布点.json": "8c8c2b62215214e5021195ec4bd37c9ec5c35344837d0c745a83e50f48b34da5",
+    "完整远征验证配置.json": "0bdc1ed971fab7940de4562185bf64744bd2b8198f4a765a8c1bba46da4aa274",
+    "事件回访与结算合同.json": "abd647fb7fd0bbca8344d2ce466897784ae750e97ffced7b9e921c5b15e4aa60",
+    "奖励预留与事件配比配置.json": "747eea38d93207e0d222e6308f159896fdbaf5f396767f782a9c085c14c5b23a",
+    "联合抽样验收配置.json": "d0844b09c86d48eef6c9133405f8087510e0cdf41f1b753df7a7769585fc6ee5",
+    "连续区域地图合同.json": "5dae73060cb3e1c54c306af04c9307089b007d7a8cced8eea97b54c5e22608e9",
+    "choice_sampling_model.py": "43d47c3dfecd8991835b9b09d79eecdf3c8035d67a1fcd9948dd3c556b367460",
+    "joint_sampling_model.py": "c31f06d737c6e629fab5117fbe4714f08c397ff2cd738c5bda21b10584ea8a96",
+    "event_catalog.py": "23251d5dc6ed558dea73c4289aabef2c385f3f7309771f21d4266a68cb9b7b53",
+    "近期事件联动.json": "e11378be8e0e19399cdd4c33b289354c589d4e218758ccef2c0517d657384c29"
+  },
+  "runtime_sha256": {
+    "data.py": "97531d77f98591438998211c4788f5a51c768575e1e35051c53402fe4eb21298",
+    "board_geometry.py": "6c33e806af1d8d2ec20efcd612d810c7736b7e17127884cb98630aeb735085d2",
+    "combat.py": "c366360a532bca87e790cfca8319548a1727c29ab6d250bd87e48df8659372c6",
+    "mechanics.py": "1328893685a0548161a5c338014b5b232407c22c9d10aff0069e4914b94aa008",
+    "battle_skills.py": "bbcfeaa34e0e51bbccf74b8e7607f2756b76461ab84fa15c58b8f827356d497a",
+    "engine.py": "71301a23c46670c12589c3827169808a7f42cb985f4cd1c12b8f84459afa33f2",
+    "town.py": "2bb2a3ac1039a7836856fd7b72bbfbbf3a6406d7049bd16e7c6bcc0954ff74a0",
+    "rescue.py": "676ba1e70149487e58406711aaa6c83c6aa7fa93a8450af0bc4ccff8dac37ff2",
+    "escort.py": "aaed3c7f65758e927f6a967330a4cf300489742df37d437d8626ac281460d66b",
+    "event_memory.py": "44fba82a4bf969d72d09311d73e599b40654b53972efd6ea9ce6f5deb2c62621",
+    "refugee.py": "e928b160449bb1734ce907a3463aab4c320a6fd313b12ce43a904d8122497c7e",
+    "water.py": "5284db38b7104e0409062e3d1453f397cf313ae9cbb890139d660f60c946f56e",
+    "medicine.py": "32a0b5bec5716ad38d4107696b85cdcdc400bb876a2f49df02b4b4c0f4ee843d",
+    "cases.py": "6b2cb149ebfabf92547e78aaca57b15d3af05212decbf1e61f4600561dfbd215",
+    "civilian.py": "154bcc64aa9147819d9a452a004a74ddddbed84acedac857f5910e6d8d9b5def",
+    "civilian_text.json": "ac4000eae08f905aa5171ba23c099273937cf5cb6da75d7d717bca44f337f0aa",
+    "app.py": "e997174dd40818b1f091de795f4fa5f4346c89c74cb8a27349c15942df20e6f5",
+    "smoke.py": "86b74bcc2c4617f28676ea75b32f0a545ad7a4d31d3b5384598cfb1de2df2234",
+    "web.py": "7fd53a9bcbe3ec2fe1b2d594b3e2f7992eeed8d4a4fd7bb9acaa7d63aebf3c56",
+    "index.html": "f712e82e55d97c971ed801589837d73d0911fe25005b6e7cafd4e7de83195c3c"
+  },
+  "scope": "独立战斗试验：Lv2/MID/Q1，满血开场，无书、方案、准备品；非自然招募或远征抽样，不发奖励，不计正式平衡。",
+  "balance_eligible": false,
+  "encounter": "RG02-N03",
+  "board": "DUAL_FLANK",
+  "fixture": {
+    "version": "TINDER-GREYBOX-0.13",
+    "id": "3155c50dd7a64d84906b62cab8303ba8",
+    "source_sha256": {
+      "规则样例.json": "482a9d2459fa462b0bbe2a564d5769c5f406897d55eaeddc4b4190db650a2c3d",
+      "多区域远征配置.json": "cddbeff39f21738f28672dda88b4a9336cef3d6823168c20aea91c92e52663e2",
+      "战利品.json": "13af056d16072bb2ae27b6c1a4c5f6397c81651eeef7930561f7711a901d8a46",
+      "构筑与学习.json": "88ada805a1cdc75d21e5d1ba922b7aa5152ff5d26bc7e093c4a9a28a6db52a56",
+      "地图地形.json": "2b871b3e3ed6a664ee96389a89f976fa08d73195dc5d772db91cb532f19bed1f",
+      "远征事件池.json": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6",
+      "普通事件扩展.json": "4243242ea7fddcfcab2836e480e5c4383c51c070d581b2776925f550c9d4c75b",
+      "敌人与遭遇.json": "8077f6ae2be68d13e3dae271a7face5ddaea326e21c91545cc29c962c23e3dc8",
+      "八区联合布点.json": "8c8c2b62215214e5021195ec4bd37c9ec5c35344837d0c745a83e50f48b34da5",
+      "完整远征验证配置.json": "0bdc1ed971fab7940de4562185bf64744bd2b8198f4a765a8c1bba46da4aa274",
+      "事件回访与结算合同.json": "abd647fb7fd0bbca8344d2ce466897784ae750e97ffced7b9e921c5b15e4aa60",
+      "奖励预留与事件配比配置.json": "747eea38d93207e0d222e6308f159896fdbaf5f396767f782a9c085c14c5b23a",
+      "联合抽样验收配置.json": "d0844b09c86d48eef6c9133405f8087510e0cdf41f1b753df7a7769585fc6ee5",
+      "连续区域地图合同.json": "5dae73060cb3e1c54c306af04c9307089b007d7a8cced8eea97b54c5e22608e9",
+      "choice_sampling_model.py": "43d47c3dfecd8991835b9b09d79eecdf3c8035d67a1fcd9948dd3c556b367460",
+      "joint_sampling_model.py": "c31f06d737c6e629fab5117fbe4714f08c397ff2cd738c5bda21b10584ea8a96",
+      "event_catalog.py": "23251d5dc6ed558dea73c4289aabef2c385f3f7309771f21d4266a68cb9b7b53",
+      "近期事件联动.json": "e11378be8e0e19399cdd4c33b289354c589d4e218758ccef2c0517d657384c29"
+    },
+    "runtime_sha256": {
+      "data.py": "97531d77f98591438998211c4788f5a51c768575e1e35051c53402fe4eb21298",
+      "board_geometry.py": "6c33e806af1d8d2ec20efcd612d810c7736b7e17127884cb98630aeb735085d2",
+      "combat.py": "c366360a532bca87e790cfca8319548a1727c29ab6d250bd87e48df8659372c6",
+      "mechanics.py": "1328893685a0548161a5c338014b5b232407c22c9d10aff0069e4914b94aa008",
+      "battle_skills.py": "bbcfeaa34e0e51bbccf74b8e7607f2756b76461ab84fa15c58b8f827356d497a",
+      "engine.py": "71301a23c46670c12589c3827169808a7f42cb985f4cd1c12b8f84459afa33f2",
+      "town.py": "2bb2a3ac1039a7836856fd7b72bbfbbf3a6406d7049bd16e7c6bcc0954ff74a0",
+      "rescue.py": "676ba1e70149487e58406711aaa6c83c6aa7fa93a8450af0bc4ccff8dac37ff2",
+      "escort.py": "aaed3c7f65758e927f6a967330a4cf300489742df37d437d8626ac281460d66b",
+      "event_memory.py": "44fba82a4bf969d72d09311d73e599b40654b53972efd6ea9ce6f5deb2c62621",
+      "refugee.py": "e928b160449bb1734ce907a3463aab4c320a6fd313b12ce43a904d8122497c7e",
+      "water.py": "5284db38b7104e0409062e3d1453f397cf313ae9cbb890139d660f60c946f56e",
+      "medicine.py": "32a0b5bec5716ad38d4107696b85cdcdc400bb876a2f49df02b4b4c0f4ee843d",
+      "cases.py": "6b2cb149ebfabf92547e78aaca57b15d3af05212decbf1e61f4600561dfbd215",
+      "civilian.py": "154bcc64aa9147819d9a452a004a74ddddbed84acedac857f5910e6d8d9b5def",
+      "civilian_text.json": "ac4000eae08f905aa5171ba23c099273937cf5cb6da75d7d717bca44f337f0aa",
+      "app.py": "e997174dd40818b1f091de795f4fa5f4346c89c74cb8a27349c15942df20e6f5",
+      "smoke.py": "86b74bcc2c4617f28676ea75b32f0a545ad7a4d31d3b5384598cfb1de2df2234",
+      "web.py": "7fd53a9bcbe3ec2fe1b2d594b3e2f7992eeed8d4a4fd7bb9acaa7d63aebf3c56",
+      "index.html": "f712e82e55d97c971ed801589837d73d0911fe25005b6e7cafd4e7de83195c3c"
+    },
+    "phase": "TOWN",
+    "seed": 11,
+    "route": "R06",
+    "team_id": "T03",
+    "pack": "P0",
+    "birth": "MID",
+    "fixture_notice": "拥有指定队伍和装备的试验档；初始60铜/12晶/6补给及每种24材料，工坊Lv2。不是自然开局或获取难度结论。",
+    "bank": {
+      "copper": 60,
+      "crystal": 12,
+      "supply": 6
+    },
+    "warehouse": {
+      "herb": 24,
+      "fiber": 24,
+      "iron": 24,
+      "crystal_shard": 24
+    },
+    "party": [
+      {
+        "instance_id": "T03-01",
+        "unit_id": "M01",
+        "stats": {
+          "hp": 65,
+          "physical_attack": 13,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 18,
+          "magic_defense": 9
+        },
+        "hp": 65,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF02-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 2,
+        "attack_type": "physical",
+        "range": 2,
+        "interval": 2,
+        "position": [
+          2,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-02",
+        "unit_id": "M02",
+        "stats": {
+          "hp": 45,
+          "physical_attack": 6,
+          "magic_attack": 2,
+          "healing_power": 14,
+          "physical_defense": 6,
+          "magic_defense": 9
+        },
+        "hp": 45,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF05-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 2,
+        "attack_type": "physical",
+        "range": 2,
+        "interval": 2,
+        "position": [
+          4,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-03",
+        "unit_id": "M04",
+        "stats": {
+          "hp": 41,
+          "physical_attack": 2,
+          "magic_attack": 12,
+          "healing_power": 4,
+          "physical_defense": 6,
+          "magic_defense": 9
+        },
+        "hp": 41,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF04-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 2,
+        "attack_type": "magic",
+        "range": 3,
+        "interval": 2,
+        "position": [
+          5,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0,
+        "skill_mode": "counter"
+      },
+      {
+        "instance_id": "T03-04",
+        "unit_id": "S01",
+        "stats": {
+          "hp": 60,
+          "physical_attack": 7,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 25,
+          "magic_defense": 12
+        },
+        "hp": 60,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF06-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 1,
+        "interval": 2,
+        "position": [
+          7,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-05",
+        "unit_id": "S02",
+        "stats": {
+          "hp": 48,
+          "physical_attack": 15,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 13,
+          "magic_defense": 4
+        },
+        "hp": 48,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF01-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 1,
+        "interval": 2,
+        "position": [
+          4,
+          0
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-06",
+        "unit_id": "S03",
+        "stats": {
+          "hp": 35,
+          "physical_attack": 12,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 4,
+          "magic_defense": 5
+        },
+        "hp": 35,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF03-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 4,
+        "interval": 2,
+        "position": [
+          6,
+          0
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-07",
+        "unit_id": "S01",
+        "stats": {
+          "hp": 60,
+          "physical_attack": 7,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 25,
+          "magic_defense": 12
+        },
+        "hp": 60,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": false,
+        "gear": [
+          "EF06-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 1,
+        "interval": 2,
+        "position": [
+          3,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-08",
+        "unit_id": "S03",
+        "stats": {
+          "hp": 35,
+          "physical_attack": 12,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 4,
+          "magic_defense": 5
+        },
+        "hp": 35,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": false,
+        "gear": [
+          "EF03-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 4,
+        "interval": 2,
+        "position": [
+          5,
+          0
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      }
+    ],
+    "budget": {
+      "milestone": "ST-104",
+      "expedition": 12,
+      "battle": 9
+    },
+    "pouch": [],
+    "used_prep_slots": 0,
+    "preparations": {},
+    "medical": 0,
+    "manifest": null,
+    "request": null,
+    "region": null,
+    "visited_regions": [],
+    "site": null,
+    "regions": {},
+    "pending": {
+      "copper": 0,
+      "crystal": 0
+    },
+    "materials": {},
+    "gear_bag": [],
+    "plans_owned": [],
+    "plans_equipped": [],
+    "notes": [],
+    "debits": {},
+    "battle": null,
+    "battle_reports": [],
+    "journal": [
+      {
+        "seq": 1,
+        "type": "fixture_created",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "route": "R06",
+        "team": "T03",
+        "pack": "P0",
+        "seed": 11
+      },
+      {
+        "seq": 2,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-01",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 3,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-01 advance"
+      },
+      {
+        "seq": 4,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-02",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 5,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-02 advance"
+      },
+      {
+        "seq": 6,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-03",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 7,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-03 advance"
+      },
+      {
+        "seq": 8,
+        "type": "skill",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-03",
+        "args": [
+          "counter"
+        ]
+      },
+      {
+        "seq": 9,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "skill T03-03 counter"
+      },
+      {
+        "seq": 10,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-04",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 11,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-04 advance"
+      },
+      {
+        "seq": 12,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-05",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 13,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-05 advance"
+      },
+      {
+        "seq": 14,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-06",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 15,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-06 advance"
+      },
+      {
+        "seq": 16,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-07",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 17,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-07 advance"
+      },
+      {
+        "seq": 18,
+        "type": "stance",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "member": "T03-08",
+        "args": [
+          "advance"
+        ]
+      },
+      {
+        "seq": 19,
+        "type": "command_committed",
+        "region": null,
+        "site": null,
+        "day": 0,
+        "expedition_no": 1,
+        "command": "stance T03-08 advance"
+      }
+    ],
+    "completed_regions": [],
+    "summary": null,
+    "debug_tainted": false,
+    "sequence": 19,
+    "day": 0,
+    "completed_history": [],
+    "event_memory": {},
+    "campaign_seed": 11,
+    "expedition_no": 1,
+    "home_roster": [],
+    "recruit_sequence": 0,
+    "unlocked_facts": [
+      "ST-101",
+      "ST-102",
+      "ST-104"
+    ],
+    "gear_storage": [],
+    "item_storage": [],
+    "hospital_level": 0,
+    "hospital_progress": null,
+    "care_target": null,
+    "downed_this_trip": [],
+    "captives": [],
+    "memorial": [],
+    "capture_batches": [],
+    "capture_mode": "standard",
+    "mission": "ORDINARY",
+    "rescue_target": null,
+    "last_settlement_id": null,
+    "ending": null,
+    "escorted": [],
+    "escort_receipts": [],
+    "escort_reserved_cost": 0,
+    "refugee": {
+      "enabled": false,
+      "state": "OPEN",
+      "encountered": false,
+      "anchor": null,
+      "active_scene": null,
+      "receipt": null,
+      "trade_credit": null,
+      "pending": null,
+      "person_id": "EV03-PORTER-01",
+      "whereabouts": {
+        "location": "原工班附近的隐蔽哨棚",
+        "custodian": "原护运接应人",
+        "status": "WAITING_CONTACT"
+      }
+    },
+    "private_case_factors": {},
+    "directed_refugee": false,
+    "water": {
+      "enabled": false,
+      "state": "OPEN",
+      "encountered": false,
+      "anchor": null,
+      "active_scene": null,
+      "receipt": null,
+      "trade_credit": null,
+      "cargo_id": "EV09-WATER-01",
+      "loaded_trip": null,
+      "custody": "采水队保管两桶封水，等待交运",
+      "transport_history": []
+    },
+    "directed_water": false,
+    "medicine": {
+      "enabled": false,
+      "state": "OPEN",
+      "encountered": false,
+      "anchor": null,
+      "active_scene": null,
+      "receipt": null,
+      "trade_credit": null,
+      "box_id": "EV19-MEDICINE-01",
+      "custody": "采药班保管原药箱，暮汀医舍正在照护原定病人"
+    },
+    "directed_medicine": false,
+    "cases": {
+      "EV25": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "原行李由撤离站保管，等候当面核对封存",
+        "object_id": "EV25-LUGGAGE",
+        "person_id": "EV25-LUGGAGE",
+        "box_id": "EV25-LUGGAGE",
+        "pending": null,
+        "whereabouts": {
+          "location": "原行李认领站",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      },
+      "EV05": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "同伴正在接应棚照护原伤工并保管坍塌工单",
+        "object_id": "EV05-INJURED-WORKER",
+        "person_id": "EV05-INJURED-WORKER",
+        "box_id": "EV05-INJURED-WORKER",
+        "pending": null,
+        "whereabouts": {
+          "location": "伤工临时接应棚",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      },
+      "EV07": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "原接应人正在隐蔽货棚照应两名逃工",
+        "object_id": "EV07-WORKERS",
+        "person_id": "EV07-WORKERS",
+        "box_id": "EV07-WORKERS",
+        "pending": null,
+        "whereabouts": {
+          "location": "逃工原接应处",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      },
+      "EV12": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "簿主仍保管写有暮汀藏身地址的原页",
+        "object_id": "EV12-ADDRESS-PAGE",
+        "person_id": "EV12-ADDRESS-PAGE",
+        "box_id": "EV12-ADDRESS-PAGE",
+        "pending": null,
+        "whereabouts": {
+          "location": "商队原登记簿接洽处",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      },
+      "EV16": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "原契仍在旧林屋，继承人随回收班清点遗物",
+        "object_id": "EV16-DEED",
+        "person_id": "EV16-DEED",
+        "box_id": "EV16-DEED",
+        "pending": null,
+        "whereabouts": {
+          "location": "旧林屋遗物接洽处",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      },
+      "EV22": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "完整工票尚未交割，工人代表等待核对",
+        "object_id": "EV22-WORK-TICKETS",
+        "person_id": "EV22-WORK-TICKETS",
+        "box_id": "EV22-WORK-TICKETS",
+        "pending": null,
+        "whereabouts": {
+          "location": "回收班工票接洽处",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      },
+      "EV28": {
+        "enabled": false,
+        "state": "OPEN",
+        "encountered": false,
+        "anchor": null,
+        "active_scene": null,
+        "receipt": null,
+        "trade_credit": null,
+        "custody": "护运班暂时照应原家属群体，保留本次撤离船班座位",
+        "object_id": "EV28-FAMILY-GROUP",
+        "person_id": "EV28-FAMILY-GROUP",
+        "box_id": "EV28-FAMILY-GROUP",
+        "pending": null,
+        "whereabouts": {
+          "location": "家属原护运接洽处",
+          "custodian": "原案件接应人",
+          "status": "WAITING_CONTACT"
+        }
+      }
+    },
+    "directed_local": null
+  },
+  "commands": [
+    "fight",
+    "run 600"
+  ],
+  "battle": {
+    "tick": 17,
+    "result": "VICTORY",
+    "seed": 11,
+    "board_id": "DUAL_FLANK",
+    "encounter_id": "RG02-N03",
+    "actors": [
+      {
+        "id": "T03-01",
+        "kind": "M01",
+        "side": "player",
+        "stats": {
+          "hp": 65,
+          "physical_attack": 13,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 18,
+          "magic_defense": 9
+        },
+        "hp": 63,
+        "pos": [
+          2,
+          2
+        ],
+        "facing": 2,
+        "stance": "advance",
+        "range": 2,
+        "interval": 2,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "moves": [
+          {
+            "move_id": "M01-A",
+            "name": "封路刺",
+            "kind": "damage",
+            "damage_type": "physical",
+            "coefficient": 1.1,
+            "range": 2,
+            "medium": "near",
+            "shape": "locked_axis_target",
+            "cooldown": 3,
+            "windup": 1,
+            "cast_limit": 2,
+            "first_eligible_tick": 1,
+            "max_targets": 1
+          }
+        ],
+        "skill_mode": "auto",
+        "next_attack": 19,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 11,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          2,
+          1
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "M01-A": 2
+        },
+        "move_ready": {
+          "M01-A": 10
+        },
+        "action_sequence": 8,
+        "basic_history": [
+          {
+            "action_id": "T03-01:7",
+            "tick": 15,
+            "cell": [
+              0,
+              4
+            ]
+          },
+          {
+            "action_id": "T03-01:8",
+            "tick": 17,
+            "cell": [
+              0,
+              4
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 1,
+        "footing_used": true,
+        "armor_check_used": false,
+        "timed_shields": [],
+        "weak_point": {},
+        "medium": "projectile"
+      },
+      {
+        "id": "T03-02",
+        "kind": "M02",
+        "side": "player",
+        "stats": {
+          "hp": 45,
+          "physical_attack": 6,
+          "magic_attack": 2,
+          "healing_power": 14,
+          "physical_defense": 6,
+          "magic_defense": 9
+        },
+        "hp": 45,
+        "pos": [
+          2,
+          3
+        ],
+        "facing": 3,
+        "stance": "advance",
+        "range": 2,
+        "interval": 2,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "moves": [
+          {
+            "move_id": "M02-A",
+            "name": "急救剂",
+            "kind": "heal",
+            "range": 2,
+            "medium": "medical",
+            "cooldown": 3,
+            "heal_base": 8,
+            "windup": 1,
+            "cast_limit": 2,
+            "first_eligible_tick": 1,
+            "max_targets": 1
+          }
+        ],
+        "skill_mode": "auto",
+        "next_attack": 18,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 2,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": false,
+        "anchor": [
+          4,
+          1
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "M02-A": 2
+        },
+        "move_ready": {
+          "M02-A": 19
+        },
+        "action_sequence": 7,
+        "basic_history": [
+          {
+            "action_id": "T03-02:4",
+            "tick": 9,
+            "cell": [
+              2,
+              4
+            ]
+          },
+          {
+            "action_id": "T03-02:6",
+            "tick": 14,
+            "cell": [
+              0,
+              4
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 2,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": [],
+        "weak_point": {},
+        "medium": "projectile"
+      },
+      {
+        "id": "T03-03",
+        "kind": "M04",
+        "side": "player",
+        "stats": {
+          "hp": 41,
+          "physical_attack": 2,
+          "magic_attack": 12,
+          "healing_power": 4,
+          "physical_defense": 6,
+          "magic_defense": 9
+        },
+        "hp": 29,
+        "pos": [
+          5,
+          2
+        ],
+        "facing": 1,
+        "stance": "advance",
+        "range": 3,
+        "interval": 2,
+        "attack_type": "magic",
+        "shield": 0,
+        "prep": [],
+        "moves": [
+          {
+            "move_id": "M04-A",
+            "name": "雾绊",
+            "kind": "damage",
+            "damage_type": "magic",
+            "coefficient": 0.8,
+            "range": 3,
+            "medium": "spell",
+            "shape": "locked_target",
+            "cooldown": 4,
+            "windup": 1,
+            "cast_limit": 2,
+            "first_eligible_tick": 1,
+            "max_targets": 1
+          }
+        ],
+        "skill_mode": "counter",
+        "next_attack": 19,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 3,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          5,
+          1
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "M04-A": 2
+        },
+        "move_ready": {
+          "M04-A": 19
+        },
+        "action_sequence": 8,
+        "basic_history": [
+          {
+            "action_id": "T03-03:6",
+            "tick": 13,
+            "cell": [
+              3,
+              5
+            ]
+          },
+          {
+            "action_id": "T03-03:8",
+            "tick": 17,
+            "cell": [
+              3,
+              5
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 1,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": [],
+        "weak_point": {},
+        "medium": "projectile"
+      },
+      {
+        "id": "T03-04",
+        "kind": "S01",
+        "side": "player",
+        "stats": {
+          "hp": 60,
+          "physical_attack": 7,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 25,
+          "magic_defense": 12
+        },
+        "hp": 35,
+        "pos": [
+          4,
+          4
+        ],
+        "facing": 2,
+        "stance": "advance",
+        "range": 1,
+        "interval": 2,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "moves": [],
+        "skill_mode": "auto",
+        "next_attack": 19,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 7,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          7,
+          1
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {},
+        "move_ready": {},
+        "action_sequence": 8,
+        "basic_history": [
+          {
+            "action_id": "T03-04:7",
+            "tick": 15,
+            "cell": [
+              3,
+              5
+            ]
+          },
+          {
+            "action_id": "T03-04:8",
+            "tick": 17,
+            "cell": [
+              3,
+              5
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 10,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": [],
+        "weak_point": {},
+        "medium": "near"
+      },
+      {
+        "id": "T03-05",
+        "kind": "S02",
+        "side": "player",
+        "stats": {
+          "hp": 48,
+          "physical_attack": 15,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 13,
+          "magic_defense": 4
+        },
+        "hp": 42,
+        "pos": [
+          0,
+          3
+        ],
+        "facing": 1,
+        "stance": "advance",
+        "range": 1,
+        "interval": 2,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "moves": [],
+        "skill_mode": "auto",
+        "next_attack": 19,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 13,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          4,
+          0
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {},
+        "move_ready": {},
+        "action_sequence": 7,
+        "basic_history": [
+          {
+            "action_id": "T03-05:6",
+            "tick": 15,
+            "cell": [
+              0,
+              4
+            ]
+          },
+          {
+            "action_id": "T03-05:7",
+            "tick": 17,
+            "cell": [
+              0,
+              4
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 4,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": [],
+        "weak_point": {},
+        "medium": "near"
+      },
+      {
+        "id": "T03-06",
+        "kind": "S03",
+        "side": "player",
+        "stats": {
+          "hp": 35,
+          "physical_attack": 12,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 4,
+          "magic_defense": 5
+        },
+        "hp": 35,
+        "pos": [
+          6,
+          1
+        ],
+        "facing": 1,
+        "stance": "advance",
+        "range": 4,
+        "interval": 2,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "moves": [],
+        "skill_mode": "auto",
+        "next_attack": 19,
+        "pending": null,
+        "skill_used": 1,
+        "stationary": 15,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          6,
+          0
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "S03-A": 1
+        },
+        "move_ready": {
+          "S03-A": 3
+        },
+        "action_sequence": 8,
+        "basic_history": [
+          {
+            "action_id": "T03-06:7",
+            "tick": 15,
+            "cell": [
+              3,
+              5
+            ]
+          },
+          {
+            "action_id": "T03-06:8",
+            "tick": 17,
+            "cell": [
+              3,
+              5
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 1,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": [],
+        "weak_point": {},
+        "medium": "projectile"
+      },
+      {
+        "id": "EN06-REG-1",
+        "kind": "EN06",
+        "side": "enemy",
+        "stats": {
+          "hp": 87,
+          "physical_attack": 0,
+          "magic_attack": 7,
+          "healing_power": 0,
+          "physical_defense": 10,
+          "magic_defense": 10
+        },
+        "hp": 0,
+        "pos": [
+          2,
+          4
+        ],
+        "facing": 4,
+        "stance": "advance",
+        "range": 3,
+        "interval": 4,
+        "attack_type": "magic",
+        "shield": 0,
+        "prep": [],
+        "medium": "projectile",
+        "moves": [
+          {
+            "move_id": "EN06-A",
+            "name": "旧声",
+            "kind": "damage",
+            "damage_type": "magic",
+            "coefficient": 1,
+            "range": 4,
+            "windup": 3,
+            "cooldown": 6,
+            "cast_limit": 2,
+            "max_targets": 1,
+            "first_eligible_tick": 2,
+            "target_rule": "own_committed_basic_hit_history",
+            "locks_cells": true,
+            "shape": "last_real_basic_attack_cell",
+            "copies_skill": false,
+            "echo_recursive": false,
+            "medium": "spell",
+            "interruptible": true,
+            "delayable_cast": true,
+            "record_capacity": 1,
+            "rule_overlay": "SKILL-PAIR-1.0"
+          }
+        ],
+        "weak_point": {
+          "hp_owner": "self",
+          "extra_hp": 0,
+          "effect": "conditional_corresponding_defense_reduction_no_extra_hp_or_damage_event",
+          "name": "鸣腔",
+          "active_condition": "while_EN06_A_windup",
+          "physical_defense_modifier": -4,
+          "magic_defense_modifier": -4,
+          "requires_side_or_rear": true
+        },
+        "next_attack": 14,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 1,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          2,
+          5
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "EN06-A": 2
+        },
+        "move_ready": {
+          "EN06-A": 12
+        },
+        "action_sequence": 4,
+        "basic_history": [
+          {
+            "action_id": "EN06-REG-1:1",
+            "tick": 2,
+            "cell": [
+              2,
+              3
+            ]
+          },
+          {
+            "action_id": "EN06-REG-1:3",
+            "tick": 10,
+            "cell": [
+              2,
+              3
+            ]
+          }
+        ],
+        "blocked_until": 8,
+        "last_moved_tick": 1,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": []
+      },
+      {
+        "id": "EN06-REG-2",
+        "kind": "EN06",
+        "side": "enemy",
+        "stats": {
+          "hp": 87,
+          "physical_attack": 0,
+          "magic_attack": 7,
+          "healing_power": 0,
+          "physical_defense": 10,
+          "magic_defense": 10
+        },
+        "hp": 0,
+        "pos": [
+          3,
+          5
+        ],
+        "facing": 5,
+        "stance": "advance",
+        "range": 3,
+        "interval": 4,
+        "attack_type": "magic",
+        "shield": 0,
+        "prep": [],
+        "medium": "projectile",
+        "moves": [
+          {
+            "move_id": "EN06-A",
+            "name": "旧声",
+            "kind": "damage",
+            "damage_type": "magic",
+            "coefficient": 1,
+            "range": 4,
+            "windup": 3,
+            "cooldown": 6,
+            "cast_limit": 2,
+            "max_targets": 1,
+            "first_eligible_tick": 2,
+            "target_rule": "own_committed_basic_hit_history",
+            "locks_cells": true,
+            "shape": "last_real_basic_attack_cell",
+            "copies_skill": false,
+            "echo_recursive": false,
+            "medium": "spell",
+            "interruptible": true,
+            "delayable_cast": true,
+            "record_capacity": 1,
+            "rule_overlay": "SKILL-PAIR-1.0"
+          }
+        ],
+        "weak_point": {
+          "hp_owner": "self",
+          "extra_hp": 0,
+          "effect": "conditional_corresponding_defense_reduction_no_extra_hp_or_damage_event",
+          "name": "鸣腔",
+          "active_condition": "while_EN06_A_windup",
+          "physical_defense_modifier": -4,
+          "magic_defense_modifier": -4,
+          "requires_side_or_rear": true
+        },
+        "next_attack": 21,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 4,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          3,
+          6
+        ],
+        "root_until": 0,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "EN06-A": 2
+        },
+        "move_ready": {
+          "EN06-A": 23
+        },
+        "action_sequence": 4,
+        "basic_history": [
+          {
+            "action_id": "EN06-REG-2:1",
+            "tick": 2,
+            "cell": [
+              5,
+              2
+            ]
+          },
+          {
+            "action_id": "EN06-REG-2:3",
+            "tick": 11,
+            "cell": [
+              4,
+              4
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 1,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": []
+      },
+      {
+        "id": "EN17-REG-3",
+        "kind": "EN17",
+        "side": "enemy",
+        "stats": {
+          "hp": 104,
+          "physical_attack": 7,
+          "magic_attack": 0,
+          "healing_power": 0,
+          "physical_defense": 16,
+          "magic_defense": 8
+        },
+        "hp": 0,
+        "pos": [
+          0,
+          4
+        ],
+        "facing": 4,
+        "stance": "advance",
+        "range": 2,
+        "interval": 3,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "medium": "near",
+        "moves": [
+          {
+            "move_id": "EN17-A",
+            "name": "轴线锁矛",
+            "kind": "damage",
+            "damage_type": "physical",
+            "coefficient": 1.5,
+            "range": 2,
+            "windup": 1,
+            "cooldown": 6,
+            "cast_limit": 2,
+            "max_targets": 2,
+            "first_eligible_tick": 2,
+            "target_rule": "nearest_then_stable_id",
+            "locks_cells": true,
+            "shape": "front_two_cells",
+            "medium": "physical_action",
+            "interruptible": true,
+            "delayable_cast": false
+          }
+        ],
+        "weak_point": {
+          "hp_owner": "self",
+          "extra_hp": 0,
+          "effect": "conditional_corresponding_defense_reduction_no_extra_hp_or_damage_event",
+          "name": "矛轴",
+          "active_condition": "one_tick_after_EN17_A_release",
+          "physical_defense_modifier": -4,
+          "magic_defense_modifier": 0,
+          "requires_side_or_rear": true
+        },
+        "next_attack": 20,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 7,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          0,
+          6
+        ],
+        "root_until": 0,
+        "weak_until": 12,
+        "weak_from": 12,
+        "move_uses": {
+          "EN17-A": 2
+        },
+        "move_ready": {
+          "EN17-A": 17
+        },
+        "action_sequence": 5,
+        "basic_history": [
+          {
+            "action_id": "EN17-REG-3:4",
+            "tick": 14,
+            "cell": [
+              0,
+              3
+            ]
+          },
+          {
+            "action_id": "EN17-REG-3:5",
+            "tick": 17,
+            "cell": [
+              0,
+              3
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 2,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": []
+      },
+      {
+        "id": "EN01-REG-4",
+        "kind": "EN01",
+        "side": "enemy",
+        "stats": {
+          "hp": 89,
+          "physical_attack": 6,
+          "magic_attack": 0,
+          "healing_power": 0,
+          "physical_defense": 10,
+          "magic_defense": 6
+        },
+        "hp": 0,
+        "pos": [
+          5,
+          4
+        ],
+        "facing": 4,
+        "stance": "advance",
+        "range": 1,
+        "interval": 3,
+        "attack_type": "physical",
+        "shield": 0,
+        "prep": [],
+        "medium": "near",
+        "moves": [
+          {
+            "move_id": "EN01-A",
+            "name": "收根锁线",
+            "kind": "damage",
+            "damage_type": "physical",
+            "coefficient": 1.2,
+            "range": 2,
+            "windup": 1,
+            "cooldown": 5,
+            "cast_limit": 1,
+            "max_targets": 1,
+            "first_eligible_tick": 2,
+            "target_rule": "nearest_then_stable_id",
+            "locks_cells": true,
+            "shape": "front_two_cells",
+            "root_self_ticks": 2,
+            "medium": "physical_action",
+            "interruptible": true,
+            "delayable_cast": false
+          }
+        ],
+        "weak_point": {
+          "hp_owner": "self",
+          "extra_hp": 0,
+          "effect": "conditional_corresponding_defense_reduction_no_extra_hp_or_damage_event",
+          "name": "囊结",
+          "active_condition": "while_EN01_A_rooted",
+          "physical_defense_modifier": -4,
+          "magic_defense_modifier": 0,
+          "requires_side_or_rear": true
+        },
+        "next_attack": 12,
+        "pending": null,
+        "skill_used": 0,
+        "stationary": 7,
+        "move_pause_until": 0,
+        "skill_ready": 1,
+        "healing_first": true,
+        "anchor": [
+          5,
+          5
+        ],
+        "root_until": 4,
+        "weak_until": 0,
+        "weak_from": 0,
+        "move_uses": {
+          "EN01-A": 1
+        },
+        "move_ready": {
+          "EN01-A": 8
+        },
+        "action_sequence": 3,
+        "basic_history": [
+          {
+            "action_id": "EN01-REG-4:2",
+            "tick": 6,
+            "cell": [
+              5,
+              3
+            ]
+          },
+          {
+            "action_id": "EN01-REG-4:3",
+            "tick": 9,
+            "cell": [
+              5,
+              3
+            ]
+          }
+        ],
+        "blocked_until": 0,
+        "last_moved_tick": 1,
+        "footing_used": false,
+        "armor_check_used": false,
+        "timed_shields": []
+      }
+    ],
+    "events": [
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "EN01-REG-4",
+        "position": [
+          5,
+          4
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "EN06-REG-1",
+        "position": [
+          2,
+          4
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "EN06-REG-2",
+        "position": [
+          3,
+          5
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "EN17-REG-3",
+        "position": [
+          0,
+          5
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "T03-01",
+        "position": [
+          2,
+          2
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "T03-02",
+        "position": [
+          3,
+          2
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "T03-03",
+        "position": [
+          5,
+          2
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "T03-04",
+        "position": [
+          6,
+          2
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "T03-05",
+        "position": [
+          3,
+          1
+        ]
+      },
+      {
+        "tick": 1,
+        "type": "move",
+        "actor": "T03-06",
+        "position": [
+          6,
+          1
+        ]
+      },
+      {
+        "tick": 2,
+        "type": "windup",
+        "actor": "EN01-REG-4",
+        "move": "EN01-A",
+        "action_id": "EN01-REG-4:1",
+        "target": "T03-03",
+        "cells": [
+          [
+            5,
+            3
+          ],
+          [
+            5,
+            2
+          ]
+        ],
+        "release_tick": 3
+      },
+      {
+        "tick": 2,
+        "type": "windup",
+        "actor": "T03-01",
+        "move": "M01-A",
+        "action_id": "T03-01:1",
+        "target": "EN06-REG-1",
+        "cells": [
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            4
+          ]
+        ],
+        "release_tick": 3
+      },
+      {
+        "tick": 2,
+        "type": "windup",
+        "actor": "T03-06",
+        "move": "S03-A",
+        "action_id": "T03-06:1",
+        "target": "EN01-REG-4",
+        "cells": [
+          [
+            6,
+            2
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            5,
+            4
+          ]
+        ],
+        "release_tick": 3
+      },
+      {
+        "tick": 2,
+        "type": "move",
+        "actor": "EN17-REG-3",
+        "position": [
+          0,
+          4
+        ]
+      },
+      {
+        "tick": 2,
+        "type": "move",
+        "actor": "T03-02",
+        "position": [
+          2,
+          3
+        ]
+      },
+      {
+        "tick": 2,
+        "type": "move",
+        "actor": "T03-04",
+        "position": [
+          5,
+          3
+        ]
+      },
+      {
+        "tick": 2,
+        "type": "move",
+        "actor": "T03-05",
+        "position": [
+          2,
+          1
+        ]
+      },
+      {
+        "tick": 2,
+        "type": "hit",
+        "actor": "EN06-REG-1",
+        "target": "T03-02",
+        "action": "BASIC",
+        "action_id": "EN06-REG-1:1",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 2,
+        "type": "echo_record",
+        "actor": "EN06-REG-1",
+        "cell": [
+          2,
+          3
+        ],
+        "action_id": "EN06-REG-1:1"
+      },
+      {
+        "tick": 2,
+        "type": "hit",
+        "actor": "EN06-REG-2",
+        "target": "T03-03",
+        "action": "BASIC",
+        "action_id": "EN06-REG-2:1",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 2,
+        "type": "echo_record",
+        "actor": "EN06-REG-2",
+        "cell": [
+          5,
+          2
+        ],
+        "action_id": "EN06-REG-2:1"
+      },
+      {
+        "tick": 2,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-03:1",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 3,
+        "type": "private_shield",
+        "actor": "T03-01",
+        "target": "T03-01",
+        "amount": 6,
+        "expires": 4
+      },
+      {
+        "tick": 3,
+        "type": "private_shield",
+        "actor": "T03-01",
+        "target": "T03-02",
+        "amount": 6,
+        "expires": 4
+      },
+      {
+        "tick": 3,
+        "type": "windup",
+        "actor": "EN06-REG-1",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-1:2",
+        "target": "EN06-REG-1",
+        "cells": [
+          [
+            2,
+            3
+          ]
+        ],
+        "release_tick": 6
+      },
+      {
+        "tick": 3,
+        "type": "windup",
+        "actor": "EN06-REG-2",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-2:2",
+        "target": "EN06-REG-2",
+        "cells": [
+          [
+            5,
+            2
+          ]
+        ],
+        "release_tick": 6
+      },
+      {
+        "tick": 3,
+        "type": "windup",
+        "actor": "EN17-REG-3",
+        "move": "EN17-A",
+        "action_id": "EN17-REG-3:1",
+        "target": "T03-01",
+        "cells": [
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "release_tick": 4
+      },
+      {
+        "tick": 3,
+        "type": "move",
+        "actor": "T03-05",
+        "position": [
+          1,
+          2
+        ]
+      },
+      {
+        "tick": 3,
+        "type": "release",
+        "actor": "EN01-REG-4",
+        "move": "EN01-A",
+        "action_id": "EN01-REG-4:1"
+      },
+      {
+        "tick": 3,
+        "type": "release",
+        "actor": "T03-01",
+        "move": "M01-A",
+        "action_id": "T03-01:1"
+      },
+      {
+        "tick": 3,
+        "type": "release",
+        "actor": "T03-06",
+        "move": "S03-A",
+        "action_id": "T03-06:1"
+      },
+      {
+        "tick": 3,
+        "type": "hit",
+        "actor": "EN01-REG-4",
+        "target": "T03-04",
+        "action": "EN01-A",
+        "action_id": "EN01-REG-4:1",
+        "raw": 5,
+        "absorbed": 0,
+        "hp_damage": 5,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 3,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "action": "M01-A",
+        "action_id": "T03-01:1",
+        "raw": 13,
+        "absorbed": 0,
+        "hp_damage": 13,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 3,
+        "type": "movement_block",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "until": 4
+      },
+      {
+        "tick": 3,
+        "type": "hit",
+        "actor": "T03-02",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-02:1",
+        "raw": 5,
+        "absorbed": 0,
+        "hp_damage": 5,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 3,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-04:1",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 3,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN01-REG-4",
+        "action": "S03-A",
+        "action_id": "T03-06:1",
+        "raw": 13,
+        "absorbed": 0,
+        "hp_damage": 13,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 4,
+        "type": "windup",
+        "actor": "T03-03",
+        "move": "M04-A",
+        "action_id": "T03-03:2",
+        "target": "EN06-REG-2",
+        "cells": [
+          [
+            3,
+            5
+          ]
+        ],
+        "release_tick": 5,
+        "target_cast": "EN06-REG-2:2"
+      },
+      {
+        "tick": 4,
+        "type": "move",
+        "actor": "T03-05",
+        "position": [
+          0,
+          3
+        ]
+      },
+      {
+        "tick": 4,
+        "type": "release",
+        "actor": "EN17-REG-3",
+        "move": "EN17-A",
+        "action_id": "EN17-REG-3:1"
+      },
+      {
+        "tick": 4,
+        "type": "hit",
+        "actor": "EN17-REG-3",
+        "target": "T03-01",
+        "action": "EN17-A",
+        "action_id": "EN17-REG-3:1",
+        "raw": 8,
+        "absorbed": 6,
+        "hp_damage": 2,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 5,
+        "type": "release",
+        "actor": "T03-03",
+        "move": "M04-A",
+        "action_id": "T03-03:2"
+      },
+      {
+        "tick": 5,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-01:2",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 5,
+        "type": "hit",
+        "actor": "T03-02",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-02:2",
+        "raw": 5,
+        "absorbed": 0,
+        "hp_damage": 5,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 5,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "action": "M04-A",
+        "action_id": "T03-03:2",
+        "raw": 8,
+        "absorbed": 0,
+        "hp_damage": 8,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 5,
+        "type": "cast_delayed",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "cast_id": "EN06-REG-2:2",
+        "release_tick": 7
+      },
+      {
+        "tick": 5,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-04:2",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 5,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:1",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 5,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-06:2",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 6,
+        "type": "windup",
+        "actor": "T03-01",
+        "move": "M01-A",
+        "action_id": "T03-01:3",
+        "target": "EN06-REG-1",
+        "cells": [
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            4
+          ]
+        ],
+        "release_tick": 7
+      },
+      {
+        "tick": 6,
+        "type": "release",
+        "actor": "EN06-REG-1",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-1:2"
+      },
+      {
+        "tick": 6,
+        "type": "hit",
+        "actor": "EN01-REG-4",
+        "target": "T03-04",
+        "action": "BASIC",
+        "action_id": "EN01-REG-4:2",
+        "raw": 4,
+        "absorbed": 0,
+        "hp_damage": 4,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 6,
+        "type": "hit",
+        "actor": "EN06-REG-1",
+        "target": "T03-02",
+        "action": "EN06-A",
+        "action_id": "EN06-REG-1:2",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "release",
+        "actor": "EN06-REG-2",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-2:2"
+      },
+      {
+        "tick": 7,
+        "type": "release",
+        "actor": "T03-01",
+        "move": "M01-A",
+        "action_id": "T03-01:3"
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "EN06-REG-2",
+        "target": "T03-03",
+        "action": "EN06-A",
+        "action_id": "EN06-REG-2:2",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "EN17-REG-3",
+        "target": "T03-05",
+        "action": "BASIC",
+        "action_id": "EN17-REG-3:2",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "action": "M01-A",
+        "action_id": "T03-01:3",
+        "raw": 13,
+        "absorbed": 0,
+        "hp_damage": 13,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "movement_block",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "until": 8
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "T03-02",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-02:3",
+        "raw": 5,
+        "absorbed": 0,
+        "hp_damage": 5,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-03:3",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-04:3",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:2",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 7,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-06:3",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "EN01-REG-4",
+        "target": "T03-04",
+        "action": "BASIC",
+        "action_id": "EN01-REG-4:3",
+        "raw": 4,
+        "absorbed": 0,
+        "hp_damage": 4,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-01:4",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "T03-02",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-02:4",
+        "raw": 5,
+        "absorbed": 0,
+        "hp_damage": 5,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-03:4",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-04:4",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:3",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN01-REG-4",
+        "action": "BASIC",
+        "action_id": "T03-06:4",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 9,
+        "type": "down",
+        "actor": "EN01-REG-4"
+      },
+      {
+        "tick": 10,
+        "type": "windup",
+        "actor": "EN17-REG-3",
+        "move": "EN17-A",
+        "action_id": "EN17-REG-3:3",
+        "target": "T03-05",
+        "cells": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "release_tick": 11
+      },
+      {
+        "tick": 10,
+        "type": "move",
+        "actor": "T03-04",
+        "position": [
+          4,
+          4
+        ]
+      },
+      {
+        "tick": 10,
+        "type": "hit",
+        "actor": "EN06-REG-1",
+        "target": "T03-02",
+        "action": "BASIC",
+        "action_id": "EN06-REG-1:3",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 10,
+        "type": "echo_record",
+        "actor": "EN06-REG-1",
+        "cell": [
+          2,
+          3
+        ],
+        "action_id": "EN06-REG-1:3"
+      },
+      {
+        "tick": 11,
+        "type": "windup",
+        "actor": "T03-02",
+        "move": "M02-A",
+        "action_id": "T03-02:5",
+        "target": "T03-02",
+        "cells": [
+          [
+            2,
+            3
+          ]
+        ],
+        "release_tick": 12
+      },
+      {
+        "tick": 11,
+        "type": "release",
+        "actor": "EN17-REG-3",
+        "move": "EN17-A",
+        "action_id": "EN17-REG-3:3"
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "EN06-REG-2",
+        "target": "T03-04",
+        "action": "BASIC",
+        "action_id": "EN06-REG-2:3",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 11,
+        "type": "echo_record",
+        "actor": "EN06-REG-2",
+        "cell": [
+          4,
+          4
+        ],
+        "action_id": "EN06-REG-2:3"
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "EN17-REG-3",
+        "target": "T03-05",
+        "action": "EN17-A",
+        "action_id": "EN17-REG-3:3",
+        "raw": 9,
+        "absorbed": 0,
+        "hp_damage": 9,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-01:5",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-03:5",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-04:5",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:4",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 11,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-06:5",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 12,
+        "type": "windup",
+        "actor": "EN06-REG-1",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-1:4",
+        "target": "EN06-REG-1",
+        "cells": [
+          [
+            2,
+            3
+          ]
+        ],
+        "release_tick": 15
+      },
+      {
+        "tick": 12,
+        "type": "release",
+        "actor": "T03-02",
+        "move": "M02-A",
+        "action_id": "T03-02:5"
+      },
+      {
+        "tick": 12,
+        "type": "heal",
+        "actor": "T03-02",
+        "target": "T03-02",
+        "requested": 26,
+        "effective": 18
+      },
+      {
+        "tick": 13,
+        "type": "windup",
+        "actor": "EN06-REG-2",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-2:4",
+        "target": "EN06-REG-2",
+        "cells": [
+          [
+            4,
+            4
+          ]
+        ],
+        "release_tick": 16
+      },
+      {
+        "tick": 13,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN06-REG-1",
+        "action": "BASIC",
+        "action_id": "T03-01:6",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 13,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-03:6",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 13,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-04:6",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 13,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:5",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 13,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-06:6",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 13,
+        "type": "down",
+        "actor": "EN06-REG-1"
+      },
+      {
+        "tick": 14,
+        "type": "windup",
+        "actor": "T03-03",
+        "move": "M04-A",
+        "action_id": "T03-03:7",
+        "target": "EN06-REG-2",
+        "cells": [
+          [
+            3,
+            5
+          ]
+        ],
+        "release_tick": 15,
+        "target_cast": "EN06-REG-2:4"
+      },
+      {
+        "tick": 14,
+        "type": "hit",
+        "actor": "EN17-REG-3",
+        "target": "T03-05",
+        "action": "BASIC",
+        "action_id": "EN17-REG-3:4",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 14,
+        "type": "hit",
+        "actor": "T03-02",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-02:6",
+        "raw": 5,
+        "absorbed": 0,
+        "hp_damage": 5,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 15,
+        "type": "windup",
+        "actor": "T03-02",
+        "move": "M02-A",
+        "action_id": "T03-02:7",
+        "target": "T03-05",
+        "cells": [
+          [
+            0,
+            3
+          ]
+        ],
+        "release_tick": 16
+      },
+      {
+        "tick": 15,
+        "type": "release",
+        "actor": "T03-03",
+        "move": "M04-A",
+        "action_id": "T03-03:7"
+      },
+      {
+        "tick": 15,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-01:7",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 15,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "action": "M04-A",
+        "action_id": "T03-03:7",
+        "raw": 8,
+        "absorbed": 0,
+        "hp_damage": 8,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 15,
+        "type": "cast_delayed",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "cast_id": "EN06-REG-2:4",
+        "release_tick": 17
+      },
+      {
+        "tick": 15,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-04:7",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 15,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:6",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 15,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-06:7",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 16,
+        "type": "release",
+        "actor": "T03-02",
+        "move": "M02-A",
+        "action_id": "T03-02:7"
+      },
+      {
+        "tick": 16,
+        "type": "heal",
+        "actor": "T03-02",
+        "target": "T03-05",
+        "requested": 22,
+        "effective": 21
+      },
+      {
+        "tick": 17,
+        "type": "release",
+        "actor": "EN06-REG-2",
+        "move": "EN06-A",
+        "action_id": "EN06-REG-2:4"
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "EN06-REG-2",
+        "target": "T03-04",
+        "action": "EN06-A",
+        "action_id": "EN06-REG-2:4",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "EN17-REG-3",
+        "target": "T03-05",
+        "action": "BASIC",
+        "action_id": "EN17-REG-3:5",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "T03-01",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-01:8",
+        "raw": 11,
+        "absorbed": 0,
+        "hp_damage": 11,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "T03-03",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-03:8",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "T03-04",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-04:8",
+        "raw": 6,
+        "absorbed": 0,
+        "hp_damage": 6,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "T03-05",
+        "target": "EN17-REG-3",
+        "action": "BASIC",
+        "action_id": "T03-05:7",
+        "raw": 12,
+        "absorbed": 0,
+        "hp_damage": 12,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "hit",
+        "actor": "T03-06",
+        "target": "EN06-REG-2",
+        "action": "BASIC",
+        "action_id": "T03-06:8",
+        "raw": 10,
+        "absorbed": 0,
+        "hp_damage": 10,
+        "weak_point": false,
+        "reduction": 0
+      },
+      {
+        "tick": 17,
+        "type": "down",
+        "actor": "EN06-REG-2"
+      },
+      {
+        "tick": 17,
+        "type": "down",
+        "actor": "EN17-REG-3"
+      },
+      {
+        "tick": 17,
+        "type": "result",
+        "result": "VICTORY"
+      }
+    ],
+    "plans": [],
+    "no_change": 0,
+    "shared_shields": [],
+    "geometry_version": "MULTI-BOARD-1.0",
+    "board_cells": [
+      {
+        "q": 3,
+        "r": 0,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 4,
+        "r": 0,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 5,
+        "r": 0,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 6,
+        "r": 0,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 7,
+        "r": 0,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 1,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 1,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 4,
+        "r": 1,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 5,
+        "r": 1,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 6,
+        "r": 1,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 7,
+        "r": 1,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 2,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 2,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 2,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 4,
+        "r": 2,
+        "terrain_id": "HIGH_OBSTACLE"
+      },
+      {
+        "q": 5,
+        "r": 2,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 6,
+        "r": 2,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 7,
+        "r": 2,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 0,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 3,
+        "terrain_id": "HIGH_OBSTACLE"
+      },
+      {
+        "q": 4,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 5,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 6,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 7,
+        "r": 3,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": -1,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 0,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 4,
+        "terrain_id": "HIGH_OBSTACLE"
+      },
+      {
+        "q": 4,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 5,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 6,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 7,
+        "r": 4,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": -1,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 0,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 4,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 5,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 6,
+        "r": 5,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": -1,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 0,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 4,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 5,
+        "r": 6,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": -1,
+        "r": 7,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 0,
+        "r": 7,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 7,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 7,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 7,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 4,
+        "r": 7,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": -1,
+        "r": 8,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 0,
+        "r": 8,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 1,
+        "r": 8,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 2,
+        "r": 8,
+        "terrain_id": "GROUND"
+      },
+      {
+        "q": 3,
+        "r": 8,
+        "terrain_id": "GROUND"
+      }
+    ],
+    "measurement_class": "GREYBOX_APPROXIMATION",
+    "balance_eligible": false,
+    "omissions": [
+      "automatic_counterplay",
+      "commander_and_equipment_affixes",
+      "enemy_moves_outside_EN01_EN02_EN03_EN04_EN06_EN12_EN17_EL03",
+      "full_hex_pathfinding",
+      "guard_redirection_and_other_control_skills",
+      "hero_skills_and_M04_passive_enemy_trigger",
+      "missing_person_investigation",
+      "skill_books_and_full_build_engines"
+    ],
+    "before": [
+      {
+        "instance_id": "T03-01",
+        "unit_id": "M01",
+        "stats": {
+          "hp": 65,
+          "physical_attack": 13,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 18,
+          "magic_defense": 9
+        },
+        "hp": 65,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF02-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 2,
+        "attack_type": "physical",
+        "range": 2,
+        "interval": 2,
+        "position": [
+          2,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-02",
+        "unit_id": "M02",
+        "stats": {
+          "hp": 45,
+          "physical_attack": 6,
+          "magic_attack": 2,
+          "healing_power": 14,
+          "physical_defense": 6,
+          "magic_defense": 9
+        },
+        "hp": 45,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF05-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 2,
+        "attack_type": "physical",
+        "range": 2,
+        "interval": 2,
+        "position": [
+          4,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-03",
+        "unit_id": "M04",
+        "stats": {
+          "hp": 41,
+          "physical_attack": 2,
+          "magic_attack": 12,
+          "healing_power": 4,
+          "physical_defense": 6,
+          "magic_defense": 9
+        },
+        "hp": 41,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF04-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 2,
+        "attack_type": "magic",
+        "range": 3,
+        "interval": 2,
+        "position": [
+          5,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0,
+        "skill_mode": "counter"
+      },
+      {
+        "instance_id": "T03-04",
+        "unit_id": "S01",
+        "stats": {
+          "hp": 60,
+          "physical_attack": 7,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 25,
+          "magic_defense": 12
+        },
+        "hp": 60,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF06-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 1,
+        "interval": 2,
+        "position": [
+          7,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-05",
+        "unit_id": "S02",
+        "stats": {
+          "hp": 48,
+          "physical_attack": 15,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 13,
+          "magic_defense": 4
+        },
+        "hp": 48,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF01-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 1,
+        "interval": 2,
+        "position": [
+          4,
+          0
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-06",
+        "unit_id": "S03",
+        "stats": {
+          "hp": 35,
+          "physical_attack": 12,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 4,
+          "magic_defense": 5
+        },
+        "hp": 35,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": true,
+        "gear": [
+          "EF03-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 4,
+        "interval": 2,
+        "position": [
+          6,
+          0
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-07",
+        "unit_id": "S01",
+        "stats": {
+          "hp": 60,
+          "physical_attack": 7,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 25,
+          "magic_defense": 12
+        },
+        "hp": 60,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": false,
+        "gear": [
+          "EF06-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 1,
+        "interval": 2,
+        "position": [
+          3,
+          1
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      },
+      {
+        "instance_id": "T03-08",
+        "unit_id": "S03",
+        "stats": {
+          "hp": 35,
+          "physical_attack": 12,
+          "magic_attack": 1,
+          "healing_power": 1,
+          "physical_defense": 4,
+          "magic_defense": 5
+        },
+        "hp": 35,
+        "erosion": 0,
+        "xp": 0,
+        "deployed": false,
+        "gear": [
+          "EF03-Q1",
+          "EF07-Q1"
+        ],
+        "cost": 1,
+        "attack_type": "physical",
+        "range": 4,
+        "interval": 2,
+        "position": [
+          5,
+          0
+        ],
+        "stance": "advance",
+        "facing": 1,
+        "level": 2,
+        "injury_days": 0
+      }
+    ]
+  },
+  "summary": {
+    "encounter": "RG02-N03",
+    "board": "DUAL_FLANK",
+    "result": "VICTORY",
+    "ticks": 17,
+    "standing": 6,
+    "hp": 249,
+    "hp_max": 294,
+    "releases": {
+      "EN01-A": 1,
+      "M01-A": 2,
+      "S03-A": 1,
+      "EN17-A": 2,
+      "M04-A": 2,
+      "EN06-A": 3,
+      "M02-A": 2
+    },
+    "delays": 2,
+    "evades": 0,
+    "effective_heal": 39,
+    "misses": {}
+  }
+}

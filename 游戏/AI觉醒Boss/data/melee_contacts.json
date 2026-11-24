@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "scope": "visual cue calibration only; first approach to adjacent upright torso cylinder, radius .22U, y .35..1.25U, forward +Z at1U. Blade vertices are measured from current imported skinned equipment. No collision/HP/damage/targeting authority. Recalibrate after changing model, weapon or clip.",
+  "tick_seconds": 0.5,
+  "one_shot_visual_seconds": 0.46,
+  "models": {
+    "infantry": {
+      "asset": "assets/infantry_armor036.glb",
+      "source_sha256": "770d9e1a30d7aa160048c1d5bbb1bc9e664e0574ba7f9c1f385c66b061337705",
+      "clips": {
+        "Right_Hand_Sword_Slash": {
+          "phase": 0.425,
+          "length": 1.5,
+          "measured_gap": 0.0911222100257874,
+          "requires_fitted_right_arm": false,
+          "original_phase_018": 0.3913043478260869,
+          "gap_at_cue": 0.110999017953873,
+          "requires_assault_fit": true,
+          "fit_revision": "043",
+          "local_cue_seconds": 0.6375,
+          "visual_cue_seconds": 0.1955,
+          "baseline_phase_042": 0.433333333333333
+        },
+        "ChargeRelease": {
+          "phase": 0.195833333333333,
+          "length": 0.5,
+          "measured_gap": 0.0883800387382507,
+          "requires_fitted_right_arm": false,
+          "original_phase_018": 0.3913043478260869,
+          "gap_at_cue": 0.105840861797333,
+          "requires_assault_fit": true,
+          "fit_revision": "043",
+          "local_cue_seconds": 0.0979166666666665,
+          "visual_cue_seconds": 0.0900833333333333,
+          "baseline_phase_042": 0.258333333333333
+        }
+      }
+    },
+    "shield": {
+      "asset": "assets/shield_armor036.glb",
+      "source_sha256": "3e02d97fcb04887036dedb5c21922845e4b2488991b09dfc069623f6a8c6a746",
+      "clips": {
+        "Right_Hand_Sword_Slash": {
+          "phase": 0.425,
+          "length": 1.5,
+          "measured_gap": 0.0952869951725006,
+          "requires_fitted_right_arm": false,
+          "original_phase_018": 0.3913043478260869
+        },
+        "ShieldAttack": {
+          "phase": 0.425,
+          "length": 1.5,
+          "measured_gap": 0.02307,
+          "requires_fitted_right_arm": true,
+          "original_phase_018": 0.3913043478260869,
+          "measurement_role": "lorne (scale 1.12)",
+          "fit_revision": "042"
+        }
+      }
+    }
+  }
+}

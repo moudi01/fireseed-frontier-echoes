@@ -1,0 +1,1102 @@
+{
+  "version": "EVENT-EXT-1.0",
+  "status": "authored_design_not_runtime_or_balanced",
+  "authority": "专项/早期四区普通事件扩池.md",
+  "scope": "MULTI-1.1 ordinary SHORT MEDIUM LONG only; fixed_tasks_and_existing_locked_runs_unchanged",
+  "base_event_sha256": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6",
+  "composition": "append_unique_event_ids_EV53_to_EV60; never_overwrite_base_events; validate_all_ids_and_reward_refs",
+  "event_weights": {
+    "EV53": 3,
+    "EV54": 3,
+    "EV55": 3,
+    "EV56": 3,
+    "EV57": 3,
+    "EV58": 3,
+    "EV59": 3,
+    "EV60": 3
+  },
+  "weight_status": "initial_relative_weights_same_as_regional_service_cards_pending_playtest",
+  "reward_bundles": [
+    {
+      "bundle_id": "RB-EXT-CO01",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO01",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-CO03",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO03",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-CO04",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO04",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-CO05",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO05",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-CO07",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO07",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-CO09",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO09",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-CO10",
+      "category_id": "run_carried_consumable",
+      "budget_debits": {
+        "material_units": 2,
+        "event_found_consumable_claims": 1
+      },
+      "effect": {
+        "type": "grant_existing_consumable",
+        "consumable_id": "CO10",
+        "count": 1,
+        "auto_use": false
+      }
+    },
+    {
+      "bundle_id": "RB-EXT-OPS8",
+      "category_id": "town_resource",
+      "budget_debits": {
+        "event_bonus_copper": 8
+      },
+      "effect": {
+        "type": "carried_operating_resource",
+        "copper": 8,
+        "crystal": 0
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_id": "EV53",
+      "name": "旧哨的绑带架",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG01"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "撤下的哨棚只剩一副绑带架。架上两包护具尚能使用，领用牌写着每队取一包。你们可以自行试好尺寸，剩下的留在原位。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "取一包束带护片",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO03",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "队员收好护片，留待需要时再绑上。",
+          "mechanical_summary": "取得1份束带护片，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO03",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "取一包抗冲衬垫",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO07",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "厚衬垫卷进行囊，还没有交给具体队员。",
+          "mechanical_summary": "取得1份抗冲衬垫，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO07",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "carried_defense_choice",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "下一战个人护盾与前4拍物防之间选择；取得物品并不预设玩家何时使用。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-EXT-CO03",
+          "RB-EXT-CO07"
+        ]
+      }
+    },
+    {
+      "event_id": "EV54",
+      "name": "背风墙下的短歇",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG01"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "倒墙挡住了风，地上的干草还算干燥。队伍可以把这次短歇用来照料一位伤员，也可以一起平复一路紧绷的呼吸。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "集中照料一名队员",
+          "costs": {},
+          "effects": [
+            {
+              "type": "event_heal_fraction",
+              "numerator": 1,
+              "denominator": 5,
+              "max_targets": 1,
+              "target": "selected_present_standing",
+              "budget_debits": {
+                "event_recovery_claims": 1
+              }
+            }
+          ],
+          "result_text": "选中的队员重新扎紧衣袖，起身跟上队伍。",
+          "mechanical_summary": "一名随行且HP>0者恢复最大生命20%；向下取整、正恢复最低1、不超上限。整趟新事件休整额度1次；无正恢复不扣额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "让全队静坐片刻",
+          "costs": {},
+          "effects": [
+            {
+              "type": "event_erosion_relief",
+              "amount": 5,
+              "targets": "present_living_HP_positive_humans",
+              "budget_debits": {
+                "event_recovery_claims": 1
+              }
+            }
+          ],
+          "result_text": "众人听着墙外的风声，等呼吸重新平稳下来。",
+          "mechanical_summary": "符合条件的随行存活人员侵蚀各−5，最低0；与照料共用整趟1次休整额度。所有人均无正收益时不可确认。",
+          "erosion_delta": -5,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "recovery_priority",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "选择当前生命恢复或后续部署压力；不是固定补给的替代，不复活、不消伤势、不刷新技能。",
+      "refs": {
+        "reward_bundle_ids": []
+      }
+    },
+    {
+      "event_id": "EV55",
+      "name": "倒木压住的货橇",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG06"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "货橇陷在湿土里，散落的两束材料容易够到。压在倒木下的货物更多，想全部拖出来得由一名队员顶住木干。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "指定一人顶木，拖出整捆货物",
+          "costs": {},
+          "effects": [
+            {
+              "type": "event_hp_exertion",
+              "target": "selected_present_standing",
+              "max_targets": 1,
+              "loss_numerator": 1,
+              "loss_denominator": 10,
+              "rounding": "ceil_min_one",
+              "requires_hp_strictly_greater_than_loss": true,
+              "is_attack": false,
+              "triggers_damage_callbacks": false
+            },
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-MAT4",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "货橇终于松动。出力的队员喘着气，把四份可用材料交进途中共享包。",
+          "mechanical_summary": "选定一人损失最大生命10%（向上取整，至少1），必须仍有至少1HP；取得4单位本区合法材料。护盾不抵扣，也不触发受击收益。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-MAT4",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "只收起外侧两束材料",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-MAT2",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "你们绕开木干，取走外侧两束材料。",
+          "mechanical_summary": "无生命代价，取得2单位本区合法材料。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-MAT2",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "personal_exertion_salvage",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "以公开、确定的个人损耗换额外材料；低血量、目标不合法或材料额度不足时禁用顶木，不强迫冒险。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-MAT2",
+          "RB-MAT4"
+        ]
+      }
+    },
+    {
+      "event_id": "EV56",
+      "name": "弯枝上的练习绳",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG06"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "几股绳结在弯枝间标出轮换位置，树下夹着巡队留下的练习笔记，旁边还有一只封好的定心香囊。你们决定带走哪一样。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "带上巡队的练习笔记",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-PLAN",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "队员把笔记夹进地图，讨论起下一次接敌时的配合。",
+          "mechanical_summary": "从出发时预锁的3个现有方案中选择1个；方案装备上限仍为3，替换须明确预览，禁止重开重抽。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-PLAN",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "带上封好的定心香囊",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO09",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "香囊系在行囊外侧，等真正需要时再取用。",
+          "mechanical_summary": "取得1份定心香囊，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO09",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "build_or_preparation",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "整趟构筑调整与单场准备互斥，满方案时允许明确替换；不凭空生成新方案或技能次数。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-EXT-CO09",
+          "RB-PLAN"
+        ]
+      }
+    },
+    {
+      "event_id": "EV57",
+      "name": "苇丛边的防水包",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG07"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "一只系在岸桩上的防水包里放着绑脚和止血膏，外层写着巡队共用。队员试过封口，两样都还能用。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "领取一份涉水绑脚",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO10",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "你们收好绑脚，等到需要涉水的战斗前再分配。",
+          "mechanical_summary": "取得1份涉水绑脚，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO10",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "领取一份止血膏",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO01",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "药膏放进随行包，留给有需要的队员。",
+          "mechanical_summary": "取得1份止血膏，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO01",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "mobility_or_healing",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "现有浅水行动规则与18点单体治疗之间选择；地图没有浅水也能取物，但预览明确其效果条件，不自动制造水面。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-EXT-CO01",
+          "RB-EXT-CO10"
+        ]
+      }
+    },
+    {
+      "event_id": "EV58",
+      "name": "潮线下的旧铜篓",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG07"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "旧铜篓挂在低处的桩脚，边上另有一包干燥材料。用一份尚未使用的涉水绑脚包住篓口，便能拖起铜件和结晶；绑脚会被刮坏。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "用一份绑脚拖起旧铜篓",
+          "costs": {
+            "carried_consumables": {
+              "CO10": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-OPS4C1",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "绑脚被桩脚磨破，篓里的铜件和结晶却完整收回。",
+          "mechanical_summary": "消耗途中包内1份未使用的CO10，取得待带回4铜＋1公共结晶；已预用的准备不能当物品交出，原拾获额度不返还。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-OPS4C1",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "取走岸边干燥材料",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-MAT2",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "队员提起干燥材料包，没有动低处的铜篓。",
+          "mechanical_summary": "无工具代价，取得2单位本区合法材料。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-MAT2",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "consume_tool_or_keep_stock",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "可把一份未来战斗工具换作经营收益，也可保留；不要求曾遇EV57、EV33或任何指定事件。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-MAT2",
+          "RB-OPS4C1"
+        ]
+      }
+    },
+    {
+      "event_id": "EV59",
+      "name": "双封的油袋",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG08"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "护运车遗落的油袋有两个独立封口，一边装着锐刃油，另一边是导雾粉。旧分装规矩只允许每队领取其中一份。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "领取一份锐刃油",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO04",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "队员把油瓶塞进软垫，等接敌前再涂上武器。",
+          "mechanical_summary": "取得1份锐刃油，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO04",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "领取一份导雾粉",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-CO05",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "纸包重新封好，留待队伍决定由谁使用。",
+          "mechanical_summary": "取得1份导雾粉，不自动使用；占1携行格，扣2材料额度及1拾获成品额度。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-CO05",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "attack_preparation_choice",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "适配物攻或魔攻构筑；两者沿用同一CO-STAT-PREP替换规则，不因事件来源叠加或自动生效。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-EXT-CO04",
+          "RB-EXT-CO05"
+        ]
+      }
+    },
+    {
+      "event_id": "EV60",
+      "name": "等风的护运队",
+      "type": "regional_field_choice",
+      "min_chapter": 1,
+      "max_chapter": null,
+      "trigger": {
+        "region_ids": [
+          "RG08"
+        ],
+        "node_types": [
+          "EVENT"
+        ],
+        "relations": [
+          "contested_frontier"
+        ],
+        "mandatory_story_replacement": false
+      },
+      "scene": "护运队在石坎旁等风小些再走。他们愿用八枚铜币换四份可用材料，也允许你们抄走一页编队笔记；这趟只办其中一件。",
+      "source": "[用户同意扩充早期普通事件；补全设计／待试玩] EVENT-EXT-1.0",
+      "options": [
+        {
+          "option_id": "PRIMARY",
+          "label": "交出四份材料，换取铜币",
+          "costs": {
+            "carried_material_units_selected": 4
+          },
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-EXT-OPS8",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "四份材料逐项点清，八枚铜币放进途中共享包。",
+          "mechanical_summary": "从途中包选择4单位普通制造材料，换取待带回8铜；不收任务物，不动城镇仓库，不退材料领取额度，铜占整趟事件铜上限。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-EXT-OPS8",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "SECONDARY",
+          "label": "抄录一页编队笔记",
+          "costs": {},
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-PLAN",
+              "claim_slot": "primary"
+            }
+          ],
+          "result_text": "笔记抄在空白页上，队伍重新商量站位与轮换。",
+          "mechanical_summary": "从出发时预锁的3个现有方案中选择1个，沿用最多3个方案和明确替换；不支付材料，放弃换铜。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": "RB-PLAN",
+          "free_bypass": false,
+          "requires": "outside_battle_no_pending_result; actual_stock_targets_capacity_and_all_global_budgets_valid",
+          "preview_rule": "show_exact_cost_target_effect_and_global_budget_debits_before_confirm",
+          "opportunity_cost": "本卡互斥选择；确认后放弃另一方案；回访不重选"
+        },
+        {
+          "option_id": "PASS",
+          "label": "继续前进",
+          "costs": {},
+          "effects": [],
+          "result_text": "你们记下这处地点，沿原路继续。",
+          "mechanical_summary": "0支付、0收益、0新增战斗和行动日；关闭本次选择。",
+          "erosion_delta": 0,
+          "humanity_delta": 0,
+          "reward_bundle_id": null,
+          "free_bypass": true,
+          "requires": "always"
+        }
+      ],
+      "repeat": {
+        "once_per_expedition": true,
+        "cooldown_completed_expeditions": 2,
+        "recent_history_basis": "actually_presented",
+        "humanity_once_per_save": false,
+        "repeat_after_claim": "aftermath_text_no_second_humanity_or_unique_story_reward"
+      },
+      "transaction": {
+        "policy_id": "EVENT_TINDER_TX1",
+        "selection_key": [
+          "save_id",
+          "expedition_id",
+          "event_instance_id"
+        ],
+        "duplicate": "return_saved_option_and_ledger_without_new_payment_or_reward",
+        "atomic_writes": [
+          "selected_inputs_once",
+          "effect_or_carried_output",
+          "global_budget_debits",
+          "option_and_target_receipt",
+          "site_closed"
+        ],
+        "commit_on": "choice_action_completed",
+        "cancel_or_failed_save": "no_mutation"
+      },
+      "gameplay_role": "materials_or_build_trade",
+      "required_map_service": null,
+      "knowledge_gate": null,
+      "placement": "self_contained_accessible_event_site; no_separate_workbench_scout_target_or_route_variant_required",
+      "design_rationale": "把现有制造材料变成安全归城后可用的经营资金，或强化本趟构筑；不隐含载重减益，材料消费不会刷新领取上限。",
+      "refs": {
+        "reward_bundle_ids": [
+          "RB-EXT-OPS8",
+          "RB-PLAN"
+        ]
+      }
+    }
+  ],
+  "contracts": {
+    "selection": "same MULTI joint matching filters and recent ordinary fallback 0.25; no party_or_morality_based_draw",
+    "baseline_weight_config": "内容池抽样初始配置.json:event_weights only; legacy layer/count/cooldown constraints overridden by MULTI",
+    "budget_caps": {
+      "event_found_consumable_claims": {
+        "SHORT": 2,
+        "MEDIUM": 3,
+        "LONG": 4
+      },
+      "event_recovery_claims": {
+        "SHORT": 1,
+        "MEDIUM": 1,
+        "LONG": 1
+      }
+    },
+    "consumable_sources": "existing CO templates found ready_made; not field_crafting or recipe unlock",
+    "consumable_capacity": "carried_units_plus_existing_pending_or_spent_prep_reservations_at_most_4; no_remote_refill; no_auto_use",
+    "reward_reservation": "reserve_each_site_max_alternative_budget_debit_at_departure_across_possible_paths; count_actual_selected_debit_only; mutually_exclusive_options_not_summed",
+    "cannot_reserve_all_sites": "card_capacity_is_not_reward_guarantee; explicitly mark_budget_limited_options; never_increase_caps_or_hidden_reroll",
+    "full_capacity_or_insufficient_budget": "disable_affected_option; allow_other_valid_option_or_PASS; no_partial_payout",
+    "input_and_reward_atomic": "validate_target_inventory_all_budgets_and_expected_state_revision; debit_input_once_then_output_and_choice_in_one_commit; failure_no_changes",
+    "receipts": "save_id+expedition_id+event_instance_id; duplicate returns original; different_payload_conflict",
+    "healing": "no_revive_no_permanent_injury_removal_no_skill_reset; positive_effect_required",
+    "exertion": "ceil(max_hp/10), min1; standing_HP>loss; never_lethal; not_attack_no_shield_or_damage_callbacks; no_permanent_injury",
+    "costs_never_refund_claim_caps": true,
+    "pending_earnings_not_banked": true,
+    "new_action_days": 0,
+    "new_battles": 0,
+    "humanity_delta": 0,
+    "presentation": "no_hidden_lore_no_moral_score; show_exact_tradeoffs_and_disabled_reason; resolved_site_never_reopens",
+    "plan_offer": "three distinct existing PL IDs prelocked before departure; never_duplicate_equipped_ID; explicit replace when at three; cancel returns to same offer, no reroll; no valid new choice disables option; chosen_plan_and_replaced_ID_in_receipt"
+  },
+  "snapshot": "历史材料/文案归档/火种计划_EVENT-EXT-1.0_早期普通事件扩池前_20261026",
+  "snapshot_files": 20,
+  "runtime_implemented": false
+}

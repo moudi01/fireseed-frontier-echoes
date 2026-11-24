@@ -1,0 +1,74 @@
+[
+  {
+    "name": "workflow-01-build-windows.zip",
+    "size": 176864141,
+    "sha256": "6f0f9afa739eb1763e5d0e8741437897904e111517e4acdce61975800b8eeda0",
+    "files": 46
+  },
+  {
+    "name": "workflow-02-blender-5.3.zip",
+    "size": 429447459,
+    "sha256": "9a5626b6fdef42e08a77a1779df03b2a249c854a81f1cd37cb01776a13d81a7f",
+    "files": 6602
+  },
+  {
+    "name": "workflow-03-blender-scenes.zip",
+    "size": 552774762,
+    "sha256": "f5159266a5ccbdd4e7a1bc96d0f87df8a73bc87690a05afbea96c0acf8446113",
+    "files": 131
+  },
+  {
+    "name": "workflow-04-game-models.zip",
+    "size": 1439995131,
+    "sha256": "23b88ed6292b8c71e49c26125a5d6e37fab02115b231ce04b60dc1ca86167108",
+    "files": 171
+  },
+  {
+    "name": "workflow-05-textures-concepts.zip",
+    "size": 513406768,
+    "sha256": "05ff89eba1d3239cfcea5cc62f9fed9af0a40f7ceff8805fbbab9358ce7dc273",
+    "files": 286
+  },
+  {
+    "name": "workflow-06-audio.zip",
+    "size": 102956,
+    "sha256": "6be21d046cefc210746fbdbedc8ee43090d5b607f0f100bed76c951a1a158976",
+    "files": 11
+  },
+  {
+    "name": "workflow-08-scene-presets.zip",
+    "size": 5340306,
+    "sha256": "5f71d5dcd5f3649952ef09cf43fd24b00e6dd67f78d559120ea724dadd6e99dd",
+    "files": 38
+  },
+  {
+    "name": "reserve-01-blender.zip",
+    "size": 214392513,
+    "sha256": "0c2957c0fd3193c43e8778273ca8c07e8aa89fa3f6454797779b2a7d786b70a9",
+    "files": 49
+  },
+  {
+    "name": "reserve-02-models-01.zip",
+    "size": 649783540,
+    "sha256": "3225d9389fda23783bec06cde0f1724e8497c80479504942683bdccf02bb5952",
+    "files": 108
+  },
+  {
+    "name": "reserve-02-models-02.zip",
+    "size": 555984433,
+    "sha256": "b3c3e249e46a0f74aa152bc24223e6939635c10c52b6a5f08785cfdfe09820f4",
+    "files": 21
+  },
+  {
+    "name": "reserve-02-models-03.zip",
+    "size": 393687157,
+    "sha256": "9b40b2b17fc5189e832689903962c8f8cec06c44bd7fb33d6080f759c94d6619",
+    "files": 82
+  },
+  {
+    "name": "reserve-03-textures-art.zip",
+    "size": 324297466,
+    "sha256": "9f79240c2e8af453f4a90f006d7f502cc4b0ade92a6a3ca38a194855f11968d6",
+    "files": 146
+  }
+]

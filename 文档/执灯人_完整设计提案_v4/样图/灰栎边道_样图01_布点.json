@@ -1,0 +1,35 @@
+{
+  "version": "MAP-SKETCH-01",
+  "region_id": "RG01",
+  "status": "spatial_sample_not_production_or_balanced_profile",
+  "mandatory_encounters": {
+    "B1": "RG01-N01",
+    "B3": "RG01-N04",
+    "B4": "RG01-N02"
+  },
+  "optional_encounters": {
+    "B2": "RG01-N03",
+    "E1": "RG01-E01"
+  },
+  "events": {
+    "①": "EV29",
+    "②": "EV30",
+    "③": "EV01",
+    "④": "EV03"
+  },
+  "baseline_supply_points": [
+    "S1",
+    "S2"
+  ],
+  "supply_quantities": null,
+  "all_sites_can_be_visited": true,
+  "minimum_completed_battles_for_objective": 3,
+  "maximum_distinct_battles": 5,
+  "early_return_can_complete_fewer": true,
+  "total_event_budget_proposal": 4,
+  "separate_event_and_battle_rewards_require_budget_profile": true,
+  "randomness": "one_authored_spatial_example_only_not_every_run_same_layout",
+  "battlefield_footprints": "schematic_no_verified_7x9_geometry",
+  "inputs_preserved": "existing_encounter_stats_event_choices_recipes_and_humanity_contracts",
+  "runtime_implemented": false
+}

@@ -1,0 +1,14 @@
+{
+  "infantry": {
+    "source": "资产/三维研发/models/infantry-equipped-v5/model.glb",
+    "sha256": "7b8c2d74d9571fa0ee4e65e42f74848e1c14e355f9b9894d93ee1701726c302b",
+    "production_style": "warm",
+    "origin": "Meshy human generation/rig; local Blender equipment and motion processing; see source manifest"
+  },
+  "shield": {
+    "source": "资产/三维研发/models/shieldbody-equipped-v5/model.glb",
+    "sha256": "e658c50766948570906fc166067b5de10f99667a23ac9ec70e501ea983eec806",
+    "production_style": "warm",
+    "origin": "Meshy human generation/rig; local Blender equipment and motion processing; see source manifest"
+  }
+}

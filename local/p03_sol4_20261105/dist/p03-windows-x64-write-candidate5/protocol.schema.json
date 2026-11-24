@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "P03 experiment execute request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "op",
+    "request_id",
+    "expected_version",
+    "command",
+    "args"
+  ],
+  "properties": {
+    "protocol_version": {
+      "const": 1
+    },
+    "op": {
+      "const": "execute"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,80}$"
+    },
+    "expected_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "command": {
+      "enum": [
+        "quest",
+        "recruit",
+        "book",
+        "craft",
+        "rescue",
+        "finale",
+        "status",
+        "help",
+        "depart",
+        "move",
+        "visit",
+        "choose",
+        "return",
+        "step",
+        "run",
+        "formation",
+        "level_up",
+        "stance",
+        "place",
+        "fight",
+        "challenge",
+        "tutorial",
+        "town"
+      ]
+    },
+    "args": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "maxLength": 256
+      }
+    },
+    "expected_epoch": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "Optional v1 connection guard. Obtain from READY; refresh after process restart. Missing guard preserves legacy experiment requests."
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"command": {"const": "tutorial"}}},
+      "then": {"properties": {"args": {"enum": [["recommend", "CONFIRM"], ["start"], ["materials"], ["observe"]]}}}
+    },
+    {
+      "if": {"properties": {"command": {"const": "town"}}},
+      "then": {"properties": {"args": {"maxItems": 0}}}
+    }
+  ]
+}

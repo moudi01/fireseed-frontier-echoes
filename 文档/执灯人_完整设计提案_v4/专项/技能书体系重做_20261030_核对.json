@@ -1,0 +1,55 @@
+{
+  "kind": "DESIGN_ONLY_CONSISTENCY",
+  "design_version": "SB-REWORK-1.0",
+  "date": "2026-10-30",
+  "status": "PASS",
+  "catalog_count": 40,
+  "category_counts": {
+    "B": 4,
+    "C": 4,
+    "D": 12,
+    "H": 4,
+    "M": 4,
+    "P": 4,
+    "S": 4,
+    "X": 4
+  },
+  "shop_stage_counts": {
+    "B": 12,
+    "I": 12,
+    "E": 12
+  },
+  "region_theme_count": 8,
+  "region_coverage_all_ordinary_books": true,
+  "legacy_trace_rows": 16,
+  "documentation_files": 7,
+  "local_links_checked": 480,
+  "broken_links": [],
+  "git_diff_check": "PASS",
+  "runtime_version": "TINDER-GREYBOX-0.71",
+  "runtime_file_count": 82,
+  "runtime_fingerprint_reference": "1d5c2ba8393485c5fdaef80d0aa9b8aaa774b8e6ca9fe73af71d7ac860fc6984",
+  "runtime_differences": [],
+  "game_commands": 0,
+  "new_battles": 0,
+  "saved_game_files_read_or_written": 0,
+  "scope": "Design consistency only; not runtime implementation, economic validation, or combat balance.",
+  "design_sha256": "e50e09b1f368bda36572050fb3e1bb8fb9079e4c0dd806617695b161960a4b80",
+  "documentation_sha256": {
+    "文档\\执灯人_完整设计提案_v4\\专项\\技能书体系重做_20261030.md": "e50e09b1f368bda36572050fb3e1bb8fb9079e4c0dd806617695b161960a4b80",
+    "开发总路线图_执行版.md": "e2f260ddc8f84809b5b4bdfd933589610a61173e16bc63097a4a249102e2e164",
+    "文档\\灰盒玩法交接_20261029.md": "4de4d631fed4b3a8259fccd924b3268599e6521bf0e28adce032cad786e2e004",
+    "文档\\执灯人_完整设计提案_v4\\README.md": "dd3fa1eccb4e90c92cc6d515c03960028cdd7984e5f1b51ecb6fa749387238fd",
+    "文档\\执灯人_完整设计提案_v4\\06_人员职业与技能书.md": "0165f5f665897f24537256c75486bd8d22b61306ae04f09da775a354d25c1aed",
+    "文档\\执灯人_完整设计提案_v4\\08_构筑与候选学习.md": "ed5816d7e781014257c55a0005e6430b66bcb85ffbe69663024eda0a60d3b13a",
+    "原型\\火种计划_远征灰盒\\README.md": "37bd2caf77077c41ceaf0e39ec4252f5fa14e94a9a988080844eceafe2cfaf57"
+  },
+  "reviews_resolved": [
+    "Keep native targeting for H11/H12 and DEMON adaptation",
+    "Prepared shot checks enhanced range; preparation snapshots on attack start",
+    "Instant rescue movement avoids cross-tick target drift",
+    "Continuous finale inherits book slots, counts, clocks and prepared effects",
+    "X04 accuracy and actual recipient precede shield removal",
+    "Pity settlement target-book reset takes precedence for the whole trip"
+  ]
+}

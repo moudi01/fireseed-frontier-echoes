@@ -1,0 +1,4291 @@
+{
+  "schema_version": 2,
+  "baseline_version": "TINDER-1.1",
+  "appendix_version": "TINDER-1.2",
+  "status": "document_specification_not_implemented_or_playtested",
+  "title": "归来的亡灵：灰栎边道首次远征",
+  "updated_date": "2026-10-26",
+  "source_paths": [
+    {
+      "source_id": "SRC12",
+      "path": "../12_首次远征教程与样片脚本.md",
+      "role": "叙事、字幕、镜头与交互正文"
+    },
+    {
+      "source_id": "SRC02",
+      "path": "../02_城镇运营与成长经济.md",
+      "role": "初始、费用、成长、日期、恢复、建设"
+    },
+    {
+      "source_id": "SRC03",
+      "path": "../03_远征构筑与棋盘战斗.md",
+      "role": "战斗、输入、撤退、人员与归城"
+    },
+    {
+      "source_id": "SRC04",
+      "path": "../04_制作范围与体验验收.md",
+      "role": "界面、保存、教学与可访问性"
+    },
+    {
+      "source_id": "SRC06",
+      "path": "../06_人员职业与技能书.md",
+      "role": "士兵六值区间与固定模板"
+    },
+    {
+      "source_id": "SRC07",
+      "path": "../07_敌人与遭遇规格.md",
+      "role": "EN01与实际教学见证"
+    },
+    {
+      "source_id": "SRC08",
+      "path": "../08_构筑与候选学习.md",
+      "role": "PL01/02/05规则"
+    },
+    {
+      "source_id": "SRC09",
+      "path": "../09_远征事件池.md",
+      "role": "共享奖励额度、事件提交和普通岔路回访；本片固定两事件不发守信点"
+    },
+    {
+      "source_id": "SRC10",
+      "path": "../10_地图地形与路线.md",
+      "role": "RT2父模板与OPEN静态地图"
+    },
+    {
+      "source_id": "SRC11",
+      "path": "../11_战利品装备与制造.md",
+      "role": "奖励、品质、材料、装备及HP重算"
+    },
+    {
+      "source_id": "DATA_RULES",
+      "path": "../校验/规则样例.json",
+      "role": "规则数据"
+    },
+    {
+      "source_id": "DATA_ENEMIES",
+      "path": "../校验/敌人与遭遇.json",
+      "role": "只读EN01和INTRO-EN01；TUT01-ROOT为教程附录，不计入65个全局遭遇"
+    },
+    {
+      "source_id": "DATA_PLANS",
+      "path": "../校验/构筑与学习.json",
+      "role": "只读方案"
+    },
+    {
+      "source_id": "DATA_EVENTS",
+      "path": "../校验/远征事件池.json",
+      "role": "只读共享事件与收益合同；教程固定事件独立于28卡"
+    },
+    {
+      "source_id": "DATA_MAP",
+      "path": "../校验/地图地形.json",
+      "role": "RG01/OPEN/RT2"
+    },
+    {
+      "source_id": "DATA_LOOT",
+      "path": "../校验/战利品.json",
+      "role": "奖励及来源池"
+    },
+    {
+      "source_id": "SRC01",
+      "path": "../01_世界叙事与主线.md",
+      "role": "主角独返、第一章信息边界、四章主线与人格轮回真值"
+    }
+  ],
+  "scope": {
+    "mission_id": "TUT01",
+    "delivery_fact": "ST102",
+    "region_id": "RG01",
+    "chapter_id": "CH1",
+    "public_difficulty_id": "D0",
+    "difficulty_D0_is_not_calendar_day_D0": true,
+    "target_play_minutes": [
+      12,
+      20
+    ],
+    "slower_play_allowed": true,
+    "edited_video_minutes": [
+      4,
+      6
+    ],
+    "time_is_gate": false,
+    "logic_tick_bound_to_seconds": false,
+    "default_1x_seconds_per_tick": 0.5,
+    "excluded_teaching": [
+      "critical_hit",
+      "absorption",
+      "heroes",
+      "crafting",
+      "elite",
+      "advanced_terrain",
+      "skill_books"
+    ],
+    "failure_scope": "真实失败结算与救援入口；后续救援战不是首趟关卡",
+    "no_changes_to": [
+      "six_base_stats",
+      "equipment_fixed_templates",
+      "ordinary_capture_and_absorption_contract"
+    ],
+    "mission_entry_conditions": [
+      "commission_accepted_or_current_S00_acceptance",
+      "ST102_not_delivered"
+    ],
+    "already_delivered_behavior": "read_only_guide_or_log_replay_no_new_tutorial_expedition_grant_or_reward; normal_repeatable_commissions_use_their_own_missions",
+    "limited_scene_extent": "fixed_teaching_layout_and_seed_exception_short_main_road_one_real_fork_two_in_place_battles_existing_events_normal_game_maps_random_each_new_expedition_no_generator_implementation_here",
+    "mission_title": "灰栎边道侦路",
+    "narrative_facts": [
+      "ST-000",
+      "ST-101",
+      "ST-102",
+      "ST-103_hint_only"
+    ],
+    "secrets_not_revealed": [
+      "protagonist_is_DEMON_avatar",
+      "human_pods",
+      "four_generals_identity",
+      "ADMIN_experiment"
+    ],
+    "next_story_gate": "ST102 opens only RG01 followup; CH2 requires ST104 and the actual legal party, not tutorial victory alone",
+    "presentation_reading_contract": {
+      "logic_tick_seconds_at_1x": 0.5,
+      "subtitles_tutorial_and_camera_can_pause_simulation": true,
+      "resume_on_read_complete_or_explicit_continue": true,
+      "min_one_tick_telegraph_is_not_a_reading_time_limit": true,
+      "presentation_delay_changes_cooldown_or_result": false
+    },
+    "player_knowledge_gate": "all_tutorial_dialogue_and_display_text_remain_pre_ST401_no_AI_backhaul_or_distinct_personality_assertion"
+  },
+  "initialization": {
+    "day": 0,
+    "resources": {
+      "copper": 60,
+      "crystal": 12,
+      "supply": 6
+    },
+    "roster_capacity": 24,
+    "composition": {
+      "S01": 3,
+      "S02": 3,
+      "S03": 2
+    },
+    "instances": [
+      {
+        "instance_id": "INIT-S01-A",
+        "unit_type": "S01",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S01-B",
+        "unit_type": "S01",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S01-C",
+        "unit_type": "S01",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S02-A",
+        "unit_type": "S02",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S02-B",
+        "unit_type": "S02",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S02-C",
+        "unit_type": "S02",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S03-A",
+        "unit_type": "S03",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      },
+      {
+        "instance_id": "INIT-S03-B",
+        "unit_type": "S03",
+        "cost": 1,
+        "level": 1,
+        "experience": 0,
+        "base_stats_ref": "SRC06",
+        "generation": "initial_roster_seed_six_independent_closed_integer_ranges_once"
+      }
+    ],
+    "receipt_ref": "INITIAL_GRANT",
+    "seed_namespace": "initial_roster_seed",
+    "paid_recruit_sequence_consumed": false,
+    "existing_save": "recognize_initial_grant_and_commission_no_regrant_no_instance_or_roll_overwrite",
+    "recording_save": "documented_fixed_seed_may_use_normal_initialization_never_override_rolls",
+    "specific_soldier_name_dialogue_required": false,
+    "base_stats_duplicated_here": false,
+    "composition_scope": "new_save_initial_grant_only_existing_instances_are_never_forced_into_3_3_2",
+    "instances_scope": "new_save_generated_instances_only_logical_INIT_aliases_do_not_replace_existing_instance_ids",
+    "existing_alias_resolution": {
+      "by": "actual_existing_unit_type_then_stable_original_instance_order",
+      "unique_actual_instance_per_alias": true,
+      "A_B_slots": "map_only_to_real_existing_compatible_instances",
+      "C_alias_missing": "do_not_bind_missing_typed_alias_use_actual_remaining_reserve_instance_ids_with_real_types_or_empty",
+      "missing_captured_or_lost": "show_actual_status_do_not_fill_with_template_copy",
+      "never_override_rolls_or_history": true
+    },
+    "initial_day_and_resources_scope": "new_save_unaccepted_commission_only_existing_or_retry_loads_actual_ledger"
+  },
+  "party": {
+    "expedition_count_max": 8,
+    "deployment_count_max": 6,
+    "expedition_cost_cap": 8,
+    "deployment_cost_cap": 6,
+    "recommendation_mandatory": false,
+    "recommended_expedition": [
+      "INIT-S01-A",
+      "INIT-S01-B",
+      "INIT-S01-C",
+      "INIT-S02-A",
+      "INIT-S02-B",
+      "INIT-S02-C",
+      "INIT-S03-A",
+      "INIT-S03-B"
+    ],
+    "recommended_deployment": [
+      {
+        "instance_id": "INIT-S01-A",
+        "position": [
+          2,
+          1
+        ],
+        "facing": "D1",
+        "stance": "guard"
+      },
+      {
+        "instance_id": "INIT-S01-B",
+        "position": [
+          4,
+          1
+        ],
+        "facing": "D1",
+        "stance": "guard"
+      },
+      {
+        "instance_id": "INIT-S02-A",
+        "position": [
+          0,
+          1
+        ],
+        "facing": "D1",
+        "stance": "flank"
+      },
+      {
+        "instance_id": "INIT-S02-B",
+        "position": [
+          6,
+          1
+        ],
+        "facing": "D1",
+        "stance": "flank"
+      },
+      {
+        "instance_id": "INIT-S03-A",
+        "position": [
+          2,
+          0
+        ],
+        "facing": "D1",
+        "stance": "avoid_danger"
+      },
+      {
+        "instance_id": "INIT-S03-B",
+        "position": [
+          4,
+          0
+        ],
+        "facing": "D1",
+        "stance": "avoid_danger"
+      }
+    ],
+    "stance_names": {
+      "guard": "守位",
+      "flank": "迂回",
+      "avoid_danger": "避险"
+    },
+    "recommended_reserve": [
+      "INIT-S01-C",
+      "INIT-S02-C"
+    ],
+    "can_change_deployment_before_each_battle": true,
+    "revalidate_both_counts_and_costs": true,
+    "no_forced_2_2_2_or_role_quota": true,
+    "no_enemy_scaling_to_party_or_rolls": true,
+    "recommended_lists_scope": "new_save_3_3_2_only_existing_save_resolves_actual_compatible_aliases_and_real_remaining_reserve_without_refill"
+  },
+  "route": {
+    "route_template_id": "RT2_TUT01",
+    "parent_route_template_id": "RT2_OPTIONAL_ELITE",
+    "source_ref": "DATA_MAP",
+    "fixed_tutorial_subtemplate": true,
+    "general_template_unchanged": false,
+    "pedagogic_omissions": [
+      "optional_elite",
+      "second_L4_branch"
+    ],
+    "steps_and_cues_add_nodes": false,
+    "nodes": [
+      {
+        "node_id": "E",
+        "layer": 0,
+        "kind": "ENTRY",
+        "step_ids": [
+          "S03",
+          "S04"
+        ]
+      },
+      {
+        "node_id": "A",
+        "layer": 1,
+        "kind": "FIGHT",
+        "step_ids": [
+          "S05",
+          "S06"
+        ]
+      },
+      {
+        "node_id": "B_SUPPORT",
+        "layer": 2,
+        "kind": "EVENT",
+        "step_ids": [
+          "S08A"
+        ]
+      },
+      {
+        "node_id": "B_MATERIAL",
+        "layer": 2,
+        "kind": "EVENT",
+        "step_ids": [
+          "S08B"
+        ]
+      },
+      {
+        "node_id": "C",
+        "layer": 3,
+        "kind": "SAFE",
+        "step_ids": [
+          "S09"
+        ]
+      },
+      {
+        "node_id": "D",
+        "layer": 4,
+        "kind": "OBSERVATION",
+        "step_ids": [
+          "S10"
+        ]
+      },
+      {
+        "node_id": "T",
+        "layer": 5,
+        "kind": "TARGET",
+        "step_ids": [
+          "S11",
+          "S12",
+          "S13"
+        ]
+      },
+      {
+        "node_id": "X",
+        "layer": 6,
+        "kind": "EXIT",
+        "step_ids": [
+          "S14"
+        ]
+      }
+    ],
+    "edges": [
+      [
+        "E",
+        "A"
+      ],
+      [
+        "A",
+        "B_SUPPORT"
+      ],
+      [
+        "A",
+        "B_MATERIAL"
+      ],
+      [
+        "B_SUPPORT",
+        "C"
+      ],
+      [
+        "B_MATERIAL",
+        "C"
+      ],
+      [
+        "C",
+        "D"
+      ],
+      [
+        "D",
+        "T"
+      ],
+      [
+        "T",
+        "X"
+      ]
+    ],
+    "complete_paths": [
+      [
+        "E",
+        "A",
+        "B_SUPPORT",
+        "C",
+        "D",
+        "T",
+        "X"
+      ],
+      [
+        "E",
+        "A",
+        "B_MATERIAL",
+        "C",
+        "D",
+        "T",
+        "X"
+      ]
+    ],
+    "visited_nodes_per_complete_path": "7_on_shortest_itinerary_8_distinct_if_both_L2_branches_visited_repeats_not_new_nodes_or_rewards",
+    "battle_count": 2,
+    "action_days": 1,
+    "board_id": "OPEN",
+    "terrain_edit_actions": [],
+    "locked_at": "departure_map_and_instances_not_player_branch_choice",
+    "only_one_L2_branch": false,
+    "L4": {
+      "node": "D",
+      "reward": null,
+      "early_full_target_preview": false,
+      "second_choice_omitted_only_for_tutorial": true
+    },
+    "general_template_change_scope": "ordinary_return_edges_and_persistent_locations_only_preserve_encounter_and_reward_budgets",
+    "both_L2_branches_visitable": true,
+    "L2_events_each_once_with_independent_option_receipt": true,
+    "shortest_complete_path_distinct_nodes": 7,
+    "both_branches_complete_path_distinct_nodes": 8,
+    "travel_edges_bidirectional": [
+      [
+        "E",
+        "A"
+      ],
+      [
+        "A",
+        "B_SUPPORT"
+      ],
+      [
+        "A",
+        "B_MATERIAL"
+      ],
+      [
+        "B_SUPPORT",
+        "C"
+      ],
+      [
+        "B_MATERIAL",
+        "C"
+      ],
+      [
+        "C",
+        "D"
+      ],
+      [
+        "D",
+        "T"
+      ],
+      [
+        "T",
+        "X"
+      ]
+    ],
+    "navigation": "explicit_adjacent_exit_input_with_ordinary_backtracking_no_lamp_gate_no_battle_map_escape",
+    "revisit_persistence": "cleared_enemies_claims_locked_event_options_HP_injury_resource_spend_never_reset",
+    "fixed_teaching_layout_and_seed_exception": true,
+    "normal_game_rule": "formal_roguelike_expeditions_generate_new_random_maps_and_wild_anchors_each_genuine_new_departure_tutorial_fixed_layout_is_explicit_exception",
+    "save_resume_rule": "same_expedition_same_saved_map_seed_layout_anchors_enemy_item_event_instances_and_resources_not_a_new_roll",
+    "danger_area_membership": {
+      "AREA_TUT_ENTRY": [
+        "E",
+        "A"
+      ],
+      "AREA_TUT_FORK": [
+        "B_SUPPORT",
+        "B_MATERIAL",
+        "C",
+        "D"
+      ],
+      "AREA_TUT_ROOT": [
+        "T",
+        "X"
+      ]
+    }
+  },
+  "encounters": [
+    {
+      "battle_slot": "A",
+      "encounter_id": "INTRO-EN01",
+      "reference_kind": "existing_global_encounter",
+      "source_ref": "DATA_ENEMIES",
+      "board_id": "OPEN",
+      "chapter_id": "CH1",
+      "source": "N",
+      "threat_budget": 1,
+      "units": [
+        {
+          "local_instance_id": "TUT01-A-EN01-1",
+          "enemy_id": "EN01",
+          "position": [
+            3,
+            6
+          ],
+          "facing": "D4",
+          "enemy_template_ref": {
+            "source_id": "DATA_ENEMIES",
+            "collection": "enemies",
+            "id_field": "enemy_id",
+            "id": "EN01",
+            "stats_path": [
+              "threat_stats",
+              "TH1"
+            ],
+            "basic_attack_path": [
+              "basic_attack"
+            ],
+            "moves_path": [
+              "moves"
+            ]
+          }
+        }
+      ],
+      "teaches_species": "EN01",
+      "seen_requires": "actual_mechanic_demonstrated_and_response_completed_not_tooltip_or_cutscene",
+      "first_autopause_at": "whole_tick_commit_after_first_EN01_A_telegraph_before_next_tick",
+      "physical_location_id": "TUT01:LOCAL:A",
+      "uses_board_as_geometry_template_not_arena_teleport": true,
+      "enemy_instances_present_before_light_expansion": true,
+      "revisit_after_victory": "show_cleared_site_no_repeat_battle_or_reward",
+      "threat_rank_id": "TH1"
+    },
+    {
+      "battle_slot": "T",
+      "encounter_id": "TUT01-ROOT",
+      "reference_kind": "tutorial_appendix_only_not_counted_in_65_global_encounters",
+      "board_id": "OPEN",
+      "chapter_id": "CH1",
+      "source": "N",
+      "threat_budget": 2,
+      "normal_chapter_budget_cap": 4,
+      "units": [
+        {
+          "local_instance_id": "TUT01-T-EN01-1",
+          "enemy_id": "EN01",
+          "position": [
+            2,
+            5
+          ],
+          "facing": "D4",
+          "enemy_template_ref": {
+            "source_id": "DATA_ENEMIES",
+            "collection": "enemies",
+            "id_field": "enemy_id",
+            "id": "EN01",
+            "stats_path": [
+              "threat_stats",
+              "TH1"
+            ],
+            "basic_attack_path": [
+              "basic_attack"
+            ],
+            "moves_path": [
+              "moves"
+            ]
+          }
+        },
+        {
+          "local_instance_id": "TUT01-T-EN01-2",
+          "enemy_id": "EN01",
+          "position": [
+            4,
+            5
+          ],
+          "facing": "D4",
+          "enemy_template_ref": {
+            "source_id": "DATA_ENEMIES",
+            "collection": "enemies",
+            "id_field": "enemy_id",
+            "id": "EN01",
+            "stats_path": [
+              "threat_stats",
+              "TH1"
+            ],
+            "basic_attack_path": [
+              "basic_attack"
+            ],
+            "moves_path": [
+              "moves"
+            ]
+          }
+        }
+      ],
+      "root_is_active_enemy_not_static_terrain": true,
+      "fact_on_real_victory": "root_threat_cleared",
+      "ST102_and_RG01_followup_unlock_only_on_safe_delivery": true,
+      "required_completed_encounters": [
+        "INTRO-EN01"
+      ],
+      "requires_all_EN01_moves_witnessed": false,
+      "physical_location_id": "TUT01:LOCAL:T",
+      "uses_board_as_geometry_template_not_arena_teleport": true,
+      "enemy_instances_present_before_light_expansion": true,
+      "revisit_after_victory": "show_cleared_site_no_repeat_battle_or_reward",
+      "threat_rank_id": "TH1"
+    }
+  ],
+  "combat_contract": {
+    "authority_refs": [
+      "SRC03",
+      "SRC06",
+      "SRC07"
+    ],
+    "real_six_stats_and_existing_moves": true,
+    "newbie_stat_bonus": false,
+    "forced_victory": false,
+    "hidden_enemy_weakening": false,
+    "victory": "all_hostile_threats_incapacitated_and_at_least_one_deployed_friendly_actionable",
+    "simultaneous_all_incapacitated": "defeat",
+    "reserve_auto_replace_or_second_fight": false,
+    "autopause_at_whole_tick_only": true,
+    "pause_freezes_logic_not_clears_battle_state": true,
+    "tech_resume_retains_tick_actions_targets_and_seed": true,
+    "enemy_killed_before_demonstration": "normal_victory_cancel_untriggered_Q06_and_TD008_TD009_no_fake_move_witness_no_forced_enemy_1_HP_no_replay",
+    "guide_seen_is_not_species_seen": true,
+    "adaptation_slots": 0,
+    "no_new_candidate_observation_or_absorption_teaching": true,
+    "first_actual_telegraph_hint": "one_optional_whole_tick_autopause_total_across_A_and_T_if_not_previously_seen",
+    "autopause_can_disable_without_changing_enemy_or_world_result": true
+  },
+  "tutorial_events": [
+    {
+      "tutorial_event_id": "TUT-SUPPORT",
+      "global_event_pool_member": false,
+      "node_id": "B_SUPPORT",
+      "step_id": "S08A",
+      "fixed_at_departure": true,
+      "presentation_count": 1,
+      "options": [
+        {
+          "option_id": "SUPPORT",
+          "costs": {},
+          "requires": [
+            "if_positive_next_battle_shield_is_eligible_require_one_current_present_independent_standing_target",
+            "all_actual_effects_and_caps_valid_before_commit_zero_effects_allowed"
+          ],
+          "effects": [
+            {
+              "type": "private_shield_next_battle",
+              "target_count": 1,
+              "amount": 12,
+              "buff_id": "EVENT-READY-SHIELD",
+              "rule_ref": "DATA_EVENTS.contracts.effect_rules.private_shield_next_battle",
+              "cap_key": "event_shield_points",
+              "cap_debit": "actual_positive_delta_up_to_12",
+              "clears": "next_battle_end_or_expedition_end",
+              "shared_pool_spendable": false,
+              "resource_generation": false,
+              "extra_actions": 0,
+              "applicable_if": "remaining_uncleared_battle_slot_and_eligible_current_target",
+              "if_not_applicable": "actual_delta0_no_buff_no_cap_debit"
+            },
+            {
+              "type": "reveal_node",
+              "node_id": "T",
+              "resolved_detail": "full_board",
+              "count": 1,
+              "cap_key": "event_previews",
+              "cap_debit": "actual_new_resolved_detail_count_0_or_1_after_dedupe",
+              "rule_ref": "DATA_EVENTS.contracts.effect_rules.reveal_node",
+              "dedupe_key": [
+                "node_id",
+                "resolved_detail"
+              ],
+              "covers": [
+                "terrain",
+                "enemy_intent"
+              ],
+              "reroll": false,
+              "already_known_or_cleared_target": "actual_new_detail0_no_cap_debit_no_fake_positive_preview"
+            }
+          ],
+          "all_or_nothing": true,
+          "resolution_contract": {
+            "shield_eligible_only_if": "there_is_a_remaining_uncleared_battle_slot_in_this_tutorial_expedition_and_valid_target",
+            "after_target_victory": "no_remaining_battle_so_next_battle_shield_actual_delta0_no_new_buff_and_no_event_shield_points_debit",
+            "already_known_target_board": "full_board_actual_new_detail0_no_event_previews_debit",
+            "zero_effect_commit": "explicit_SUPPORT_can_commit_option_receipt_with_actual_effects_empty_and_zero_cap_debit_without_requiring_new_positive_effect",
+            "preview": "show_each_actual_effect_and_no_remaining_battle_or_already_known_reason_before_CONFIRM",
+            "alternatives": [
+              "PASS_commits_zero_cost_zero_effect_permanent_option",
+              "leave_without_option_and_return_later_if_no_pending_write"
+            ],
+            "no_new_battle_or_reward": "late_visit_cannot_create_future_encounter_extend_shield_to_next_expedition_or_refund_previous_costs"
+          }
+        },
+        {
+          "option_id": "PASS",
+          "costs": {},
+          "effects": [],
+          "free_bypass": true
+        }
+      ],
+      "no_inventory_reward": true,
+      "uncommitted_exit_allowed": true,
+      "option_after_commit": "locked_including_PASS_revisit_only_shows_original_receipt",
+      "revisit_grants_no_new_presentation_or_reward": true,
+      "post_target_victory_late_visit": "still_accessible_before_return_commit_show_zero_applicable_support_effects_keep_PASS_and_zero_effect_SUPPORT_available_no_softlock"
+    },
+    {
+      "tutorial_event_id": "TUT-SALVAGE",
+      "global_event_pool_member": false,
+      "node_id": "B_MATERIAL",
+      "step_id": "S08B",
+      "fixed_at_departure": true,
+      "presentation_count": 1,
+      "options": [
+        {
+          "option_id": "CLAIM_MAT2",
+          "costs": {},
+          "requires": [
+            "preallocated_claim_available",
+            "material_units_remaining_gte_2"
+          ],
+          "effects": [
+            {
+              "type": "claim_reward",
+              "bundle_id": "RB-MAT2",
+              "claim_slot": "L2_MATERIAL",
+              "authority_ref": "DATA_LOOT.reward_bundles",
+              "material_units": 2,
+              "region_id": "RG01",
+              "weights_ref": "DATA_LOOT.region_material_weights.RG01",
+              "weights_snapshot": {
+                "fiber": 4,
+                "herb": 3,
+                "iron": 1
+              },
+              "draw": "independent_with_replacement_locked_claim_seed",
+              "ownership": "carried_until_safe_return"
+            }
+          ]
+        },
+        {
+          "option_id": "PASS",
+          "costs": {},
+          "effects": [],
+          "free_bypass": true
+        }
+      ],
+      "source": "old_human_made_supply_crate_not_corpse_or_terrain_harvest",
+      "uncommitted_exit_allowed": true,
+      "option_after_commit": "locked_including_PASS_revisit_only_shows_original_receipt",
+      "revisit_grants_no_new_presentation_or_reward": true
+    }
+  ],
+  "reward_plan": {
+    "locked_at": "departure",
+    "commission_source": "public_route_clearance_and_survey_delivery_not_EN01_body_drop",
+    "segment_rewards": [
+      {
+        "node_id": "A",
+        "copper": 6,
+        "crystal": 0,
+        "ownership": "carried_until_safe_return"
+      },
+      {
+        "node_id": "T",
+        "copper": 10,
+        "crystal": 2,
+        "ownership": "carried_until_safe_return"
+      }
+    ],
+    "full_ordinary_total": {
+      "copper": 16,
+      "crystal": 2
+    },
+    "elite_increment": null,
+    "first_plan_offer": {
+      "step_id": "S06",
+      "plan_ids": [
+        "PL01",
+        "PL02",
+        "PL05"
+      ],
+      "choose": 1,
+      "decline_allowed": true,
+      "equipped_cap": 3,
+      "authority_ref": "DATA_PLANS",
+      "one_offer_once": true,
+      "no_L4_second_offer": true
+    },
+    "preallocated_claim_slots": [
+      {
+        "slot_id": "L2_MATERIAL",
+        "node_id": "B_MATERIAL",
+        "bundle_id": "RB-MAT2",
+        "only_selected_branch": false,
+        "requires_actual_visit_and_CLAIM_MAT2_once": true
+      },
+      {
+        "slot_id": "TARGET_GEAR",
+        "node_id": "T",
+        "bundle_id": "RB-GEAR",
+        "requires_target_victory": true
+      }
+    ],
+    "shared_budget_ref": "DATA_LOOT.expedition_budgets",
+    "tutorial_max_consumption": {
+      "gear_claims": 1,
+      "book_claims": 0,
+      "material_units": 2,
+      "event_bonus_copper": 0,
+      "event_bonus_crystal": 0
+    },
+    "baseline_D0_material_cap": 4,
+    "unallocated_budget_auto_reward": false,
+    "legacy_support_caps": {
+      "event_shield_points": 12,
+      "event_previews": 2,
+      "max_presented_events_per_expedition": 2
+    },
+    "events_presented_this_route": "0_to_2_distinct_existing_tutorial_events_each_at_most_once",
+    "gear_box": {
+      "step_id": "S13",
+      "node_id": "T",
+      "bundle_id": "RB-GEAR",
+      "claim_slot": "TARGET_GEAR",
+      "source": "old_human_made_patrol_equipment_box",
+      "quality_table_id": "QT-CACHE-D0",
+      "quality_weights_snapshot": {
+        "Q1": 70,
+        "Q2": 28,
+        "Q3": 2
+      },
+      "authority_ref": "DATA_LOOT",
+      "loot_theme_tag": "woodland_cache",
+      "family_pool": [
+        "EF03",
+        "EF05",
+        "EF07"
+      ],
+      "family_draw": "uniform_without_replacement",
+      "family_offer_max": 2,
+      "one_shared_quality_roll": true,
+      "family_choice_before_quality_reveal": true,
+      "whole_box_decline": true,
+      "decline_locks_decision_no_reroll": true,
+      "decline_updates_pity": false,
+      "first_new_save_prior_streaks": {
+        "Q1": 0,
+        "non_Q3": 0
+      },
+      "special_Q2_guarantee": false,
+      "pity_ref": "DATA_LOOT.quality_contract.pity",
+      "zero_prior_streaks_only_for_first_unclaimed_new_save": true,
+      "real_claim_then_loss_keeps_pity": true,
+      "wearable_by_current_survivor_not_required_to_claim_or_finish": true,
+      "fixed_values_no_affix_roll": true,
+      "initial_ownership": "carried_unbound",
+      "safe_return_banks": true,
+      "can_equip_before_return_under_11": true
+    },
+    "extra_tutorial_first_reward": null,
+    "no_book_seal_CO_or_free_level": true,
+    "ST102_delivery_has_no_extra_money_or_items": true,
+    "both_branch_rewards_can_coexist": true,
+    "branch_budget_note": "both_support_and_material_can_be_claimed_12_shield_once_2_material_units_once_D0_material_cap4_unchanged_no_extra_money_gear_or_day"
+  },
+  "supplies_and_items": {
+    "base_supply_consumed": 1,
+    "extra_supply_transferred": 1,
+    "extra_supply_cap_before_store": 2,
+    "forced_use": false,
+    "rescue_heal_fraction": 0.3,
+    "rounding": "floor_min_1_per_eligible_target_clamp_to_max",
+    "standing_only": true,
+    "full_HP_or_zero_effect_no_debit": true,
+    "allowed_use": [
+      "town_noncombat",
+      "route_noncombat",
+      "prebattle",
+      "settled_postbattle"
+    ],
+    "forbidden_use": [
+      "battle_running",
+      "battle_paused",
+      "battle_result_pending",
+      "return_commit_pending"
+    ],
+    "use_adds_days": 0,
+    "unused_generic_extra_returns_on_safe_return": true,
+    "remaining_extra_lost_on_defeat": true,
+    "no_starting_CO_or_equipment_gift": true,
+    "equip_HP_rule": "keep_absolute_current_HP_clamp_new_max_never_heal",
+    "early_escort_gear_rule_ref": "DATA_LOOT.ownership_contract",
+    "extra_supply_transferred_scope": "default_loadout_and_expected_ledgers_only",
+    "selected_extra_supply_range": [
+      0,
+      2
+    ]
+  },
+  "steps": [
+    {
+      "step_id": "S00",
+      "title": "染血独返与重新委任",
+      "node_id": null,
+      "world_phase": "town",
+      "guide_step_independent": true,
+      "entry_event": "S00.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "town",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "COMMISSION_ACCEPTED_OR_EXISTING_RECOGNIZED",
+        "requires": [
+          "initial_grant_committed_or_existing_receipt_recognized",
+          "current_original_instance_ledger_loaded_without_regrant"
+        ]
+      },
+      "next": [
+        "S01"
+      ],
+      "receipt_refs": [
+        "INITIAL_GRANT",
+        "COMMISSION_ACCEPT"
+      ],
+      "asset_refs": [
+        "AS-TOWN",
+        "AS-UI",
+        "AS-SUBTITLE"
+      ],
+      "cue_refs": [
+        "Q00"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S00",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "北门响起迟缓的敲门声。镜头先看见地上的血，再看见主角的脸。沈砚展开盖有阵亡印的旧名册，停在最后一行。主角说不出完整经过，只能描述一个让他先走的声音。镇民没有立刻鼓掌；有人往门后退了一步。",
+      "player_action": "读完或跳过开场后，自行接受委任。第一次接受才初始化60铜/12结晶/6补给与8名真实士兵，跳过演出不重复配发。",
+      "narrative_boundary": "ST-000与ST-101只记已发生的独返和委任；不把疑问答案写给玩家。",
+      "opening_fact": "ST-000"
+    },
+    {
+      "step_id": "S01",
+      "title": "秦姨交付行囊与手灯",
+      "node_id": null,
+      "world_phase": "town",
+      "guide_step_independent": true,
+      "entry_event": "S01.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "town"
+      ],
+      "completion_predicate": {
+        "any_of": [
+          {
+            "event": "RETURN_LAMP_VERIFICATION_COMPLETED",
+            "requires": [
+              "commission_accepted"
+            ],
+            "world_effect": "record_actual_verification_only",
+            "resource_delta": {},
+            "date_delta": 0
+          },
+          {
+            "event": "LAMP_GUIDE_SKIPPED",
+            "requires": [
+              "commission_accepted"
+            ],
+            "world_effect": null,
+            "guide_effect": "record_S01_skipped_only"
+          },
+          {
+            "event": "GUIDANCE_DISABLED_AND_COMMISSION_RECOGNIZED",
+            "requires": [
+              "guide_enabled_false",
+              "commission_accepted"
+            ],
+            "world_effect": null,
+            "guide_effect": "continue_to_S02_without_false_verification"
+          }
+        ]
+      },
+      "next": [
+        "S02"
+      ],
+      "receipt_refs": [
+        "LAMP_VERIFICATION",
+        "GUIDE_STEP"
+      ],
+      "asset_refs": [
+        "AS-TOWN",
+        "AS-RETURN",
+        "AS-UI",
+        "AS-SUBTITLE"
+      ],
+      "cue_refs": [
+        "Q01"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S01",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "light_function_preview": {
+        "after_real_verification": "optional_nonrewarding_preview_that_lamp_can_reveal_existing_paths",
+        "on_skip": "normal_travel_local_visibility_remains_automatic_no_separate_lamp_controls_or_gate",
+        "dialogue_ref": "TD006",
+        "reward": null,
+        "does_not_commit_exploration_reveal": true
+      },
+      "scene_text": "秦姨逐个念出新兵姓名，桌上每一份行囊都有对应标签。手灯放在边上，光圈只照着地图和人手。队员整理扣带时，主角下意识说出旧队的点名顺序，又停住。",
+      "player_action": "核对真实名册、补给预览与灯的作用；不要求点击一百次物品。自动随行照路，不花费举灯次数或照路资源。",
+      "narrative_boundary": "旧称呼仅为断层伏笔；新兵不因此获得前代身份。"
+    },
+    {
+      "step_id": "S02",
+      "title": "选择带谁与怎样站",
+      "node_id": null,
+      "world_phase": "town",
+      "guide_step_independent": true,
+      "entry_event": "S02.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "party_setup"
+      ],
+      "completion_predicate": {
+        "event": "PARTY_DRAFT_ACCEPTED",
+        "requires": [
+          "ready_current_real_instances",
+          "expedition_count_lte_8",
+          "expedition_cost_lte_8",
+          "deployment_count_lte_6",
+          "deployment_cost_lte_6"
+        ],
+        "recommended_layout_not_required": true
+      },
+      "next": [
+        "S03"
+      ],
+      "receipt_refs": [],
+      "asset_refs": [
+        "AS-S01",
+        "AS-S02",
+        "AS-S03",
+        "AS-UI",
+        "AS-GUIDE"
+      ],
+      "cue_refs": [
+        "Q02"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S02",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "编队桌同时给出八个同行位和六个上场位，预备者靠桌后站着。每个单位Cost和六属性可查。采用建议后仍可更换、少带或关闭引导。",
+      "player_action": "建议3盾3近2弓同行，2盾2近2弓上场；出征Cost8、部署Cost6。实际合法即能出发，不用固定推荐阵型做门锁。",
+      "narrative_boundary": "所有字幕读取真实实例；失去某人后的重试不生成同名替身。"
+    },
+    {
+      "step_id": "S03",
+      "title": "从北门出发",
+      "node_id": "E",
+      "world_phase": "expedition_active",
+      "guide_step_independent": true,
+      "entry_event": "S03.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "departure_preview",
+        "route",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "DEPARTURE_COMMITTED",
+        "requires": [
+          "party_valid",
+          "base_supply_1_paid",
+          "selected_extra_supply_transferred",
+          "route_rewards_seed_locked",
+          "public_irreversible_personnel_and_gear_risk_previewed"
+        ]
+      },
+      "next": [
+        "S04"
+      ],
+      "receipt_refs": [
+        "DEPARTURE"
+      ],
+      "asset_refs": [
+        "AS-TOWN",
+        "AS-REGION",
+        "AS-ROUTE",
+        "AS-RETURN",
+        "AS-UI"
+      ],
+      "cue_refs": [
+        "Q03"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S03",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "城门在队伍身后关上。镜头回到固定等距视角；路面连续接到灰栎边道，不用切黑跳到一块无关棋盘。出发清单最后显示捕获期限与共享包风险。",
+      "player_action": "确认基础消耗1补给，可选额外转包1补给；显示实际出发日d与预计结算d+1。取消无扣款。确认后种子、敌人和奖励槽只生成一次。",
+      "narrative_boundary": "这是普通侦路，按预签规则结算独返与真实队员去向，不适用后续终战单向边界，也不表现管理员临时夺权。"
+    },
+    {
+      "step_id": "S04",
+      "title": "沿旧路看见脚印",
+      "node_id": "E",
+      "world_phase": "expedition_active",
+      "guide_step_independent": true,
+      "entry_event": "S04.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "transaction_pending",
+        "encounter_transition"
+      ],
+      "completion_predicate": {
+        "event": "ROUTE_TRAVEL_COMMITTED",
+        "requires": [
+          "explicit_legal_departure_route_input",
+          "local_visibility_and_arrival_saved"
+        ],
+        "grants_species_seen": false,
+        "adds_node": false,
+        "no_manual_lamp_guard": true
+      },
+      "next": [
+        "S05"
+      ],
+      "receipt_refs": [
+        "ROUTE_TRAVEL_V1"
+      ],
+      "asset_refs": [
+        "AS-FOOTPRINT",
+        "AS-ROUTE",
+        "AS-UI",
+        "AS-SUBTITLE",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [
+        "Q04",
+        "Q04-LIGHT"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S04",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "灯随队伍移动，照出先前藏在暗处的石路与脚印。未走到的远处仍暗，地形不是临时生成给玩家看的。敌人的枝条在草边停顿了一下，像在分辨主角手势。",
+      "player_action": "使用明确路径出口或实际移动输入前进；第一次进入危险区域，对当时成员登记+5侵蚀，回头不再加。",
+      "narrative_boundary": "不设按L举灯或付费看路线；光不攻击、不回血、不替换地形。"
+    },
+    {
+      "step_id": "S05",
+      "title": "首战：它听懂过号令",
+      "node_id": "A",
+      "world_phase": "battle_A",
+      "guide_step_independent": true,
+      "entry_event": "S05.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "encounter_transition",
+        "deployment",
+        "battle_running",
+        "battle_paused",
+        "battle_result_pending"
+      ],
+      "completion_predicate": {
+        "event": "BATTLE_A_VICTORY_COMMITTED",
+        "requires": [
+          "INTRO-EN01_actual_victory"
+        ],
+        "move_witness_only_if": "actual_EN01_A_action_demonstrated_not_tooltip"
+      },
+      "next": [
+        "S06"
+      ],
+      "receipt_refs": [
+        "BATTLE_RESULT"
+      ],
+      "asset_refs": [
+        "AS-OPEN",
+        "AS-S01",
+        "AS-S02",
+        "AS-S03",
+        "AS-EN01",
+        "AS-TELEGRAPH",
+        "AS-UI",
+        "AS-GUIDE"
+      ],
+      "cue_refs": [
+        "Q05",
+        "Q06",
+        "Q07"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S05",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "flow_contract_ref": "encounter_flow_contract",
+      "entry_is_same_location_existing_enemies": true,
+      "scene_text": "接敌原地扩光，完整OPEN盘在同一段旧路上显出。单个拟态丛先向侧翼偏了半拍，随后回到实际战斗动作。队员问它是否认得手势，主角没有答案。",
+      "player_action": "进入免费公开敌情和部署；开战后看预警、按需暂停查看再继续。敌技至少一整拍预警，不强迫玩家挨一下证明学会。",
+      "narrative_boundary": "INTRO-EN01使用真实单位六值，无特供弱敌、无强制胜利。"
+    },
+    {
+      "step_id": "S06",
+      "title": "战果先放在携行账",
+      "node_id": "A",
+      "world_phase": "route_after_A",
+      "guide_step_independent": true,
+      "entry_event": "S06.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "plan_choice",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "A_REWARD_AND_PLAN_DECISION_COMMITTED",
+        "requires": [
+          "carried_segment_A_6_once",
+          "one_of_PL01_PL02_PL05_or_decline"
+        ],
+        "must_accept_plan": false
+      },
+      "next": [
+        "S07"
+      ],
+      "receipt_refs": [
+        "SEGMENT_REWARD",
+        "PLAN_DECISION"
+      ],
+      "asset_refs": [
+        "AS-UI",
+        "AS-ICONS",
+        "AS-GUIDE"
+      ],
+      "cue_refs": [],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S06",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "击败实际敌人后，落叶重新落回路面；地图上的已清标记固定下来。委托报酬6铜显示“携行”，没有立刻飘进城镇库存。队员展开捡到的战术笔记。",
+      "player_action": "从PL01/PL02/PL05选一或拒绝；当前最多3方案。记真实战斗结果、每名资格成员侵蚀+10与对应物资，不提前给经验或升等级。",
+      "narrative_boundary": "战斗结算与奖励重入同ID只执行一次。"
+    },
+    {
+      "step_id": "S07",
+      "title": "先走哪条岔路",
+      "node_id": null,
+      "world_phase": "route_choice_L2",
+      "guide_step_independent": true,
+      "entry_event": "S07.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "ROUTE_TRAVEL_COMMITTED",
+        "requires": [
+          "explicit_adjacent_B_SUPPORT_or_B_MATERIAL_travel",
+          "public_reward_categories_and_risks_available_without_manual_probe"
+        ],
+        "choice_is_next_destination_not_exclusive_branch": true
+      },
+      "next": [
+        {
+          "if": "selected_node_is_B_SUPPORT",
+          "step_id": "S08A"
+        },
+        {
+          "if": "selected_node_is_B_MATERIAL",
+          "step_id": "S08B"
+        }
+      ],
+      "receipt_refs": [
+        "ROUTE_TRAVEL_V1"
+      ],
+      "asset_refs": [
+        "AS-ROUTE",
+        "AS-UI",
+        "AS-GUIDE",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [
+        "Q08",
+        "Q08-LIGHT"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S07",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "旧路牌左右都留着磨亮的边。护运站有安全护持，材料匣在另一边。实际同行者说两边都能回走。远处未知部分仍保持黑暗。",
+      "player_action": "玩家选先去的支路；路线不做永久二选一，未先走支路不淡出锁死。普通来回不重刷事件、敌人、材料或日期。首次到达B_SUPPORT或B_MATERIAL便进入AREA_TUT_FORK，登记一次+5侵蚀；之后去另一支、C或D不再加同区域进入值。",
+      "narrative_boundary": "地图回访与事件互斥选择分开：回得去，不等于已领的卡能再选。"
+    },
+    {
+      "step_id": "S08A",
+      "title": "护运站的登记簿",
+      "node_id": "B_SUPPORT",
+      "world_phase": "tutorial_event",
+      "guide_step_independent": true,
+      "entry_event": "S08A.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "tutorial_event",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "ROUTE_TRAVEL_COMMITTED",
+        "requires": [
+          "explicit_adjacent_exit",
+          "no_pending_atomic_mutation"
+        ],
+        "event_option_required_to_leave": false,
+        "event_option_if_committed_is_permanent_including_PASS": true,
+        "other_branch_remains_visitable": true
+      },
+      "next": [
+        "S07",
+        "S09"
+      ],
+      "receipt_refs": [
+        "EVENT_PRESENTATION",
+        "EVENT_OPTION",
+        "ROUTE_TRAVEL_V1"
+      ],
+      "asset_refs": [
+        "AS-SUPPORT",
+        "AS-SHIELD",
+        "AS-UI",
+        "AS-SUBTITLE",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [
+        "Q08"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S08A",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "late_visit_after_T_victory": "show_no_remaining_battle_and_already_known_preview_zero_effect_or_PASS_legal_leave_without_option_legal",
+      "scene_text": "站内只剩一张预先写好的护持服务单。灯下的旧盾架有使用痕迹，留言说明只能给一名真实上场者一次护持。没有远程NPC假装现场指挥。",
+      "player_action": "选护持时为一名合法站立实例登记下场12私盾，并提前展示目标处已锁敌情；也可PASS。仅此一次，不给库存护盾道具。",
+      "narrative_boundary": "若在目标胜利后才回访，过期护持不再发，仍可读留言。"
+    },
+    {
+      "step_id": "S08B",
+      "title": "材料匣里的封签",
+      "node_id": "B_MATERIAL",
+      "world_phase": "tutorial_event",
+      "guide_step_independent": true,
+      "entry_event": "S08B.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "tutorial_event",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "ROUTE_TRAVEL_COMMITTED",
+        "requires": [
+          "explicit_adjacent_exit",
+          "no_pending_atomic_mutation"
+        ],
+        "event_option_required_to_leave": false,
+        "event_option_if_committed_is_permanent_including_PASS": true,
+        "other_branch_remains_visitable": true
+      },
+      "next": [
+        "S07",
+        "S09"
+      ],
+      "receipt_refs": [
+        "EVENT_PRESENTATION",
+        "EVENT_OPTION",
+        "LOOT_CLAIM",
+        "ROUTE_TRAVEL_V1"
+      ],
+      "asset_refs": [
+        "AS-CRATE",
+        "AS-ICONS",
+        "AS-UI",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S08B",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "封签写着回收日期和所属仓库。队员打开匣，拿出两份已登记材料；空匣继续留在原处。秦姨曾说过，材料要真的带回才能做药。",
+      "player_action": "领取一次RB-MAT2或PASS，扣本趟共享材料2额度；教程不另发铜、书、应召印或永久属性。",
+      "narrative_boundary": "材料先携行，普通失败丢失；同趟再看只显示封签和原回执。"
+    },
+    {
+      "step_id": "S09",
+      "title": "在安全锚前停一停",
+      "node_id": "C",
+      "world_phase": "safe_anchor",
+      "guide_step_independent": true,
+      "entry_event": "S09.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "safe_anchor",
+        "transaction_pending",
+        "illumination_anchor_interaction"
+      ],
+      "completion_predicate": {
+        "event": "SAFE_ANCHOR_CONTINUE_COMMITTED",
+        "requires": [
+          "explicit_continue_choice"
+        ],
+        "alternative_terminals": [
+          "EARLY_RETURN",
+          "BACKTRACK_TO_KNOWN_CONNECTED_LOCATION"
+        ],
+        "no_forward_probe_required": true
+      },
+      "next": [
+        "S10"
+      ],
+      "receipt_refs": [
+        "SAFE_ANCHOR_DECISION",
+        "ROUTE_TRAVEL_V1",
+        "ILLUMINATION_ANCHOR_ACTIVATION_V1"
+      ],
+      "asset_refs": [
+        "AS-ROUTE",
+        "AS-UI",
+        "AS-GUIDE",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [
+        "Q09"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S09",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "optional_illumination_anchor": {
+        "illumination_anchor_id": "IA_TUT_C",
+        "area_id": "AREA_TUT_FORK",
+        "button_label": "点亮此区",
+        "confirm_preview": "仅照亮本区岔口、护运站、材料匣与C；不含远眺D、目标T或相邻未知区。不会领取物品或清除敌人。",
+        "cancel_before_commit_allowed": true,
+        "activation_required_for_continue_or_backtrack_or_early_return": false,
+        "activation_grants_no_rewards_or_day_advance": true,
+        "revisit_lit_contents": "unvisited_objects_and_events_still_require_actual_arrival_and_explicit_interaction",
+        "stable_anchor_is_not_illumination_anchor": "C_is_existing_safe_navigation_point_preset_illumination_object_has_its_own_id_and_receipt",
+        "current_run_only": "本趟点亮后持续常亮；回城结算结束后不继承到下趟野外新地图。保存退出再续玩仍是本趟，不重置。"
+      },
+      "scene_text": "队伍到达可休息的固定站位。旧照明座可被点亮，照清本区域已经存在的道路；队员之间能看见彼此的脸。主角第一次主动请每个人回答点名。",
+      "player_action": "可整理装备、用合法补给、更换真实预备、选择早返；可选激活本趟照明锚，不花费额外一天。AREA_TUT_FORK的首次进入已在到达B支路时登记+5；此处只读取该回执，不再次加侵蚀。",
+      "narrative_boundary": "锚是照明记忆，不能洗掉侵蚀、治疗伤势、清敌或继承到下一张新图。"
+    },
+    {
+      "step_id": "S10",
+      "title": "远眺根口",
+      "node_id": "D",
+      "world_phase": "route_observation",
+      "guide_step_independent": true,
+      "entry_event": "S10.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "encounter_transition"
+      ],
+      "completion_predicate": {
+        "event": "D_OBSERVATION_COMPLETED",
+        "requires": [
+          "actual_arrival_and_existing_observable_root_activity"
+        ],
+        "new_rewards": 0,
+        "new_branches": 0,
+        "new_preview_cap_debit": 0,
+        "automatic_free_full_board_at_actual_enemy_discovery": true
+      },
+      "next": [
+        "S11"
+      ],
+      "receipt_refs": [
+        "D_OBSERVATION",
+        "ROUTE_TRAVEL_V1"
+      ],
+      "asset_refs": [
+        "AS-ROUTE",
+        "AS-UI",
+        "AS-SUBTITLE",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [
+        "Q10"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S10",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "远处两团枝影在同一片旧路边活动。镜头允许玩家看清敌人数与预警方式后回到队伍，不把可跳过的推镜当成固定等待。",
+      "player_action": "展示两只已锁拟态丛与OPEN格型，可返回整备或继续；护运站只是更早给出同一情报，不决定是否能看见必要敌情。",
+      "narrative_boundary": "未进入战斗不扣药、不跳日；观察不是ST-102完成条件。"
+    },
+    {
+      "step_id": "S11",
+      "title": "目标战：把安排执行完",
+      "node_id": "T",
+      "world_phase": "battle_T",
+      "guide_step_independent": true,
+      "entry_event": "S11.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "encounter_transition",
+        "deployment",
+        "battle_running",
+        "battle_paused",
+        "battle_result_pending"
+      ],
+      "completion_predicate": {
+        "event": "BATTLE_T_VICTORY_COMMITTED",
+        "requires": [
+          "TUT01-ROOT_actual_victory",
+          "INTRO-EN01_actual_battle_completed"
+        ],
+        "writes": [
+          "root_threat_cleared"
+        ],
+        "does_not_write": [
+          "ST102_complete",
+          "RG01_followup_unlocked"
+        ]
+      },
+      "next": [
+        "S12"
+      ],
+      "receipt_refs": [
+        "BATTLE_RESULT",
+        "ROOT_THREAT_FACT"
+      ],
+      "asset_refs": [
+        "AS-OPEN",
+        "AS-S01",
+        "AS-S02",
+        "AS-S03",
+        "AS-EN01",
+        "AS-TELEGRAPH",
+        "AS-UI"
+      ],
+      "cue_refs": [
+        "Q11",
+        "Q06",
+        "Q12"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S11",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "flow_contract_ref": "encounter_flow_contract",
+      "entry_is_same_location_existing_enemies": true,
+      "scene_text": "接敌后仍在根口原地扩光。两个拟态丛各有真实实例和起手预警，不因为镜头切过就重置冷却。队员的行动来自此前保存的姿态、目标与技能顺序。",
+      "player_action": "真实部署后自动战斗，允许暂停/查看/变速/撤退；战斗中与暂停都禁用药品和换装。同拍合法伤害按03一起结算。",
+      "narrative_boundary": "TUT01-ROOT胜利只记root_threat_cleared、携行10铜2结晶；未归城不写已交付。"
+    },
+    {
+      "step_id": "S12",
+      "title": "远处那道没有靠近的影子",
+      "node_id": "T",
+      "world_phase": "target_noncombat",
+      "guide_step_independent": true,
+      "entry_event": "S12.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "narrative_noncombat",
+        "route"
+      ],
+      "completion_predicate": "cue_complete_or_user_skipped_after_real_target_victory_no_boss_battle",
+      "next": [
+        "S13"
+      ],
+      "receipt_refs": [
+        "CUE_PRESENTATION"
+      ],
+      "asset_refs": [
+        "AS-CAMEO",
+        "AS-SUBTITLE",
+        "AS-UI",
+        "AS-LAMP-FOG"
+      ],
+      "cue_refs": [
+        "Q13"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S12",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "scene_text": "战场安静后，远处出现一个不完整的人形轮廓。声音说“这个号令，我见过”，主角转向时，它已经淡入阴影。队员只能确认自己看见过影子。",
+      "player_action": "演出可跳过；不生成魔王战、不开放攻击按钮、不授予任何击败魔王或城镇或名册重置。先记录可观察异常，再让玩家继续。",
+      "narrative_boundary": "DEMON的身份、分身、培养舱与管理员全部留到各自固定揭露。"
+    },
+    {
+      "step_id": "S13",
+      "title": "旧巡路队的装备箱",
+      "node_id": "T",
+      "world_phase": "target_loot",
+      "guide_step_independent": true,
+      "entry_event": "S13.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "route",
+        "gear_claim",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "TARGET_LOOT_DECISION_COMMITTED",
+        "requires": [
+          "target_segment_10_copper_2_crystal_once",
+          "RB_GEAR_claim_or_whole_box_decline"
+        ],
+        "equip_required": false
+      },
+      "next": [
+        "S14"
+      ],
+      "receipt_refs": [
+        "SEGMENT_REWARD",
+        "LOOT_CLAIM",
+        "GEAR_BOX_DECISION"
+      ],
+      "asset_refs": [
+        "AS-CRATE",
+        "AS-ICONS",
+        "AS-UI"
+      ],
+      "cue_refs": [
+        "Q14"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S13",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "post_decision_navigation": "return_preview_or_backtrack_while_expedition_active_no_reroll_or_reclaim",
+      "scene_text": "箱子放在路侧，原巡路队的记号仍在。当前队员建议先核对物件再搬。画面不把领取装备写成剥取敌人器官。",
+      "player_action": "可领一次RB-GEAR或拒绝；先看家族池与CACHE-D0的70/28/2品质表，再按11领取固定模板。非战斗可合法装备。",
+      "narrative_boundary": "未装新物与共享包一起可能丢失；穿上后也不获得主角独返保护。"
+    },
+    {
+      "step_id": "S14",
+      "title": "带着真实结果回城",
+      "node_id": "X",
+      "world_phase": "return_commit",
+      "guide_step_independent": true,
+      "entry_event": "S14.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "return_preview",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "EXPEDITION_RETURN_COMMITTED",
+        "requires": [
+          "personnel_resources_XP_date_atomic_receipt"
+        ],
+        "full_success_writes": [
+          "ST102_delivered",
+          "RG01_followup_unlocked"
+        ],
+        "date_delta": 1,
+        "runtime_date": "saved_departure_day_d_to_d_plus_1_not_hardcoded_D0_D1"
+      },
+      "next": [
+        {
+          "if": "settlement_safe_return",
+          "step_id": "S15"
+        },
+        {
+          "if": "settlement_defeat",
+          "terminal": "RESCUE_ENTRY"
+        }
+      ],
+      "receipt_refs": [
+        "RETURN_SETTLEMENT",
+        "ST102_DELIVERY"
+      ],
+      "asset_refs": [
+        "AS-TOWN",
+        "AS-RETURN",
+        "AS-UI",
+        "AS-SUBTITLE"
+      ],
+      "cue_refs": [
+        "Q15"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S14",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "normal_target_path_entry_guard": "real_T_victory_and_explicit_return_confirmation_no_T_RETURN_probe_no_rewalking_cleared_roads",
+      "scene_text": "城门内的镜头先看人数，再看战利品。沈砚问“回来了几个人”，不按预先脚本回答八个。伤员、空位和被捕记录都进入同一份归城清单。",
+      "player_action": "安全归城一次提交实际人员、携行款物、未用额外补给、日历d+1、经验与ST-102交付；早返没有目标款和交付。",
+      "narrative_boundary": "先处理期限内救援成功，再处理到期吞并；本趟新伤不在同一结算立减一天。"
+    },
+    {
+      "step_id": "S15",
+      "title": "先决定下一趟缺什么",
+      "node_id": null,
+      "world_phase": "town_after_return",
+      "guide_step_independent": true,
+      "entry_event": "S15.entered_after_checkpoint",
+      "legal_input_contexts": [
+        "town",
+        "equipment",
+        "building_order",
+        "transaction_pending"
+      ],
+      "completion_predicate": {
+        "event": "TUTORIAL_WRAP_UP_ACKNOWLEDGED",
+        "requires": [
+          "return_receipt_committed"
+        ],
+        "can_finish_with_gear_stored_and_no_build_order": true,
+        "guide_complete_not_quest_success": true
+      },
+      "next": [
+        "COMPLETE"
+      ],
+      "receipt_refs": [
+        "GEAR_TRANSFER",
+        "BUILD_ORDER"
+      ],
+      "asset_refs": [
+        "AS-TOWN",
+        "AS-UI",
+        "AS-ICONS",
+        "AS-BUILD",
+        "AS-GUIDE"
+      ],
+      "cue_refs": [
+        "Q16"
+      ],
+      "source_ref": "SRC12",
+      "source_section_id": "步骤 S15",
+      "guide_skip_effect": "dismiss_explanation_only_no_auto_world_choice",
+      "outcome_variants": [
+        {
+          "variant_id": "success",
+          "requires": "ST102_delivered_true",
+          "ending_text": "侦路结果已交存，下一步调查湖岸",
+          "RG01_followup_unlocked": true
+        },
+        {
+          "variant_id": "ordinary_town",
+          "requires": "safe_return_and_ST102_not_delivered",
+          "ending_text": "本趟已结算，根口任务仍待完成",
+          "RG01_followup_unlocked": false
+        }
+      ],
+      "scene_text": "秦姨把材料摆上库房桌。沈砚等着防线修复计划，许苇带来旧队名册的封套。镜头停在新兵本人日志与旧名册并排的位置。",
+      "player_action": "玩家可装备一件物品、选择医舍或遗迹观测站建设，也可暂不花钱。建设下单不耗日，实际进度等后续合法行动结算；查看异常记录不强制出发。",
+      "narrative_boundary": "标准样片止于重新经营；后续真相、救援战、四将和终局均只留入口，不假称已制作。"
+    }
+  ],
+  "receipts": [
+    {
+      "receipt_id": "INITIAL_GRANT",
+      "key_fields": [
+        "save_id",
+        "INITIAL_ROSTER_V1"
+      ],
+      "atomic_writes": "resources+8_original_instances+seed+grant_flag",
+      "boundary": "existing_returns_originals_no_regrant",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "COMMISSION_ACCEPT",
+      "key_fields": [
+        "save_id",
+        "COMMISSION_ACCEPT_V1"
+      ],
+      "atomic_writes": "commission_fact",
+      "boundary": "existing_fact_skips_initial_issue",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "LAMP_VERIFICATION",
+      "key_fields": [
+        "save_id",
+        "TUT01_LAMP_VERIFICATION_V1"
+      ],
+      "atomic_writes": "verification_fact_only",
+      "boundary": "no_resource_date_or_personnel_transport",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "DEPARTURE",
+      "key_fields": [
+        "save_id",
+        "expedition_id",
+        "DEPARTURE_V1"
+      ],
+      "atomic_writes": "base_fee+selected_extra_transfer+locked_party_route_rewards",
+      "boundary": "no_partial_fee_or_unlocked_route",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "FOOTPRINT_OBSERVATION",
+      "key_fields": [
+        "expedition_id",
+        "E",
+        "FOOTPRINT_V1"
+      ],
+      "atomic_writes": "observation_ack_only",
+      "boundary": "not_species_or_skill_witness",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit",
+      "status": "legacy_T1_observation_receipt_read_only_not_used_to_grant_T2_reveal",
+      "migrated_receipt_is_fog_evidence": false
+    },
+    {
+      "receipt_id": "BATTLE_RESULT",
+      "key_fields": [
+        "expedition_id",
+        "battle_id",
+        "RESULT_V1"
+      ],
+      "atomic_writes": "result+personnel_state+real_witness+log_end",
+      "boundary": "never_replay_damage_or_reroll",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "SEGMENT_REWARD",
+      "key_fields": [
+        "expedition_id",
+        "node_id",
+        "SEGMENT_REWARD_V1"
+      ],
+      "atomic_writes": "locked_segment_money_into_carried_ledger",
+      "boundary": "A6_and_T10_2_once_not_extra_enemy_drop",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "PLAN_DECISION",
+      "key_fields": [
+        "expedition_id",
+        "A",
+        "FIRST_PLAN_V1"
+      ],
+      "atomic_writes": "chosen_PL_or_decline+run_equipment",
+      "boundary": "no_reoffer_after_decline",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "ROUTE_TRAVEL_V1",
+      "key_fields": [
+        "expedition_id",
+        "travel_command_id",
+        "ROUTE_TRAVEL_V1"
+      ],
+      "atomic_writes": "previous_and_current_location+actual_visibility_delta+visited_locations+known_connections+transition_target",
+      "boundary": "legal_adjacent_travel_with_both_ordinary_B_branches_available_no_encounter_or_event_reset",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "EVENT_PRESENTATION",
+      "key_fields": [
+        "expedition_id",
+        "node_id",
+        "tutorial_event_id",
+        "PRESENTED_V1"
+      ],
+      "atomic_writes": "presented_receipt+count",
+      "boundary": "PASS_also_presented",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "EVENT_OPTION",
+      "key_fields": [
+        "expedition_id",
+        "node_id",
+        "tutorial_event_id",
+        "OPTION_V1"
+      ],
+      "atomic_writes": "option+actual_effects+cap_or_claim",
+      "boundary": "all_effects_valid_before_commit_PASS_zero_delta",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "LOOT_CLAIM",
+      "key_fields": [
+        "expedition_id",
+        "node_id",
+        "preallocated_reward_slot",
+        "LOOT_V1"
+      ],
+      "atomic_writes": "budget+seeded_result+instances+ownership+gear_pity",
+      "boundary": "claim_once_quality_not_revealed_for_free_retry",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "SAFE_ANCHOR_DECISION",
+      "key_fields": [
+        "expedition_id",
+        "C",
+        "navigation_command_id",
+        "CONTINUE_OR_RETURN_V1"
+      ],
+      "atomic_writes": "continue_or_return_request",
+      "boundary": "continuing_once_does_not_forbid_later_backtrack_and_safe_return_no_heal_or_day_for_navigation",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "D_OBSERVATION",
+      "key_fields": [
+        "expedition_id",
+        "D",
+        "OBSERVATION_V1"
+      ],
+      "atomic_writes": "fixed_view_ack",
+      "boundary": "zero_reward_no_new_full_preview",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "ROOT_THREAT_FACT",
+      "key_fields": [
+        "save_id",
+        "TUT01-ROOT",
+        "ROOT_THREAT_CLEARED_V1"
+      ],
+      "atomic_writes": "root_threat_cleared_real_T_victory",
+      "boundary": "not_ST102_delivery",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "CUE_PRESENTATION",
+      "key_fields": [
+        "save_id",
+        "expedition_id_or_PRE_DEPARTURE",
+        "cue_id"
+      ],
+      "atomic_writes": "cue_seen_only",
+      "boundary": "no_reward_or_world_fact_callback",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "GEAR_BOX_DECISION",
+      "key_fields": [
+        "expedition_id",
+        "T",
+        "GEAR_BOX_V1"
+      ],
+      "atomic_writes": "claim_or_whole_box_decline",
+      "boundary": "no_new_family_or_quality_roll_after_decline",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "RETURN_SETTLEMENT",
+      "key_fields": [
+        "save_id",
+        "expedition_id",
+        "RETURN_V1"
+      ],
+      "atomic_writes": "personnel+banked_rewards+XP+date+recovery_construction+capture",
+      "boundary": "success_UI_only_after_all_saved",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "ST102_DELIVERY",
+      "key_fields": [
+        "save_id",
+        "ST102",
+        "DELIVERY_V1"
+      ],
+      "atomic_writes": "ST102_delivered+RG01_followup_unlocked_only_after_real_T_victory_and_safe_return",
+      "boundary": "no_extra_money_book_seal_or_item",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "BUILD_ORDER",
+      "key_fields": [
+        "save_id",
+        "build_order_id",
+        "BUILD_ORDER_V1"
+      ],
+      "atomic_writes": "cost+new_site_progress_2",
+      "boundary": "no_prior_action_progress",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "GEAR_TRANSFER",
+      "key_fields": [
+        "save_id",
+        "equipment_request_id",
+        "GEAR_TRANSFER_V1"
+      ],
+      "atomic_writes": "same_item+owner_container+stat_recompute",
+      "boundary": "absolute_current_HP_clamp_never_heal",
+      "duplicate": "return_original_receipt",
+      "conflicting_payload_same_key": "reject_or_return_original_never_new_result",
+      "invalid_or_insufficient": "zero_debit_zero_effect",
+      "save_failure": "same_pending_draft_no_success_UI_or_next_mutation_until_retry_or_safe_exit"
+    },
+    {
+      "receipt_id": "GUIDE_STEP",
+      "key_fields": [
+        "save_id",
+        "guide_version",
+        "step_id",
+        "GUIDE_STEP_V1"
+      ],
+      "atomic_writes": "guide_ack_or_skip_only",
+      "world_writes": [],
+      "duplicate": "return_original_guide_receipt",
+      "save_failure": "retain_same_guide_draft_no_world_fact_change"
+    },
+    {
+      "receipt_id": "FOG_REVEAL_V1",
+      "status": "legacy_T2_read_only_history_not_active_gate",
+      "new_write": false,
+      "requires_new_probe": false,
+      "legacy_completed_business": "preserve_no_rewind_or_synthetic_receipt",
+      "T3_replacement": "automatic_local_visibility_in_ROUTE_TRAVEL_V1"
+    },
+    {
+      "receipt_id": "ILLUMINATION_ANCHOR_ACTIVATION_V1",
+      "key_fields": [
+        "expedition_id",
+        "illumination_anchor_id",
+        "area_instance_id",
+        "ILLUMINATION_ANCHOR_ACTIVATION_V1"
+      ],
+      "payload_fields": [
+        "illumination_anchor_id",
+        "area_instance_id",
+        "activation_receipt",
+        "bounded_area_lighting_state",
+        "actual_local_visibility_delta"
+      ],
+      "atomic_writes": "activation_receipt+current_exp_bounded_area_lighting+actual_visibility_delta_no_visited_event_claim_or_enemy_clearance",
+      "boundary": "actual_preset_anchor_noncombat_player_confirm_no_pending_write_exact_authored_bound_area_only",
+      "costs": {},
+      "action_day_cost": 0,
+      "rewards": {},
+      "duplicate": "return_original_activation_receipt_read_only_no_new_effect_or_cost",
+      "cancel_before_commit": "zero_write_zero_effect",
+      "save_failure": "same_pending_activation_no_publish_until_saved_allow_existing_safe_exit_boundary",
+      "cross_return_and_later_expeditions": "user_decided_current_expedition_only_return_settlement_ends_light_effect_new_random_map_new_wild_anchors_no_prior_activation_inheritance_historical_receipt_read_only"
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "AS-TOWN",
+      "kind": "scene",
+      "description": "暮汀边境镇北门、带阵亡印旧名册、委任与编队桌",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "ENV-TOWN-01",
+        "CH-NPC-01",
+        "CH-NPC-02",
+        "CH-NPC-03"
+      ]
+    },
+    {
+      "asset_id": "AS-REGION",
+      "kind": "map",
+      "description": "RG01区域总图",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "UI-CORE"
+      ]
+    },
+    {
+      "asset_id": "AS-ROUTE",
+      "kind": "map",
+      "description": "有限区域探索图；最短7节点、补走双支共8个不同节点，短连接和进出口方向一致",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "UI-CORE"
+      ]
+    },
+    {
+      "asset_id": "AS-OPEN",
+      "kind": "board",
+      "description": "两处原地点复用OPEN七列九行几何合同；不传送通用竞技场",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "ENV-FOREST-01"
+      ]
+    },
+    {
+      "asset_id": "AS-S01",
+      "kind": "unit",
+      "description": "S01模型与既有动作",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "CH-SOLDIER-S01"
+      ]
+    },
+    {
+      "asset_id": "AS-S02",
+      "kind": "unit",
+      "description": "S02模型与既有动作",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "CH-SOLDIER-S02"
+      ]
+    },
+    {
+      "asset_id": "AS-S03",
+      "kind": "unit",
+      "description": "S03模型与既有动作",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "CH-SOLDIER-S03"
+      ]
+    },
+    {
+      "asset_id": "AS-EN01",
+      "kind": "enemy",
+      "description": "EN01一套资产供三次实例复用",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "CH-EN01"
+      ]
+    },
+    {
+      "asset_id": "AS-FOOTPRINT",
+      "kind": "prop",
+      "description": "固定足印与真实根痕，不是额外节点",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "ENV-FOREST-01",
+        "CH-EN01"
+      ]
+    },
+    {
+      "asset_id": "AS-SUPPORT",
+      "kind": "prop",
+      "description": "旧护运站",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "ENV-FOREST-01",
+        "PROP-LOOT"
+      ]
+    },
+    {
+      "asset_id": "AS-CRATE",
+      "kind": "prop",
+      "description": "旧材料匣与巡路队装备箱",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "PROP-LOOT"
+      ]
+    },
+    {
+      "asset_id": "AS-CAMEO",
+      "kind": "narrative",
+      "description": "魔王轮廓短现，没有血条占位与攻击",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "CH-KING-SIL"
+      ]
+    },
+    {
+      "asset_id": "AS-UI",
+      "kind": "ui",
+      "description": "既有编队风险地图战斗物品结算界面",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "UI-CORE"
+      ],
+      "optional_illumination_anchor_control": "C点亮此区/提交前取消/本区范围与原激活回执可读；不是每步探照"
+    },
+    {
+      "asset_id": "AS-GUIDE",
+      "kind": "ui",
+      "description": "可关闭高亮与键鼠焦点",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "UI-CORE",
+        "FX-READ"
+      ]
+    },
+    {
+      "asset_id": "AS-TELEGRAPH",
+      "kind": "fx",
+      "description": "EN01锁格与完整预警拍",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "FX-READ"
+      ]
+    },
+    {
+      "asset_id": "AS-SHIELD",
+      "kind": "fx",
+      "description": "有来源私盾",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "FX-READ"
+      ]
+    },
+    {
+      "asset_id": "AS-RETURN",
+      "kind": "fx",
+      "description": "归灯核验与实际归队反馈",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "CH-PLAYER",
+        "FX-READ"
+      ]
+    },
+    {
+      "asset_id": "AS-ICONS",
+      "kind": "ui",
+      "description": "资源材料方案与固定装备模板图标",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "UI-CORE"
+      ]
+    },
+    {
+      "asset_id": "AS-BUILD",
+      "kind": "ui",
+      "description": "医舍与遗迹观测站报价与未竣工状态",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "ENV-TOWN-01",
+        "UI-CORE"
+      ]
+    },
+    {
+      "asset_id": "AS-SUBTITLE",
+      "kind": "audio_ui",
+      "description": "条件字幕、可选语音与等价无声信息",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "status": "design_required_not_delivered",
+      "canonical_12_asset_refs": [
+        "UI-CORE",
+        "AU-TUT"
+      ]
+    },
+    {
+      "asset_id": "AS-LAMP-FOG",
+      "kind": "fx",
+      "description": "随行局部暖光、未知黑暗、已走低亮；接敌临时整盘扩光；C预设照明锚可选点亮本区，当前区域已亮时战后保留环境光，不增资产制作交付",
+      "source_ref": "SRC12",
+      "source_section": "9 资产、镜头与声音交接",
+      "canonical_12_asset_refs": [
+        "CH-PLAYER",
+        "ENV-FOREST-01",
+        "FX-FOG-EXP"
+      ],
+      "status": "design_required_not_delivered"
+    }
+  ],
+  "cues": [
+    {
+      "cue_id": "Q00",
+      "source_ref": "SRC12",
+      "source_step_id": "S00",
+      "trigger_event": "COMMISSION_SCENE_ENTERED",
+      "dialogue_refs": [
+        "TD001",
+        "TD002",
+        "TD003",
+        "TD032"
+      ],
+      "condition": "unseen_commission_scene_existing_commission_no_regrant",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q01",
+      "source_ref": "SRC12",
+      "source_step_id": "S01",
+      "trigger_event": "LAMP_VERIFICATION_REQUESTED",
+      "dialogue_refs": [
+        "TD004",
+        "TD005",
+        "TD006"
+      ],
+      "condition": "actual_local_two_lamp_verification",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q02",
+      "source_ref": "SRC12",
+      "source_step_id": "S02",
+      "trigger_event": "PARTY_SETUP_ENTERED",
+      "dialogue_refs": [
+        "TD031"
+      ],
+      "condition": "first_setup",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q03",
+      "source_ref": "SRC12",
+      "source_step_id": "S03",
+      "trigger_event": "DEPARTURE_COMMITTED",
+      "dialogue_refs": [],
+      "condition": "actual_departure",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q04",
+      "source_ref": "SRC12",
+      "source_step_id": "S04",
+      "trigger_event": "LOCAL_ROUTE_VISIBILITY_AND_ARRIVAL_SAVED",
+      "dialogue_refs": [
+        "TD007"
+      ],
+      "condition": "actual_local_near_light_reveals_existing_footprints_no_manual_probe_or_reward_callback",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q05",
+      "source_ref": "SRC12",
+      "source_step_id": "S05",
+      "trigger_event": "A_DEPLOYMENT_OPENED",
+      "dialogue_refs": [],
+      "condition": "prebattle_non_damaging_shape_demo_not_witness",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q06",
+      "source_ref": "SRC12",
+      "source_step_id": "S05",
+      "trigger_event": "FIRST_ACTUAL_EN01_A_TELEGRAPH_TICK_COMMITTED",
+      "dialogue_refs": [
+        "TD008",
+        "TD009"
+      ],
+      "condition": "once_across_A_and_T_speaker_actionable_cancel_if_enemy_incapacitated_before_windup",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented",
+      "additional_conditions": [
+        "guide_enabled",
+        "first_telegraph_autopause_setting_enabled",
+        "not_previously_seen_in_A_or_T"
+      ]
+    },
+    {
+      "cue_id": "Q07",
+      "source_ref": "SRC12",
+      "source_step_id": "S05",
+      "trigger_event": "BATTLE_A_VICTORY_COMMITTED",
+      "dialogue_refs": [],
+      "condition": "actual_downing_variant_only_if_downed",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q08",
+      "source_ref": "SRC12",
+      "source_step_id": "S07",
+      "trigger_event": "FORK_AREA_ENTERED_AFTER_A_VICTORY",
+      "dialogue_refs": [
+        "TD010",
+        "TD011"
+      ],
+      "condition": "existing_nearby_fork_routes_readable_offer_next_exit_and_known_return_no_irreversible_branch_lock",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented",
+      "dialogue_selection_rule": "play_only_variant_matching_actual_trigger_never_all_candidates",
+      "dialogue_variants": [
+        {
+          "on": "S07.route_fork_entered",
+          "dialogue_refs": [
+            "TD010"
+          ]
+        },
+        {
+          "on": "S08A.TUT_SUPPORT_PRESENTED",
+          "dialogue_refs": [
+            "TD011"
+          ]
+        }
+      ],
+      "additional_source_step_ids": [
+        "S08A"
+      ]
+    },
+    {
+      "cue_id": "Q09",
+      "source_ref": "SRC12",
+      "source_step_id": "S09",
+      "trigger_event": "SAFE_ANCHOR_ENTERED",
+      "dialogue_refs": [
+        "TD012",
+        "TD027"
+      ],
+      "condition": "first_arrival_no_auto_heal",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q10",
+      "source_ref": "SRC12",
+      "source_step_id": "S10",
+      "trigger_event": "D_LOCAL_VISIBILITY_AND_ARRIVAL_SAVED",
+      "dialogue_refs": [
+        "TD013"
+      ],
+      "condition": "actual_local_visible_root_activity_actual_actionable_speaker_or_environment_fallback_not_remote_intel_alone",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q11",
+      "source_ref": "SRC12",
+      "source_step_id": "S11",
+      "trigger_event": "BATTLE_T_STARTED",
+      "dialogue_refs": [
+        "TD014"
+      ],
+      "condition": "standard_camera_no_live_commands",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q12",
+      "source_ref": "SRC12",
+      "source_step_id": "S11",
+      "trigger_event": "BATTLE_T_VICTORY_COMMITTED",
+      "dialogue_refs": [],
+      "condition": "no_static_terrain_change",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q13",
+      "source_ref": "SRC12",
+      "source_step_id": "S12",
+      "trigger_event": "ROOT_THREAT_FACT_COMMITTED",
+      "dialogue_refs": [
+        "TD015",
+        "TD016",
+        "TD017"
+      ],
+      "condition": "real_target_victory_and_actual_present_party_or_environment_caption_no_DEMON_combat",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q14",
+      "source_ref": "SRC12",
+      "source_step_id": "S13",
+      "trigger_event": "TARGET_BOX_OPENED",
+      "dialogue_refs": [
+        "TD018"
+      ],
+      "condition": "actual_target_victory_old_human_made_box",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q15",
+      "source_ref": "SRC12",
+      "source_step_id": "S14",
+      "trigger_event": "SAFE_RETURN_PRESENTATION_READY",
+      "dialogue_refs": [
+        "TD019",
+        "TD020",
+        "TD021",
+        "TD028"
+      ],
+      "condition": "dialogue_conditions_independent_actual_personnel_and_delivery_no_failure_success_mix",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented",
+      "dialogue_selection_rule": "play_only_variant_matching_committed_return_outcome",
+      "dialogue_variants": [
+        {
+          "on": "safe_return_ST102_delivered",
+          "dialogue_refs": [
+            "TD019",
+            "TD020",
+            "TD021"
+          ]
+        },
+        {
+          "on": "safe_early_return_ST102_not_delivered",
+          "dialogue_refs": [
+            "TD019",
+            "TD020",
+            "TD028"
+          ]
+        }
+      ]
+    },
+    {
+      "cue_id": "Q16",
+      "source_ref": "SRC12",
+      "source_step_id": "S15",
+      "trigger_event": "RETURN_SETTLEMENT_COMMITTED",
+      "dialogue_refs": [
+        "TD022",
+        "TD023",
+        "TD029",
+        "TD030"
+      ],
+      "condition": "display_only_actually_banked_materials_and_gear",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "F01",
+      "source_ref": "SRC12",
+      "source_step_id": "S14",
+      "trigger_event": "FAILURE_PICKUP_AND_CAPTURE_FLOW",
+      "dialogue_refs": [
+        "TD024",
+        "TD025",
+        "TD026"
+      ],
+      "condition": "predeclared_patrol_D019_only_after_capture_saved",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_no_reward_or_world_fact_write",
+      "status": "script_reference_not_implemented",
+      "source_branch": "failure_settlement"
+    },
+    {
+      "cue_id": "Q04-LIGHT",
+      "source_ref": "SRC12",
+      "source_step_id": "S04",
+      "trigger_event": "LOCAL_ROUTE_VISIBILITY_AND_ARRIVAL_SAVED",
+      "dialogue_refs": [],
+      "condition": "actual_local_near_light_reveals_existing_footprints_no_manual_probe_or_reward_callback",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_keep_real_reveal_and_world_state",
+      "status": "script_reference_not_implemented"
+    },
+    {
+      "cue_id": "Q08-LIGHT",
+      "source_ref": "SRC12",
+      "source_step_id": "S07",
+      "trigger_event": "FORK_LOCAL_VISIBILITY_SAVED",
+      "dialogue_refs": [
+        "TD010"
+      ],
+      "condition": "both_authored_nearby_route_entries_visible_present_actionable_speaker_else_environment_prompt",
+      "receipt_ref": "CUE_PRESENTATION",
+      "skip": "presentation_only_do_not_auto_choose_branch",
+      "status": "script_reference_not_implemented"
+    }
+  ],
+  "dialogue_conditions": {
+    "TD001": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD002": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD003": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD004": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD005": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD006": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD007": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD008": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD009": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD010": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD011": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD012": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD013": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD014": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD015": "S12_after_actual_target_victory_only_unidentified_voice",
+    "TD016": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD017": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD018": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD019": "safe_return_town_actor",
+    "TD020": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD021": "safe_return_actual_roster_count_not_fixed_eight",
+    "TD022": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD023": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD024": "ordinary_defeat_lone_return_only",
+    "TD025": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD026": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD027": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD028": "safe_early_return_ST102_not_delivered",
+    "TD029": "actual_anomaly_seen_not_fabricated_fact",
+    "TD030": "named_character_in_current_town_or_explicit_fixed_record",
+    "TD031": "real_present_and_actionable_speaker_or_environment_caption",
+    "TD032": "named_character_in_current_town_or_explicit_fixed_record"
+  },
+  "world_fact_aliases": {
+    "ST101": "ST-101",
+    "ST102": "ST-102",
+    "SC-101": "ST-101 legacy transaction alias only",
+    "SC-102": "ST-102 legacy transaction alias only",
+    "ST102_delivered": "after_safe_survey_delivery_not_merely_root_threat_cleared"
+  },
+  "state_models": {
+    "world": {
+      "persistent_fields": [
+        "save_id",
+        "commission_accepted",
+        "initial_grant_receipt",
+        "initial_roster_seed",
+        "original_instance_ledger",
+        "mission_id",
+        "expedition_id",
+        "attempt_sequence",
+        "world_phase",
+        "route_seed",
+        "reward_seed",
+        "locked_route",
+        "current_node_id",
+        "battle_ids",
+        "whole_tick_battle_state",
+        "carried_ledger",
+        "claims_and_remaining_budgets",
+        "personnel_status",
+        "root_threat_cleared",
+        "ST102_delivered",
+        "RG01_followup_unlocked",
+        "day",
+        "receipt_ledger",
+        "fog_version",
+        "current_stable_anchor_id",
+        "node_fog_states",
+        "revealed_edge_ids",
+        "revealed_scene_patch_ids",
+        "intel_detail_receipts",
+        "fog_instance_id",
+        "fog_seed",
+        "visited_L2_branches",
+        "event_presentation_and_option_receipts",
+        "cleared_battle_slots",
+        "claimed_object_ids",
+        "travel_command_receipts",
+        "committed_phase",
+        "pending_transition_target",
+        "previous_safe_anchor_before_contact",
+        "illumination_anchor_id",
+        "area_instance_id",
+        "activation_receipt",
+        "bounded_area_lighting_state",
+        "map_seed",
+        "saved_area_layout_and_connections",
+        "generated_illumination_anchor_definitions",
+        "per_member_erosion",
+        "danger_area_entry_receipts"
+      ],
+      "complete_predicate": "ST102_delivery_receipt_committed_after_real_T_victory_and_safe_return",
+      "guide_skip_never_writes_world_facts": true,
+      "legacy_read_only_fields": [
+        "selected_L2_branch",
+        "fog_reveal_receipts",
+        "locked_survey_points"
+      ],
+      "legacy_field_semantics": "historical_selection_not_route_mutual_exclusion_no_new_manual_probe_gate",
+      "illumination_records_lifecycle": "same_expedition_saved_light_independent_of_VISITED_enemy_clearance_event_claims_and_camera_return_settlement_ends_run_light_next_genuine_expedition_new_random_map_area_instances_and_wild_anchors_no_old_light_inheritance_town_personnel_equipment_and_story_persist_no_world_reset",
+      "random_map_lifecycle": "departure_saves_map_seed_layout_area_instances_generated_anchor_defs_enemy_event_item_instances_resources_and_receipts_same_run_resume_reuses_all_new_run_generates_new_map_only_under_normal_run_rule_tutorial_fixed_layout_seed_exception"
+    },
+    "guide": {
+      "persistent_fields": [
+        "guide_version",
+        "guide_enabled",
+        "guide_step_id",
+        "completed_explanation_ids",
+        "seen_cue_receipts",
+        "dismissed_hint_ids",
+        "input_device_preference"
+      ],
+      "explanation_complete_is_not_world_success": true,
+      "skip_all": "disable_optional_explanation_and_auto_camera_only_keep_public_risk_UI_and_world_progress",
+      "skip_current": "dismiss_text_or_camera_do_not_choose_pay_or_grant",
+      "replay": "read_only_no_resource_or_world_writes",
+      "skip_never_grants_exploration_reveal": "guide_skip_grants_no_reveal_itself_and_does_not_disable_normal_automatic_local_visibility"
+    },
+    "checkpoints": [
+      {
+        "checkpoint_id": "CP00",
+        "trigger_event": "INITIAL_GRANT_COMMITTED_OR_RECOGNIZED",
+        "minimum_persistence": "grant+original_instance_ledger+seed+current_resources"
+      },
+      {
+        "checkpoint_id": "CP01",
+        "trigger_event": "DEPARTURE_COMMITTED",
+        "minimum_persistence": "fees+party+route+rewards+seeds+attempt+expected_return_day"
+      },
+      {
+        "checkpoint_id": "CP02",
+        "trigger_event": "DEPLOYMENT_COMMITTED",
+        "minimum_persistence": "battle_id+seed+positions+facing+stance+queue"
+      },
+      {
+        "checkpoint_id": "CP03",
+        "trigger_event": "WHOLE_LOGIC_TICK_COMMITTED",
+        "minimum_persistence": "HP+shields+actions+cooldowns+charges+targets+RNG_keys+pause_state"
+      },
+      {
+        "checkpoint_id": "CP04",
+        "trigger_event": "BATTLE_RESULT_COMMITTED",
+        "minimum_persistence": "result+real_mechanic_evidence+stable_result_receipt"
+      },
+      {
+        "checkpoint_id": "CP05",
+        "trigger_event": "NODE_CHOICE_OR_CLAIM_COMMITTED",
+        "minimum_persistence": "current_location+visited_branches+independent_event_option+budget+owned_instances+run_plan+actual_effects"
+      },
+      {
+        "checkpoint_id": "CP06",
+        "trigger_event": "RETURN_SETTLEMENT_COMMITTED",
+        "minimum_persistence": "personnel+resources+XP+date+recovery+construction+capture+ST102_if_eligible"
+      },
+      {
+        "checkpoint_id": "CP-TRAVEL",
+        "trigger_event": "ROUTE_TRAVEL_COMMITTED",
+        "minimum_persistence": "actual_location+local_visibility+known_connections+visited_locations+phase_and_transition_target_atomically",
+        "receipt_ref": "ROUTE_TRAVEL_V1"
+      },
+      {
+        "checkpoint_id": "CP-ILLUMINATION",
+        "trigger_event": "ILLUMINATION_ANCHOR_ACTIVATION_COMMITTED",
+        "minimum_persistence": "illumination_anchor_id+area_instance_id+activation_receipt+bound_area_light+actual_local_visibility_delta_atomically_no_visit_claim_or_enemy_reset",
+        "receipt_ref": "ILLUMINATION_ANCHOR_ACTIVATION_V1"
+      }
+    ],
+    "recovery_rule": "last_fully_committed_state_or_same_pending_transaction_never_restocked_prebattle",
+    "exit_during_animation": "save_last_committed_business_boundary_and_target_phase_resume_or_skip_remaining_presentation_no_new_business_or_replayed_rewards"
+  },
+  "legal_inputs": {
+    "town": [
+      "inspect",
+      "party_draft",
+      "route_preview",
+      "settings",
+      "save_exit",
+      "guide_skip"
+    ],
+    "party_setup": [
+      "select_ready_real_instance",
+      "add_remove_expedition_member",
+      "edit_legal_deployment",
+      "preview_costs",
+      "cancel",
+      "confirm_legal_party",
+      "guide_skip"
+    ],
+    "departure_preview": [
+      "inspect_exact_cost_and_return_day",
+      "select_extra_supply_0_to_2",
+      "cancel_zero_debit",
+      "confirm_once",
+      "guide_skip"
+    ],
+    "route": [
+      "inspect_map",
+      "inspect_carried_ledger",
+      "choose_adjacent_legal_exit",
+      "return_along_known_connected_route",
+      "inspect_or_use_explicit_local_event_or_loot",
+      "use_valid_noncombat_supply",
+      "save_exit",
+      "guide_skip",
+      "inspect_or_interact_with_physically_reached_preset_illumination_anchor"
+    ],
+    "plan_choice": [
+      "inspect_three_locked_existing_plans",
+      "choose_one_legal_plan",
+      "decline",
+      "save_exit",
+      "guide_skip"
+    ],
+    "tutorial_event": [
+      "inspect_effect_caps_and_source",
+      "select_legal_current_target",
+      "choose_one_option",
+      "PASS",
+      "cancel_unsubmitted_draft",
+      "save_exit",
+      "guide_skip",
+      "leave_without_option_if_no_pending_write_and_return_later"
+    ],
+    "safe_anchor": [
+      "inspect",
+      "swap_legal_reserve_and_revalidate",
+      "use_valid_noncombat_supply",
+      "continue",
+      "request_safe_return",
+      "existing_downed_escort_if_legal",
+      "save_exit",
+      "guide_skip",
+      "backtrack_to_known_connected_location",
+      "optional_point_light_this_area_at_actual_C_anchor"
+    ],
+    "deployment": [
+      "move_within_legal_deploy_cells",
+      "set_facing_stance_and_target_preference",
+      "set_existing_skill_queue",
+      "inspect_enemy",
+      "use_valid_noncombat_supply",
+      "confirm_start",
+      "save_exit",
+      "guide_skip",
+      "cancel_preparation_to_previous_safe_anchor"
+    ],
+    "battle_running": [
+      "pause",
+      "inspect",
+      "speed_selection",
+      "request_retreat",
+      "settings",
+      "save_exit"
+    ],
+    "battle_paused": [
+      "inspect",
+      "resume",
+      "speed_selection",
+      "request_retreat",
+      "settings",
+      "save_exit",
+      "guide_skip"
+    ],
+    "battle_result_pending": [
+      "inspect_pending_result",
+      "retry_identical_save",
+      "safe_exit"
+    ],
+    "narrative_noncombat": [
+      "advance_dialogue",
+      "skip_dialogue",
+      "settings",
+      "save_exit"
+    ],
+    "gear_claim": [
+      "inspect_compatibility_and_effective_quality_weights",
+      "select_locked_family",
+      "confirm_claim",
+      "decline_whole_box",
+      "save_exit",
+      "guide_skip"
+    ],
+    "return_preview": [
+      "inspect_personnel_money_items_XP_date",
+      "confirm_return_once",
+      "save_exit",
+      "guide_skip"
+    ],
+    "transaction_pending": [
+      "inspect_pending_summary",
+      "retry_identical_request",
+      "safe_exit"
+    ],
+    "equipment": [
+      "inspect_original_item_and_target",
+      "preview_HP_clamp",
+      "equip_transfer_or_store_if_11_legal",
+      "cancel",
+      "save_exit",
+      "guide_skip"
+    ],
+    "building_order": [
+      "compare_registered_prices_and_progress",
+      "confirm_optional_order",
+      "cancel",
+      "save_exit",
+      "guide_skip"
+    ],
+    "encounter_transition": [
+      "pause",
+      "settings",
+      "inspect_public_risk",
+      "skip_camera_and_light_presentation",
+      "save_exit_at_committed_boundary"
+    ],
+    "illumination_anchor_interaction": [
+      "inspect_bound_area_and_current_activation_receipt",
+      "activate_current_preset_illumination_anchor_noncombat",
+      "cancel_before_activation_commit",
+      "settings",
+      "save_exit",
+      "guide_skip"
+    ]
+  },
+  "input_and_camera_locks": {
+    "guide_is_business_rule": false,
+    "highlight_by_control_or_instance_id_not_screen_pixels": true,
+    "hard_lock_only": [
+      "conflicting_mutation_while_atomic_write_pending",
+      "action_illegal_by_existing_world_rule"
+    ],
+    "preserve_legally_available": [
+      "pause",
+      "settings",
+      "save_exit",
+      "retreat_or_safe_return",
+      "inspect_public_risk"
+    ],
+    "battle_forbids": [
+      "consume_item",
+      "live_position_facing_stance_queue_edits",
+      "equipment_change",
+      "reserve_swap",
+      "charges_reset",
+      "change_battle_lighting",
+      "adjacent_map_click_escape"
+    ],
+    "tooltip_close_never_auto_resumes_battle": true,
+    "camera_cannot_hide_warning_HP_or_retreat": true,
+    "reduced_motion_has_outline_and_subtitle_equivalent": true,
+    "combat_cue_cannot_change_action_seed_position_or_target": true,
+    "no_wall_clock_gate_or_speed_reward": true,
+    "skip_dialogue_never_auto_chooses_world_option": true,
+    "guide_skip_keeps_normal_automatic_local_visibility": true,
+    "transition_hard_lock": "only_conflicting_business_mutations_until_committed_boundary_no_required_long_camera_or_hold"
+  },
+  "terminal_and_retry": {
+    "full_success": {
+      "next": "S15",
+      "requires": "real_T_victory_and_safe_survey_delivery",
+      "root_threat_cleared": true,
+      "ST102_delivered": true,
+      "RG01_followup_unlocked": true
+    },
+    "safe_early_return": {
+      "next": "S14",
+      "then": "S15.ordinary_town_variant",
+      "goal_delivered": false,
+      "keep_only_real_carried_gains": true,
+      "bring_all_rescuable_downed_no_abandonment_fee": true,
+      "days": 1
+    },
+    "combat_retreat": {
+      "authority_ref": "SRC03",
+      "finish_current_tick_then_public_pursuit_ticks": 1,
+      "friendly_new_windups_during_pursuit": false,
+      "success_requires_standing_survivor_after_pursuit": true,
+      "no_enemy_legal_attack_no_invented_damage": true,
+      "then": "S14"
+    },
+    "defeat": {
+      "next": "S14.failure_settlement",
+      "then": "RESCUE_ENTRY",
+      "ordinary_carried_money_items_and_extra_supply_lost": true,
+      "advance_day_once": true,
+      "show_before_capture": [
+        "public_patrol_pickup_line",
+        "actual_present_personnel",
+        "capture_date_and_deadline"
+      ],
+      "capture_source": "predeclared_pickup_patrol_not_EN01_absorption_attack",
+      "reserve_is_not_auto_rescuer_or_safe_return": true,
+      "capture_scope": "all_physically_present_independent_expedition_instances_not_already_safely_escorted",
+      "personnel_and_gear_follow_existing_capture_and_loss_rules": true,
+      "standard_capture_day": 1,
+      "standard_deadline_day": 4,
+      "standard_window_days": 3,
+      "relaxed_deadline_day_if_selected_before_departure": 6,
+      "mode_snapshot_ref": "SRC02_capture_profile_snapshot_no_retroactive_change",
+      "opens": "existing_rescue_entry_for_actual_captures",
+      "subsequent_rescue_battle_is_first_level_content": false,
+      "revive_or_free_replacement": false,
+      "fixed_day_fields_scope": "D0_first_attempt_example_only",
+      "runtime_dates_ref": "runtime_calendar",
+      "example_last_standard_rescue_departure_day": 3,
+      "example_rescue_success_day": 4,
+      "administrator_live_intervention": false,
+      "rule_origin": "pre_signed_capture_and_lone_return_rules_automatically_executed"
+    },
+    "new_attempt": {
+      "when": "after_failed_or_early_return_settlement_when_current_party_can_legally_depart",
+      "new_expedition_id": true,
+      "normal_base_fee_and_selected_extra_transfer_again": true,
+      "keep": [
+        "existing_instances_and_rolls",
+        "real_injury_capture_and_deadline",
+        "spent_items",
+        "actual_observation",
+        "committed_claims_and_pity"
+      ],
+      "new_departure_may_generate_new_attempt_seed": true,
+      "same_request_retry_is_not_new_attempt": true,
+      "free_prebattle_reload": false,
+      "ST102_done_does_not_reopen_tutorial_for_free_initial_or_first_rewards": true,
+      "reset_to_initial_day": false,
+      "new_people_require_normal_paid_recruitment": true
+    }
+  },
+  "expected_ledgers": {
+    "assumptions": [
+      "new_save_default_60_12_6",
+      "no_predeparture_purchase_or_build",
+      "selected_extra_supply_1",
+      "recommended_six_deployed_both_battles_unless_case_outcome_says_otherwise",
+      "no_elite_or_event_cash",
+      "items_separate_from_copper_crystal_supply",
+      "same_run_backtracking_and_local_light_add_no_cost_day_healing_or_reward_reset"
+    ],
+    "cases": [
+      {
+        "case_id": "INITIAL",
+        "day": 0,
+        "town": {
+          "copper": 60,
+          "crystal": 12,
+          "supply": 6
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          0,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "8配发实例不扣招募费"
+      },
+      {
+        "case_id": "DEPARTED",
+        "day": 0,
+        "town": {
+          "copper": 60,
+          "crystal": 12,
+          "supply": 4
+        },
+        "carried_supply": 1,
+        "ordinary_money_banked": [
+          0,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "基础1消耗、额外1转包；预计D1"
+      },
+      {
+        "case_id": "A_WON_NOT_RETURNED",
+        "day": 0,
+        "town": {
+          "copper": 60,
+          "crystal": 12,
+          "supply": 4
+        },
+        "carried_supply": 1,
+        "ordinary_money_banked": [
+          0,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "已获6铜在携行账，不入库"
+      },
+      {
+        "case_id": "FULL_SUCCESS_UNUSED_RESCUE",
+        "day": 1,
+        "town": {
+          "copper": 76,
+          "crystal": 14,
+          "supply": 5
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          16,
+          2
+        ],
+        "ST102_delivered": true,
+        "note": "未用额外1返库；实物另列"
+      },
+      {
+        "case_id": "FULL_SUCCESS_USED_RESCUE",
+        "day": 1,
+        "town": {
+          "copper": 76,
+          "crystal": 14,
+          "supply": 4
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          16,
+          2
+        ],
+        "ST102_delivered": true,
+        "note": "合法实际消耗1，没有强制用药"
+      },
+      {
+        "case_id": "EARLY_AFTER_A_UNUSED_RESCUE",
+        "day": 1,
+        "town": {
+          "copper": 66,
+          "crystal": 12,
+          "supply": 5
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          6,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "仅首战与已领支路物，无目标款与箱"
+      },
+      {
+        "case_id": "EARLY_AFTER_A_USED_RESCUE",
+        "day": 1,
+        "town": {
+          "copper": 66,
+          "crystal": 12,
+          "supply": 4
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          6,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "实际用药1不返"
+      },
+      {
+        "case_id": "RETREAT_BEFORE_A_VICTORY",
+        "day": 1,
+        "town": {
+          "copper": 60,
+          "crystal": 12,
+          "supply": 5
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          0,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "假定救护未用且撤退成功"
+      },
+      {
+        "case_id": "DEFEAT_FIRST_OR_SECOND_BATTLE",
+        "day": 1,
+        "town": {
+          "copper": 60,
+          "crystal": 12,
+          "supply": 4
+        },
+        "carried_supply": 0,
+        "ordinary_money_banked": [
+          0,
+          0
+        ],
+        "ST102_delivered": false,
+        "note": "A已得6铜也丢失；包内材料与未穿新物同理"
+      }
+    ],
+    "experience": {
+      "recommended_six_safe_deployed_survivors_each": 1,
+      "never_deployed_reserves_each": 0,
+      "requires": "actual_deployment_in_settled_battle_and_final_safe_return",
+      "multiple_battles_add_more": false,
+      "first_level_experience_cost": 2,
+      "can_level_up_after_only_first_run": false,
+      "one_per_eligible_instance_per_expedition": 1
+    },
+    "optional_items": {
+      "B_SUPPORT": "no_stock_item_shield_and_earlier_full_target_preview",
+      "B_MATERIAL_safe_return": "exactly_2_seeded_RG01_material_units",
+      "S13_accepted_safe_return": "one_fixed_template_gear_instance",
+      "box_declined": "no_gear_and_no_pity_increment",
+      "both_L2_safe_return": "SUPPORT_once_and_exactly_2_seeded_RG01_material_units_can_coexist_no_extra_money_or_second_shield"
+    },
+    "post_success_build_examples": [
+      {
+        "building_id": "B01",
+        "name": "医舍",
+        "cost": {
+          "copper": 20,
+          "crystal": 4
+        },
+        "remaining_progress": 2,
+        "town_if_rescue_unused": {
+          "copper": 56,
+          "crystal": 10,
+          "supply": 5
+        },
+        "order_day": 1
+      },
+      {
+        "building_id": "B02",
+        "name": "遗迹观测站",
+        "cost": {
+          "copper": 16,
+          "crystal": 4
+        },
+        "remaining_progress": 2,
+        "town_if_rescue_unused": {
+          "copper": 60,
+          "crystal": 10,
+          "supply": 5
+        },
+        "order_day": 1
+      }
+    ],
+    "building_rules": {
+      "optional": true,
+      "order_adds_days": 0,
+      "first_expedition_progress_retroactive": false,
+      "unrushed_later_action_settlements_to_finish": 2,
+      "immediate_facility_effect": false,
+      "if_rescue_used_examples_supply": 4
+    },
+    "evidence_limit": "这是给定收益与人员结果前提下的账，不证明推荐阵型必胜；必须以实际自动战斗、寻路、动作与伤亡验证",
+    "date_values_scope": "new_save_default_D0_attempt_examples_only_runtime_uses_actual_d_to_d_plus_1"
+  },
+  "acceptance_contracts": [
+    {
+      "acceptance_id": "AT01",
+      "case": "initialize_or_reenter_S00_twice",
+      "expected": "initial_once_existing_originals_not_refilled_no_reroll"
+    },
+    {
+      "acceptance_id": "AT02",
+      "case": "cancel_or_double_confirm_departure",
+      "expected": "cancel_zero_one_fee_one_extra_transfer_same_locked_route"
+    },
+    {
+      "acceptance_id": "AT03",
+      "case": "valid_small_party_or_other_soldier_mix",
+      "expected": "no_role_quota_no_secret_enemy_scaling"
+    },
+    {
+      "acceptance_id": "AT04",
+      "case": "pause_at_actual_EN01_warning",
+      "expected": "whole_tick_pause_no_item_use_or_live_formation_edit"
+    },
+    {
+      "acceptance_id": "AT05",
+      "case": "enemy_killed_before_windup_or_guide_skipped",
+      "expected": "normal_victory_no_1HP_lock_no_false_skill_witness_target_still_allowed_after_real_A"
+    },
+    {
+      "acceptance_id": "AT06",
+      "case": "decline_PL_or_commit_PASS_at_either_branch",
+      "expected": "that_offer_or_event_option_stays_locked_other_branch_remains_visitable_and_claimable_once"
+    },
+    {
+      "acceptance_id": "AT07",
+      "case": "material_claim_then_reload",
+      "expected": "same_2_seeded_RG01_units_once_within_D0_cap4"
+    },
+    {
+      "acceptance_id": "AT08",
+      "case": "support_target_invalid_or_effect_already_known",
+      "expected": "actual_delta_caps_revalidated_zero_effect_SUPPORT_or_PASS_remains_legal_no_fake_positive_effect_or_cap_debit"
+    },
+    {
+      "acceptance_id": "AT09",
+      "case": "decline_or_repeat_gear_claim",
+      "expected": "one_fixed_instance_same_quality_no_Q2_tutorial_gift_no_reseed"
+    },
+    {
+      "acceptance_id": "AT10",
+      "case": "full_success_with_or_without_actual_rescue_use",
+      "expected": "76_14_5_or76_14_4_D1_one_XP_eligible_survivor"
+    },
+    {
+      "acceptance_id": "AT11",
+      "case": "A_early_return_or_actual_defeat",
+      "expected": "66_12_5_early_or60_12_4_defeat_under_assumptions_no_ST102_delivery"
+    },
+    {
+      "acceptance_id": "AT12",
+      "case": "save_failure_or_exit_at_battle_or_return",
+      "expected": "same_pending_receipt_no_partial_resources_date_or_new_roll"
+    },
+    {
+      "acceptance_id": "AT13",
+      "case": "deployment_wipes_with_reserve_present",
+      "expected": "normal_failure_no_automatic_rescue_D1_capture_standard_D4"
+    },
+    {
+      "acceptance_id": "AT14",
+      "case": "optional_D1_build_or_HP_gear_change",
+      "expected": "progress2_no_new_day_HP_absolute_clamp_no_heal"
+    },
+    {
+      "acceptance_id": "AT15",
+      "case": "skip_camera_dialogue_or_all_guide",
+      "expected": "no_autopicked_world_choice_no_false_delivery_no_reward_callback"
+    },
+    {
+      "acceptance_id": "AT16",
+      "case": "shortest_route_or_both_branches_and_any_speed",
+      "expected": "7_shortest_or8_distinct_both_branches_2_battles_1_day_repeated_travel_no_extra_reward_or_day"
+    },
+    {
+      "acceptance_id": "AT17",
+      "case": "early_return_then_S15",
+      "expected": "ordinary_town_ending_no_RG01_followup_unlock"
+    },
+    {
+      "acceptance_id": "AT18",
+      "case": "existing_commission_with_2_shields_and_4_melee",
+      "expected": "resolve_aliases_to_real_ledger_missing_C_uses_real_remaining_or_empty_never_refill"
+    },
+    {
+      "acceptance_id": "AT19",
+      "case": "skip_S01_or_disable_guide_before_S01",
+      "expected": "continue_S02_without_real_verification_fact_no_deadlock"
+    },
+    {
+      "acceptance_id": "AT20",
+      "case": "old_save_or_second_attempt_departure_at_day_d",
+      "expected": "settle_d_plus_1_not_D1_capture_deadline_from_actual_C"
+    },
+    {
+      "acceptance_id": "AT21",
+      "case": "guide_off_at_departure",
+      "expected": "irreversible_personnel_and_gear_loss_risk_remains_visible_before_confirm"
+    },
+    {
+      "acceptance_id": "AT22",
+      "case": "guide_off_at_S04_and_S07",
+      "expected": "normal_movement_reveals_local_routes_no_L_or_look_confirmation_explicit_exit_choices_remain"
+    },
+    {
+      "acceptance_id": "AT23",
+      "case": "actual_enemy_discovery",
+      "expected": "automatic_guard_expand_whole_local_board_retire_outside_cells_then_manual_deployment_start_no_resource_cost"
+    },
+    {
+      "acceptance_id": "AT24",
+      "case": "backtrack_reload_or_revisit_claimed_locations",
+      "expected": "same_cleared_enemies_HP_injuries_event_options_claims_and_budgets_no_reset_reroll_or_reconfirmation"
+    },
+    {
+      "acceptance_id": "AT25",
+      "case": "request_remote_unconnected_or_battle_map_travel",
+      "expected": "reject_illegal_travel_no_remote_reveal_no_map_click_escape"
+    },
+    {
+      "acceptance_id": "AT26",
+      "case": "visit_support_then_return_and_visit_material_or_reverse",
+      "expected": "both_existing_events_can_present_once_12_shield_nonstacking_2_material_once_no_new_money_or_gear"
+    },
+    {
+      "acceptance_id": "AT27",
+      "case": "remote_paid_intel_then_local_route_arrival",
+      "expected": "reuse_known_intel_no_reconfirmation_fee_or_refund_local_visibility_not_event_preview_cap"
+    },
+    {
+      "acceptance_id": "AT28",
+      "case": "battle_or_paused_battle_adjacent_region_click",
+      "expected": "no_escape_or_new_light_skill_existing_retreat_contract_only"
+    },
+    {
+      "acceptance_id": "AT29",
+      "case": "legacy_T2_save_with_or_without_FOG_receipts",
+      "expected": "preserve_committed_world_legacy_receipts_read_only_no_rewind_fake_receipt_or_manual_probe_gate"
+    },
+    {
+      "acceptance_id": "AT30",
+      "case": "keyboard_only_or_low_motion",
+      "expected": "equivalent_route_and_real_interaction_controls_skip_camera_without_business_change"
+    },
+    {
+      "acceptance_id": "AT31",
+      "case": "D021_has_no_actionable_present_speaker",
+      "expected": "environment_prompt_only_no_spawned_or_remote_actor_no_reward"
+    },
+    {
+      "acceptance_id": "AT32",
+      "case": "known_route_or_existing_stronger_intel",
+      "expected": "no_repeat_lamp_confirm_local_visibility_only_no_duplicate_intel_cost_or_seen_evidence"
+    },
+    {
+      "acceptance_id": "AT33",
+      "case": "both_L2_visits_with_exit_without_option_and_later_return",
+      "expected": "uncommitted_event_can_be_chosen_later_committed_PASS_or_claim_stays_locked_material_total2_equipment_once"
+    },
+    {
+      "acceptance_id": "AT34",
+      "case": "C_safe_return_or_post_target_return",
+      "expected": "existing_return_confirmation_without_forward_probe_or_rewalking_all_cleared_roads"
+    },
+    {
+      "acceptance_id": "AT35",
+      "case": "skip_or_exit_during_contact_or_post_battle_camera",
+      "expected": "resume_saved_boundary_and_target_phase_no_auto_start_replayed_battle_reward_or_ST102_delivery"
+    },
+    {
+      "acceptance_id": "AT36",
+      "case": "ordinary_travel_between_finite_regions",
+      "expected": "short_connections_preserve_direction_and_entry_exit_same_local_battle_no_generic_arena_teleport_or_cross_region_pursuit"
+    },
+    {
+      "acceptance_id": "AT37",
+      "case": "claim_both_L2_benefits_and_target_then_return",
+      "expected": "16_copper2_crystal_total2_material_max12_event_shield_once_one_gear_or_decline_one_action_day_unchanged"
+    },
+    {
+      "acceptance_id": "AT38",
+      "case": "repeat_friendly_backtracking_after_saved_battle",
+      "expected": "no_respawn_heal_free_supply_or_new_result_lamplighter_front_with_exploration_light_plus_any_saved_current_area_anchor_light"
+    },
+    {
+      "acceptance_id": "AT39",
+      "case": "cancel_deployment_before_explicit_battle_start",
+      "expected": "previous_safe_anchor_same_uncleared_encounter_no_pursuit_heal_clearance_reward_or_resource_refund_after_start_original_retreat_only"
+    },
+    {
+      "acceptance_id": "AT40",
+      "case": "first_support_visit_after_target_victory_before_return_commit",
+      "expected": "no_remaining_battle_shield_delta0_known_board_delta0_no_cap_debit_explicit_zero_effect_SUPPORT_or_PASS_allowed_no_new_battle_or_next_expedition_buff"
+    },
+    {
+      "acceptance_id": "AT41",
+      "case": "optional_C_illumination_activation_or_cancel",
+      "expected": "C_explicit_activate_saves_IA_TUT_C_area_instance_and_activation_receipt_cancel_before_commit_zero_effect_no_required_tutorial_gate"
+    },
+    {
+      "acceptance_id": "AT42",
+      "case": "activated_AREA_TUT_FORK_then_leave_and_reload_same_expedition",
+      "expected": "A_exit_fork_patch_B_SUPPORT_B_MATERIAL_C_stay_lit_occlusion_soft_edges_preserved_D_T_adjacent_unknown_remain_dark"
+    },
+    {
+      "acceptance_id": "AT43",
+      "case": "light_reveals_unvisited_original_objects_or_hostiles",
+      "expected": "REVEALED_UNVISITED_not_VISITED_until_arrival_events_loot_still_explicit_no_clear_heal_teleport_respawn_or_remote_full_board"
+    },
+    {
+      "acceptance_id": "AT44",
+      "case": "repeat_activation_or_finish_battle_in_lit_area",
+      "expected": "same_key_read_only_no_cost_day_reward_or_refresh_postbattle_keeps_saved_current_area_light"
+    },
+    {
+      "acceptance_id": "AT45",
+      "case": "return_or_later_expedition_after_activation",
+      "expected": "safe_return_settlement_ends_current_run_wild_light_new_genuine_expedition_new_random_map_and_wild_anchors_no_previous_light_inheritance_town_personnel_equipment_story_persist_without_reset"
+    },
+    {
+      "acceptance_id": "AT46",
+      "case": "save_exit_reload_or_backtrack_during_active_expedition",
+      "expected": "same_map_seed_layout_anchors_activations_enemies_objects_event_choices_HP_resources_and_budgets_no_reroll_refill_or_new_run"
+    },
+    {
+      "acceptance_id": "AT47",
+      "case": "normal_new_departure_versus_fixed_tutorial_exception",
+      "expected": "normal_new_run_new_random_connected_finite_map_and_wild_anchors_under_reachability_battle_slot_and_direction_constraints_RT2_TUT01_fixed_teaching_layout_seed_explicit_exception_no_generator_implementation_claim"
+    },
+    {
+      "acceptance_id": "AT-TINDER-01",
+      "case": "opening_skip_or_reenter",
+      "expected": "same_ST000_and_ST101_no_identity_spoiler_no_second_initial_grant"
+    },
+    {
+      "acceptance_id": "AT-TINDER-02",
+      "case": "early_command_anomaly",
+      "expected": "observable_half_beat_only_no_change_to_enemy_stats_or_control"
+    },
+    {
+      "acceptance_id": "AT-TINDER-03",
+      "case": "ordinary_defeat",
+      "expected": "lone_return_actual_captured_missing_or_saved_instances_no_rewind_no_free_restoration"
+    },
+    {
+      "acceptance_id": "AT-TINDER-04",
+      "case": "same_area_backtrack_save_reload",
+      "expected": "no_second_erosion_no_second_reward_same_map_same_anchor_lifecycle"
+    },
+    {
+      "acceptance_id": "AT-TINDER-05",
+      "case": "S12_projection",
+      "expected": "no_DEMON_kill_no_world_reset_no_protagonist_or_pod_identity_reveal"
+    },
+    {
+      "acceptance_id": "AT-TINDER-06",
+      "case": "current_speaker_died_or_not_present",
+      "expected": "real_other_actionable_speaker_or_caption_no_ghost_actor"
+    },
+    {
+      "acceptance_id": "AT-TINDER-07",
+      "case": "safe_full_visit",
+      "expected": "three_unique_danger_areas_plus_two_battles_erosion35_before_return15_after_return_if_no_extra_event_delta"
+    },
+    {
+      "acceptance_id": "AT-T11-01",
+      "case": "any_S00_to_S15_dialogue_or_hint",
+      "expected": "no_distinct_personality_AI_backhaul_or_admin_live_monitoring_fact_revealed_to_player"
+    },
+    {
+      "acceptance_id": "AT-T11-02",
+      "case": "ordinary_tutorial_defeat",
+      "expected": "pre_signed_capture_and_lone_return_execute_without_admin_direct_intervention_or_permission_revocation"
+    },
+    {
+      "acceptance_id": "AT-T11-03",
+      "case": "later_finale_warning_referenced_before_ST401",
+      "expected": "player_text_only_one_way_boundary_and_failure_ends_round_full_avatar_and_backhaul_mechanism_remain_ST401"
+    }
+  ],
+  "validation_boundary": "Machine-readable design specification only. Static synchronization does not prove runtime implementation, delivered assets, balance, play duration or a winning formation.",
+  "runtime_calendar": {
+    "departure_day_source": "actual_current_day_d_saved_in_DEPARTURE_receipt",
+    "settlement_day": "d+1",
+    "advance_at": "RETURN_SETTLEMENT_once",
+    "nodes_cues_pauses_and_offline_advance_days": false,
+    "new_attempt_starts_at_current_saved_day_never_D0_reset": true,
+    "D0_to_D1_in_examples_only": true,
+    "capture_day": "actual_failure_settlement_day_C",
+    "standard_deadline": "C+3",
+    "relaxed_deadline": "C+5_if_profile_selected_before_capture",
+    "rescue_duration_days": 1,
+    "latest_rescue_departure": "deadline_day-1",
+    "deadline_day_rescue_success_before_absorption_check": true
+  },
+  "departure_risk_contract": {
+    "source_refs": [
+      "SRC02",
+      "SRC03",
+      "SRC11",
+      "SRC12"
+    ],
+    "shown_before_confirm": [
+      "predeclared_physical_pickup_line_and_capture",
+      "actual_capture_mode_and_deadline_formula",
+      "overdue_absorption_irreversible",
+      "person_and_worn_equipment_permanently_lost",
+      "one_day_rescue_latest_departure_and_success_deadline"
+    ],
+    "guide_skip_removes_public_risk": false,
+    "combat_or_dialogue_skip_changes_risk": false,
+    "no_silent_newbie_immunity": true
+  },
+  "design_version": "TINDER-1.7",
+  "atomic_batches": [
+    {
+      "batch_id": "COMMISSION_INIT_BATCH",
+      "key_fields": [
+        "save_id",
+        "COMMISSION_INIT_V1"
+      ],
+      "child_receipts": [
+        "INITIAL_GRANT",
+        "COMMISSION_ACCEPT"
+      ],
+      "writes": "commission_acceptance+initial_resources+eight_real_instances+seed+receipts_in_one_commit",
+      "existing_save": "read_existing_receipts_and_instances_no_regrant",
+      "success_visible_only_after_whole_batch_saved": true
+    },
+    {
+      "batch_id": "A_RESULT_BATCH",
+      "key_fields": [
+        "expedition_id",
+        "A_battle_id",
+        "RESULT_BATCH_V1"
+      ],
+      "child_receipts": [
+        "BATTLE_RESULT",
+        "SEGMENT_REWARD"
+      ],
+      "writes": "A_result+personnel_state+real_witness+carried_6_copper+both_receipts",
+      "plan_decision_is_later_separate_manual_input": true,
+      "success_visible_only_after_whole_batch_saved": true
+    },
+    {
+      "batch_id": "T_RESULT_BATCH",
+      "key_fields": [
+        "expedition_id",
+        "T_battle_id",
+        "RESULT_BATCH_V1"
+      ],
+      "child_receipts": [
+        "BATTLE_RESULT",
+        "SEGMENT_REWARD",
+        "ROOT_THREAT_FACT"
+      ],
+      "writes": "T_result+personnel_state+real_witness+carried_10_copper_2_crystal+root_fact_and_receipts",
+      "permanent_root_fact_alone_is_not_current_attempt_victory": true,
+      "success_visible_only_after_whole_batch_saved": true
+    },
+    {
+      "batch_id": "EVENT_OPTION_BATCH",
+      "key_fields": [
+        "expedition_id",
+        "node_id",
+        "tutorial_event_id",
+        "EVENT_BATCH_V1"
+      ],
+      "child_receipts": [
+        "EVENT_OPTION",
+        "LOOT_CLAIM"
+      ],
+      "writes": "chosen_option+actual_support_effects_or_material_claim+all_cap_and_budget_debits+receipts",
+      "presentation_receipt_is_separate_and_has_no_reward": true,
+      "PASS": "choice_receipt_only_no_cost_effect_or_budget_debit",
+      "success_visible_only_after_whole_batch_saved": true,
+      "optional_child_receipts_conditions": {
+        "LOOT_CLAIM": "selected_option_is_CLAIM_MAT2"
+      },
+      "zero_effect_SUPPORT": "option_receipt_only_actual_effects_empty_no_cap_or_claim_debit_legal_after_target_victory"
+    },
+    {
+      "batch_id": "GEAR_BOX_BATCH",
+      "key_fields": [
+        "expedition_id",
+        "T",
+        "TARGET_GEAR",
+        "BOX_BATCH_V1"
+      ],
+      "child_receipts": [
+        "GEAR_BOX_DECISION",
+        "LOOT_CLAIM"
+      ],
+      "writes": "gear_decision+claimed_fixed_item+budget+pity+ownership+receipts",
+      "decline": "decision_only_no_item_debit_or_pity_advance",
+      "success_visible_only_after_whole_batch_saved": true,
+      "optional_child_receipts_conditions": {
+        "LOOT_CLAIM": "gear_box_decision_is_claim"
+      }
+    },
+    {
+      "batch_id": "RETURN_BATCH",
+      "key_fields": [
+        "save_id",
+        "expedition_id",
+        "RETURN_BATCH_V1"
+      ],
+      "child_receipts": [
+        "RETURN_SETTLEMENT",
+        "ST102_DELIVERY"
+      ],
+      "writes": "all_personnel+banked_gains+XP+actual_date+recovery_construction+capture_and_eligible_delivery_in_one_commit",
+      "delivery_requires": [
+        "T_result_for_this_exact_expedition_is_victory",
+        "root_threat_cleared",
+        "safe_survey_return",
+        "ST102_not_previously_delivered"
+      ],
+      "early_return": "no_delivery_or_lake_unlock",
+      "success_visible_only_after_whole_batch_saved": true,
+      "optional_child_receipts_conditions": {
+        "ST102_DELIVERY": "all_delivery_requires_hold_and_not_previously_delivered"
+      }
+    },
+    {
+      "batch_id": "ILLUMINATION_ANCHOR_ACTIVATION_BATCH",
+      "key_fields": [
+        "expedition_id",
+        "illumination_anchor_id",
+        "area_instance_id",
+        "ILLUMINATION_ANCHOR_ACTIVATION_V1"
+      ],
+      "child_receipts": [
+        "ILLUMINATION_ANCHOR_ACTIVATION_V1"
+      ],
+      "writes": "original_activation_receipt+bounded_current_exp_area_lighting+actual_local_visibility_delta",
+      "costs": {},
+      "rewards": {},
+      "cancel_before_commit": "zero_write_zero_effect",
+      "duplicate": "read_original_receipt_without_reactivation_or_new_debits",
+      "success_visible_only_after_whole_batch_saved": true
+    }
+  ],
+  "asset_id_convention": "AS-* are requirement groups; canonical_12_asset_refs map to the concrete asset IDs in chapter 12, not extra asset counts",
+  "fog_contract": {
+    "authority_ref": {
+      "source_id": "DATA_MAP",
+      "json_path": [
+        "fog_contract"
+      ]
+    },
+    "version": "TINDER-1.1",
+    "automatic_local_visibility": true,
+    "manual_lamp_action_or_FOG_receipt_required": false,
+    "no_lamp_cost_or_paid_intel_refund": true,
+    "legacy_T2_receipts_read_only": true,
+    "return_uses_existing_contract_no_probe": true,
+    "lighting_layers": [
+      "automatic_hand_lamp_local_exploration",
+      "automatic_temporary_local_battle_board_expansion",
+      "optional_player_activated_bounded_area_illumination_anchor"
+    ],
+    "illumination_anchor_ref": "illumination_anchor_contract",
+    "later_expedition_mask_boundary": "genuine_new_expedition_random_map_and_area_ids_with_new_wild_anchors_previous_run_light_not_inherited_tutorial_fixed_teaching_layout_exception_same_run_resume_reuses_saved_mask_and_activations"
+  },
+  "dialogue_additions": [],
+  "encounter_flow_contract": {
+    "authority_ref": {
+      "source_id": "DATA_MAP",
+      "json_path": [
+        "exploration_battle_contract"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "exploration",
+        "input": "explicit_route_exit_or_real_local_interaction_known_return_available_or_optional_physically_reached_preset_illumination_anchor_activation",
+        "save": "location_visibility_and_world_receipts_after_committed_travel_or_interaction_and_illumination_anchor_area_activation_receipt_when_explicitly_committed"
+      },
+      {
+        "phase": "encounter_transition",
+        "trigger": "actual_discovery_of_existing_local_enemies",
+        "automatic": "stop_frontline_passes_guard_expand_entire_local_board_lamplighter_retires_behind_friendly_edge_outside_cells",
+        "input": "pause_settings_skip_camera_save_exit_no_battle_or_route_choice_rewrite",
+        "save": "committed_encounter_identity_location_seed_and_target_deployment_phase_no_battle_started_by_animation"
+      },
+      {
+        "phase": "deployment",
+        "input": "existing_legal_formation_facing_stance_queue_equipment_reserve_noncombat_item_explicit_start_or_cancel_preparation_to_previous_safe_anchor",
+        "save": "committed_setup_and_unchanged_encounter_seed",
+        "backtrack": "before_actual_battle_start_explicit_cancel_preparation_to_previous_safe_anchor_without_pursuit_or_battle_result_keep_encounter_enemy_instances_and_spent_resources_no_heal_clearance_or_reward",
+        "cancel_preparation_save": "previous_stable_anchor_and_same_locked_encounter_identity_seed_enemy_instances_HP_resources_visibility_and_deployment_target_phase_no_battle_result_or_reward_receipt",
+        "after_start": "cancellation_unavailable_use_existing_combat_retreat_contract_only"
+      },
+      {
+        "phase": "battle",
+        "input": "existing_pause_inspect_speed_and_retreat_only",
+        "save": "existing_whole_tick_snapshot_or_same_pending_result",
+        "map_escape": false
+      },
+      {
+        "phase": "post_battle",
+        "automatic": "only_after_real_saved_result_regroup_lamplighter_returns_front_temporary_encounter_light_contracts_preserve_any_active_current_area_anchor_ambient_light",
+        "input": "pause_settings_skip_camera_save_exit_then_available_real_reward_or_route_inputs",
+        "save": "battle_result_and_automatic_segment_rewards_once_then_exploration_target_phase_optional_loot_requires_separate_explicit_input",
+        "anchor_persistence": "never_force_current_activated_area_dark_anchor_light_and_enemy_clearance_are_separate_states"
+      }
+    ],
+    "lamplighter_occupies_cell_or_fights_or_takes_aggro": false,
+    "light_costs": {},
+    "cast_interrupt_guard_lamp_or_lamp_oil": false,
+    "no_spawn_teleport_or_hidden_enemy_weakening": true,
+    "visual_transition_is_not_business_authority": true,
+    "no_new_animation_asset_commitment": true,
+    "illumination_anchor_effect_on_battle": "no_change_to_auto_battle_stats_aggro_targeting_terrain_or_existing_units_whole_local_board_expansion_still_automatic"
+  },
+  "illumination_anchor_contract": {
+    "authority_ref": {
+      "source_id": "DATA_MAP",
+      "json_path": [
+        "illumination_anchor_contract"
+      ]
+    },
+    "illumination_anchor_id": "IA_TUT_C",
+    "activation_node_id": "C",
+    "area_id": "AREA_TUT_FORK",
+    "included_existing_locations": [
+      "A_exit_fork_patch_only",
+      "B_SUPPORT",
+      "B_MATERIAL",
+      "C"
+    ],
+    "excluded_existing_locations": [
+      "D",
+      "T",
+      "X",
+      "adjacent_unknown_areas"
+    ],
+    "activation_receipt_ref": "ILLUMINATION_ANCHOR_ACTIVATION_V1",
+    "optional_not_completion_gate": true,
+    "no_new_node_battle_reward_or_cost": true,
+    "cross_return_and_later_expedition_light_policy": "user_decided_run_only_safe_return_settlement_ends_active_wild_area_light_new_expedition_new_random_map_new_wild_anchors_no_previous_light_inheritance_preserve_town_and_story"
+  },
+  "expedition_map_generation_contract": {
+    "authority_ref": {
+      "source_id": "DATA_MAP",
+      "json_path": [
+        "expedition_map_generation_contract"
+      ]
+    },
+    "normal_runs_random_each_new_departure": true,
+    "tutorial_exception": "RT2_TUT01_fixed_teaching_layout_and_seed",
+    "same_expedition_resume_not_new_departure": true,
+    "document_only_not_generation_algorithm_or_playable_implementation": true
+  },
+  "narrative_contract": {
+    "opening": "bloody_lone_return_and_town_suspicion",
+    "commander_memory_gaps": true,
+    "first_command_anomaly": "mimic_enemy_responds_half_a_beat_before_player_command",
+    "DEMON_appearance": "distant_unidentified_projection_no_identity_reveal_no_boss_fight",
+    "ordinary_failure": "protagonist_returns_alone_no_rewind_no_companion_restoration",
+    "finale_not_in_tutorial": true,
+    "no_world_reset_on_success_or_failure": true,
+    "secrets_in_contracts_are_authoring_metadata_not_player_text": true,
+    "training_administrator_isolation": {
+      "source": "本轮作者确认的补全",
+      "live_private_personality_or_quest_read": false,
+      "direct_training_interference": false,
+      "normal_capture_and_lone_return": "pre_signed_automatic_rules",
+      "direct_maintenance_gate": "DEMON_PROCESS_ENDED",
+      "finale_failure_C": "pre_signed_termination_not_early_admin_permission_revocation"
+    },
+    "finale_boundary_knowledge": {
+      "before_ST401": "characters_only_know_final_boundary_is_one_way_no_safe_return",
+      "before_ST401_do_not_explain": [
+        "protagonist_avatar_origin",
+        "old_brain_hosting",
+        "AI_backhaul_or_return_interface_mechanism"
+      ],
+      "mechanism_reveal_fact": "ST-401",
+      "entry_boundary": "voluntarily_close_normal_return_access_to_prevent_DEMON_tracking_the_entry_target",
+      "cause_is_admin_early_revocation": false,
+      "ordinary_tutorial_uses_finale_one_way_boundary": false
+    },
+    "agency_contract": {
+      "mainline_requires_prior_kindness": false,
+      "mainline_requires_trust_rescue_or_specific_hero": false,
+      "base_party_motive": "preserve_own_personality_and_freedom_shared_immediate_survival",
+      "base_line": "我不知道你以前是谁。我只知道，我不想被它换掉。",
+      "skeptical_line": "我还不信你。但这条路上，我们现在的目标相同。",
+      "trust_callback_requires": [
+        "speaker_alive",
+        "speaker_present",
+        "actual_matching_shared_experience"
+      ],
+      "no_eligible_callback": "base_motive_line_not_fabricated_memory",
+      "fresh_recruits_and_soldier_only_party_supported": true,
+      "profit_branch_party_automatically_approves": false,
+      "fixed_general_evidence_proves": "former_commander_history_not_current_player_morality",
+      "player_motivation_from_resource_optimization": false,
+      "DEMON_resist_branch_conclusion": "personality_continuity_is_not_interchangeable_with_aggregate_gain",
+      "DEMON_profit_branch_conclusion": "explicit_merge_confirms_replaceability_model_then_absorb_avatar",
+      "DEMON_understands_sacrifice_in_all_branches": false
+    },
+    "identity_choice_in_tutorial": false,
+    "opening_observation_requires_actual_action": true
+  },
+  "erosion_contract": {
+    "initial_all": 0,
+    "new_danger_area_each": 5,
+    "visited_area_again": 0,
+    "each_completed_battle_survivors": 10,
+    "safe_return_survivors_delta": -20,
+    "range": [
+      0,
+      100
+    ],
+    "per_area_receipt_key": [
+      "expedition_id",
+      "area_id",
+      "instance_id"
+    ],
+    "tutorial_danger_areas": [
+      "AREA_TUT_ENTRY",
+      "AREA_TUT_FORK",
+      "AREA_TUT_ROOT"
+    ],
+    "no_scripted_stat_debuff_or_forced_collapse": true,
+    "expected_full_visit_before_return": 35,
+    "expected_full_visit_after_safe_return": 15,
+    "first_entry_trigger_by_area": {
+      "AREA_TUT_ENTRY": "first actual arrival at E/A",
+      "AREA_TUT_FORK": "first actual arrival at B_SUPPORT or B_MATERIAL; S09 C only reads same receipt",
+      "AREA_TUT_ROOT": "first actual arrival at T/X"
+    }
+  },
+  "dialogues": [
+    {
+      "dialogue_id": "TD001",
+      "speaker_ref": "沈砚",
+      "text": "门外送来的名册上，你们已经全员阵亡。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD002",
+      "speaker_ref": "主角",
+      "text": "我记得有人让我先走。再往后的事……接不上了。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD003",
+      "speaker_ref": "沈砚",
+      "text": "那就先别急着解释。把还在这里的人带好。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD004",
+      "speaker_ref": "秦姨",
+      "text": "八个人，都是刚登记的新兵。我给他们备了行囊，名字得由你亲自记。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD005",
+      "speaker_ref": "秦姨",
+      "text": "路没变得更短。只是旧哨站没人照看了，先去看清能不能走。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD006",
+      "speaker_ref": "秦姨",
+      "text": "灯会跟着你们，照清眼前的路。它不会替谁挡箭。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD007",
+      "speaker_ref": "实际同行队员",
+      "text": "脚印还在。有人往那边走过，也有人往回跑。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD008",
+      "speaker_ref": "实际同行队员",
+      "text": "它刚才……是不是在等你的手势？",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD009",
+      "speaker_ref": "主角",
+      "text": "先按训练站稳。看清它要打哪里。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD010",
+      "speaker_ref": "实际同行队员",
+      "text": "两条旧路都能走。先去哪边，还能回来。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD011",
+      "speaker_ref": "护运站留言",
+      "text": "需要护持，就在这里登记。材料匣在另一边，不领也能继续。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD012",
+      "speaker_ref": "实际同行队员",
+      "text": "这盏旧灯点亮后，这一片就看得清了。到下一趟，得重新找路。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD013",
+      "speaker_ref": "实际同行队员",
+      "text": "前面有两处动静，都是刚才见过的那种。我们可以先整备。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD014",
+      "speaker_ref": "主角",
+      "text": "盾在前，侧边的人等它露出空当。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD015",
+      "speaker_ref": "远处不明声音",
+      "text": "这个号令，我见过。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD016",
+      "speaker_ref": "主角",
+      "text": "谁在那边？",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD017",
+      "speaker_ref": "实际同行队员",
+      "text": "只有那道影子。它没有过来。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD018",
+      "speaker_ref": "实际同行队员",
+      "text": "这里有旧巡路队的箱子，封条还在。带不带，先把数目记清。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD019",
+      "speaker_ref": "沈砚",
+      "text": "回来了几个人？",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD020",
+      "speaker_ref": "主角",
+      "text": "按名册核对。物资放这边，伤员先去医舍。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD021",
+      "speaker_ref": "沈砚",
+      "text": "路可以慢慢收回来。人不能写成下一批就有。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD022",
+      "speaker_ref": "秦姨",
+      "text": "你们带回的只算这一趟。先看看他们还缺什么。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD023",
+      "speaker_ref": "许苇",
+      "text": "那份旧名册我找到了。等你准备好，我们一起看。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD024",
+      "speaker_ref": "秦姨",
+      "text": "你回来了。其他人在哪？",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD025",
+      "speaker_ref": "主角",
+      "text": "把最后的位置记下来。能去找的，现在就准备。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD026",
+      "speaker_ref": "秦姨",
+      "text": "我会照实登记。还没找到的人，不算已经回家。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD027",
+      "speaker_ref": "实际同行队员",
+      "text": "到这里先歇一会儿。要不要继续，由我们看清以后再定。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD028",
+      "speaker_ref": "沈砚",
+      "text": "这次带回了前段的消息。根口还没查完，等人准备好再去。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD029",
+      "speaker_ref": "许苇",
+      "text": "你说它在号令之前动了？我只记现象，先不替你下结论。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD030",
+      "speaker_ref": "秦姨",
+      "text": "东西放进仓库，才算真正带回来。把每个人穿着什么也记上。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD031",
+      "speaker_ref": "实际同行队员",
+      "text": "我们在这儿。点到谁，就由谁回答。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "actual_present_actionable_instance_or_caption",
+      "skip_allowed": true
+    },
+    {
+      "dialogue_id": "TD032",
+      "speaker_ref": "主角",
+      "text": "我不知道那次发生了什么。这一趟，我会把每个人的去向记清。",
+      "source_ref": "SRC12",
+      "source": "[补全设计]",
+      "actor_binding": "named_character_or_fixed_record",
+      "skip_allowed": true
+    }
+  ]
+}

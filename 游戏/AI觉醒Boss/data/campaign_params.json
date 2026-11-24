@@ -1,0 +1,157 @@
+{
+  "status": "prototype_anchors_not_balanced",
+  "starting_coins": 30,
+  "recruit_cost": 10,
+  "return_aid_coins": 10,
+  "notes": "P3 short loop. Loot quantities unchanged. 100/50/60 transport applies only to legacy settlement v1; new v2 returns recoverable wounded without discard. Not final drop tables. XP+1 per deployed return is a pipeline placeholder, not the final growth curve.",
+  "returned_xp": 1,
+  "route_days": {
+    "tutorial": 2,
+    "commission": 2,
+    "outskirts": 3,
+    "rescue": 2,
+    "tutorial_trail": 2,
+    "rescue_path": 2,
+    "outpost": 3,
+    "boundary": 3
+  },
+  "route_loot": {
+    "tutorial": [
+      {
+        "id": "recruit_token",
+        "name": "招募信物",
+        "quantity": 1,
+        "unit_value": 60,
+        "splittable": false
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 40,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "commission": [
+      {
+        "id": "recruit_token",
+        "name": "招募信物",
+        "quantity": 1,
+        "unit_value": 60,
+        "splittable": false
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 40,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "outskirts": [
+      {
+        "id": "coins",
+        "name": "铜币",
+        "quantity": 30,
+        "unit_value": 1,
+        "splittable": true
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 10,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "rescue": [
+      {
+        "id": "coins",
+        "name": "铜币",
+        "quantity": 30,
+        "unit_value": 1,
+        "splittable": true
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 10,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "tutorial_trail": [
+      {
+        "id": "recruit_token",
+        "name": "招募信物",
+        "quantity": 1,
+        "unit_value": 60,
+        "splittable": false
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 40,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "rescue_path": [
+      {
+        "id": "coins",
+        "name": "铜币",
+        "quantity": 30,
+        "unit_value": 1,
+        "splittable": true
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 10,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "outpost": [
+      {
+        "id": "coins",
+        "name": "铜币",
+        "quantity": 30,
+        "unit_value": 1,
+        "splittable": true
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 10,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ],
+    "boundary": [
+      {
+        "id": "coins",
+        "name": "铜币",
+        "quantity": 30,
+        "unit_value": 1,
+        "splittable": true
+      },
+      {
+        "id": "crystals",
+        "name": "结晶",
+        "quantity": 10,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ]
+  },
+  "patrol_loot": [
+    {
+      "id": "coins",
+      "name": "铜币",
+      "quantity": 10,
+      "unit_value": 1,
+      "splittable": true
+    }
+  ]
+}

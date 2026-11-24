@@ -1,0 +1,450 @@
+{
+  "format": "P03-INPUT-1",
+  "scope_revision": "36c24804-3107-469d-8ad7-c1ba129f5572",
+  "runtime_fingerprint": "aaf831bc67b5e9e79fa3defcab926290373f9639a46944f34375fc90933f5cc3",
+  "closure_basis": "87 runtime files + 19 Catalog inputs + check_multi_region import + sampler weight input + configured event extensions + freeze; check_multi_region.run and web/app entrypoints not invoked",
+  "files": [
+    {
+      "path": "原型/火种计划_远征灰盒/action_timing.py",
+      "sha256": "9a339200ad0abc09b74d3d370d3dc8f3698945f3354c3ccb5b941371fcb6348b"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/adaptation_geometry.py",
+      "sha256": "a10964835def50d6bb9bd8c68b4bfa9571f1b52f718306dcead05f8ac4485c3b"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/app.py",
+      "sha256": "577acfa402820cb82e9fafa4371be9bcd5c1de7b23250e7cff284abb1bff8b36"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/balance_v062.py",
+      "sha256": "630fd2b7b12711dcbbf1d488fc42ce92a4a6915634afd507615198c7627fc10c"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/battle_enrage.py",
+      "sha256": "600492c9391f4805f3acef399ab135436140cde9dafb4d95e1268250c2dcc7f5"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/battle_lab.py",
+      "sha256": "bbbcae4debd8c0519bac06cd6b9c84be6a1e82db9da9ebead899146cd526dd3b"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/battle_plans.py",
+      "sha256": "4d1b9c16179d95a6bfbe5989641223ac93104e4589e67bd1521a27c2b5136012"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/battle_skills.py",
+      "sha256": "67c1893a6c2568a31119d5f7a053d7e9df458c6ebc3427a42bcd33ea8f556d75"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/board_gallery.py",
+      "sha256": "2ebf6efce79c284b11dd26f807d64ff6f713f7f12468451d5b17c3e1f82db096"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/board_geometry.py",
+      "sha256": "079c2d3cd8ba22c8bc426d5b57c8d7ee688ba1208dda8aebe6139207d882391d"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/book_catalog.py",
+      "sha256": "cf9d5ffd6ddcbe835e9e9accaf87bb63cb5dc5e4e77e1bca8916d20962781906"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/book_combat.py",
+      "sha256": "68848a7f5193114a6d015fe06f6f538f23f060785b375266c44b0efaf9b4a4b7"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/book_rewards.py",
+      "sha256": "19ac83bdc13d856d88ba3f919283a0d09434a838d835a10ce752d10c64d5811d"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/boss_mimic.py",
+      "sha256": "8b3a00d16358decdfb2b68ed454c0238d81bad3086cbd9f4bd1115df92ebcc5e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/boss_threats.py",
+      "sha256": "75b994d9c92d924f59a3ca803ba13fcaf90bd791e049deb5a3963a24e2ac5dd9"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/bosses.py",
+      "sha256": "543ac15d282fc5bf8e18da459697d94e867d5b1b5805cf004fab9e4b96296aaf"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/campaign.py",
+      "sha256": "af9fbaad7f1660e1203053b0c30adb69a5c8e223dae34473cad033638fadce68"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/cases.py",
+      "sha256": "ff2197dd802e584847b81d42a07006031885b10d16971780c35e8d203966bbb6"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/challenge_rewards.py",
+      "sha256": "cc80ecf69cdeb41692f0be2a3a2e620c6189c14fae05d6b8a1fd8cb748c0fbb8"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/civilian.py",
+      "sha256": "154bcc64aa9147819d9a452a004a74ddddbed84acedac857f5910e6d8d9b5def"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/civilian_text.json",
+      "sha256": "ac4000eae08f905aa5171ba23c099273937cf5cb6da75d7d717bca44f337f0aa"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/clues.py",
+      "sha256": "9479122fc6ce4bc459b140a79ab84b7299744ae4c36d40b77463103853164cef"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/combat.py",
+      "sha256": "3faf379e1dc25efc070bf34a6468e330c5ba1c28b589eb2940ea416d42df1909"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/commander.py",
+      "sha256": "4120128ffee4f9866981c9c71d2083196e920b50bbffe0f10c5287097041654a"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/construction.py",
+      "sha256": "cf89403cfaed996a0816da86a79cdeac81251c64d5c1ef8f216a2820b4ced2d4"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/data.py",
+      "sha256": "6792ba275b9b5ecd3a0c91c8aab280c3666dc35c8c89c7b24a22e0c6a22f235a"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/depth_growth.py",
+      "sha256": "874ff4f4c18ecda2809d1bdb0a9042bac0eb2f98745abdfd91f9f2e2583ef204"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/drill_lab.py",
+      "sha256": "0e29c23f09f1f8170ec431367fb27bfcb488b6a64fb4c2a1cfe3e5ca7c1937a4"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/drills.py",
+      "sha256": "c7b0116abe6db5f82c31681b95869cd7daa35982099b18628c155f86dcd2c279"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/enemy_intel.py",
+      "sha256": "0fd795e9417d43e2b71b78ece7656eaad628ce80bb368b02099a26726290ade6"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/enemy_support.py",
+      "sha256": "ea47ab6724acadf556255537e0774f512703401aa62b62a08594e2c8bd25adb0"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/engine.py",
+      "sha256": "f567e46f541751fe485b1337f000b72d2a0bc52ddce0a41eb739a3d2590671c6"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/equipment.py",
+      "sha256": "805ce3afb6112cd440f8eb0f46a199f21bbf7ffe155da9df61b6f5740bacb65a"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/equipment_rolls.py",
+      "sha256": "98bc379f0f284a09b1d89e22b6504ed92c556ae1db726b318ec4cd81d87a30a3"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/escort.py",
+      "sha256": "aaed3c7f65758e927f6a967330a4cf300489742df37d437d8626ac281460d66b"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/event_conditions.py",
+      "sha256": "c5ec34ad7612b62af5277575a936f27e61b972d3eb8d39c157d75ead7cd5e7ee"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/event_memory.py",
+      "sha256": "c0e8562c16cfdf4c787c61ebe3f03f7add90f968a3c86b93d220672f831e88aa"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/expedition_peril.py",
+      "sha256": "f2ad9da67583f30b0b20d5da3e11cd1370af3737d7e32889f9eca1612710c26f"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/expedition_tiers.py",
+      "sha256": "0d3e223203c22ead25217572eebd35fc293e9796f233dbf2bed037fc6c520006"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/facilities.py",
+      "sha256": "b4dbd4df1265ca6dc9c4b628ec8d763211e17894c727ad6e5b7038fbd0606dbb"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/fantasy_enemies.py",
+      "sha256": "afa49802168f9bcc758836a1a7682dfe3372336bbdf2f3d1de71bf65c3187181"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/finale.py",
+      "sha256": "3b2d400c60aedc27918bce2ac67a01877073c103de60792db63a3cb9d57ac750"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/finale_battle.py",
+      "sha256": "24717eaaf824d263a0e8f697d2f08f3e22da14882dd6aedbea8e310f266bfb4e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/fortune_mechanics.py",
+      "sha256": "afb43c80562db94a5324f80a4a0adacdf47b7ba5780640d0464a5d7534082bde"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/gear_affixes.py",
+      "sha256": "9226cf9834cbcbb2faf81ab2ce64722687e0daf208dd91e65e6cd9fe4a99468f"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/hero_fixtures.py",
+      "sha256": "3632258643e1beec5e026559a362808a3da969583ad01f1bb2a7c1aea31d1940"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/hero_power_v062.py",
+      "sha256": "6e5d543d747d59dcfc04f7d6e11b6138fed09acf88f4180c8f2b8359e65f6630"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/hero_refinements.py",
+      "sha256": "15d92256a04f4973075548d575f0e020b88799ab0017f78fb6c74d0cfc79986a"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/heroes.py",
+      "sha256": "68b7d5f00ad1098c7cfe359a53677a4a05d3829dbdd40cae1c58da7db7119c57"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/hidden_thread.py",
+      "sha256": "0d8e238702b5e3b5d46cabd30c643c6023f34f0325d4100012f719bb016b604c"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/index.html",
+      "sha256": "f9546a885c46408df879b35dc3da40567b208f74e61f42065ac6639bde0f74ae"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/late_pressure.py",
+      "sha256": "c5630f2b8af719a1f8be4bf119bcd5aa4e20521c2375b75fb5214e0d36d8987e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/learning.py",
+      "sha256": "fdb922991286f61092f3ad9b0f7637cdb58aed9650e5d9e847e8b6ffba7f6424"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/mechanics.py",
+      "sha256": "fe5286c60bd746873775860db2531e670d6b7c2e3506ca181634acdf746f6114"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/medicine.py",
+      "sha256": "42b6394ef1c3313e9ac2187985aded6c94addcc1c6fed6ea8c0608924bc05308"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/missing.py",
+      "sha256": "981c1236a8d34bfaf3c0250dc3c4dd7ebf5e5546ccf2afa64b9348644702b476"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/narrative.py",
+      "sha256": "9a3e580d1f9f78e9981ec2fa281cdaa96bf8bd4e92f4f6be8973dd8e2f30c523"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/narrative_view.js",
+      "sha256": "059100976b1ed6ec2cad6c78644524193f09272fc8bedcdf55f1808a87108049"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/necromancy.py",
+      "sha256": "5e4c5db093678293a010cc7712e1059a67aa719530db5b44a4d083d9e26945c2"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/outfitting.py",
+      "sha256": "5edb260e7749cd73c87a30fad3735b2d4038aa4786ac9b70943933a56930d9fa"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/plan_offers.py",
+      "sha256": "2cafd0a0ca87584cb5da3dd53e301509b0df492d2185231f09d3878e549f4788"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/protection.py",
+      "sha256": "0236d57033b0210930568756e8751c0cdfbe986440cfd8bdc2650f33d587980e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/recovery.py",
+      "sha256": "fa528a83cb10dddffb93b7e4833e5e4bae2cce01ddf30e60e1e735b8eb3a6544"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/reforge.py",
+      "sha256": "86af9e33ad2d8e0e3ef490ad6c43fd9d12d93f1cc3d759e73c136b814d8fb78f"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/refugee.py",
+      "sha256": "548bdfeedc4b93cebdf370c14307089e4384db5eda4817f06a43515ebad049ed"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/region_space.py",
+      "sha256": "9d3d415a2d8d54f5e9006d80e075dba14828d9e46a7b0f365a5b2d3d874550b1"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/reinforcements.py",
+      "sha256": "3fd5203929fd95db939d136b66a9245a88310552665eb4076f147cc05578f32b"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/rescue.py",
+      "sha256": "e5f89a2b4818acb42d03bb4be339dad04d16dee79422cf5fc15dceb09fb080c0"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/research.py",
+      "sha256": "bcd8cc058323f41d4c68f04fef1264716e1be3022f03a597df96dc76434c935e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/rogue_events.py",
+      "sha256": "f32aa90837785f38cd97c1ba8df3446c186f0a3580b1b2c9b8411945c4f4cb79"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/roster_content.py",
+      "sha256": "2079b6eeb6b85a9fb4b72e935a80fe2c0735831a7211107684d043b48f92a1a8"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/roster_skills.py",
+      "sha256": "5ea7f1f194fa63e97f48f194e74e117dda288d49eb03906fc93a18ca1a7b5d4e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/runtime_freeze_v098.json",
+      "sha256": "f4af19ed63d684318dc95a563f4558fcab16e817628d80beceac3d57e8094032"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/save_storage.py",
+      "sha256": "231c7ea861acfdfe6271a4e437ff907037510197830194eba2ae62e810ed1ac3"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/save_validation.py",
+      "sha256": "45297a23e7080532d495ed2f64a9ef32095e9ac7d7c1514067236f5a14c1889f"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/skill_books.py",
+      "sha256": "312498c94ff205bbd4dd49bba2c9da2ec0a166ba66ab29a3fffc433170c9fc6d"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/smoke.py",
+      "sha256": "4941b1965a4aaff43c68e39ff7283df07e38e5f3bbfc85d9c0c33ff9dada3e56"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/space_view.js",
+      "sha256": "aacfec7eb4fded1acdce498bcdbd3c87255b076364b33011bf48b0d8671b6a35"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/spatial_moves.py",
+      "sha256": "c2e35626cae65639eba1409896fd1406450018fb1d0a335e40066856a5e3eb9d"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/stage_balance.py",
+      "sha256": "898c0aa21f29712a0acda5f9b1cd3f896a9dba9f24d83e68ee3e3b34208562fb"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/story_mission.py",
+      "sha256": "0458fde87806860e07c21b588fc9d75095a342964eb16f732138c96008998d7e"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/supplies.py",
+      "sha256": "d9c252af582df0f313626b9a66f9f803ab31bfca4a7face38ae8a60046a8e9ce"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/sweeps.py",
+      "sha256": "7e2e1e7645a92f28613d0f595edf2a1edf779f212be62f6ddfb6f44d152c1547"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/town.py",
+      "sha256": "a78ca649ff7caf47c0f4a2a34e3c89b0343fc6f7c61ae624e84df10a9fc3450f"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/veil.py",
+      "sha256": "ae213238bfb61fec71db17f4a5a204484e0e6f99e63619c54b8c934485fcb756"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/water.py",
+      "sha256": "52bd8c7d3718fff4424321cab6539b8c7e0605bb1eb0e93ed6126598e0fc8779"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/web.py",
+      "sha256": "311a16c8b71c85db814f05974a7520fa2170e3547cc362beabc49d23635da0d7"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/workshop.py",
+      "sha256": "6712504bbbe6264e096bfbdec4e9f7cd30255cae9689a11d8aa61356ba407c1c"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/check_multi_region.py",
+      "sha256": "c45614b077b6c870afd2953468c8ef4342492e0f4dd98a1af4cd60f83628c014"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/choice_sampling_model.py",
+      "sha256": "43d47c3dfecd8991835b9b09d79eecdf3c8035d67a1fcd9948dd3c556b367460"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/event_catalog.py",
+      "sha256": "23251d5dc6ed558dea73c4289aabef2c385f3f7309771f21d4266a68cb9b7b53"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/joint_sampling_model.py",
+      "sha256": "c31f06d737c6e629fab5117fbe4714f08c397ff2cd738c5bda21b10584ea8a96"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/事件回访与结算合同.json",
+      "sha256": "abd647fb7fd0bbca8344d2ce466897784ae750e97ffced7b9e921c5b15e4aa60"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/八区联合布点.json",
+      "sha256": "8c8c2b62215214e5021195ec4bd37c9ec5c35344837d0c745a83e50f48b34da5"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/内容池抽样初始配置.json",
+      "sha256": "87c09c1fdc80f5902fb76d9321620054e9cb3edbf04aa7fe8e1e9745c60b7377"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/地图地形.json",
+      "sha256": "2b871b3e3ed6a664ee96389a89f976fa08d73195dc5d772db91cb532f19bed1f"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/多区域远征配置.json",
+      "sha256": "cddbeff39f21738f28672dda88b4a9336cef3d6823168c20aea91c92e52663e2"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/奖励预留与事件配比配置.json",
+      "sha256": "747eea38d93207e0d222e6308f159896fdbaf5f396767f782a9c085c14c5b23a"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/完整远征验证配置.json",
+      "sha256": "0bdc1ed971fab7940de4562185bf64744bd2b8198f4a765a8c1bba46da4aa274"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/战利品.json",
+      "sha256": "13af056d16072bb2ae27b6c1a4c5f6397c81651eeef7930561f7711a901d8a46"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/敌人与遭遇.json",
+      "sha256": "8077f6ae2be68d13e3dae271a7face5ddaea326e21c91545cc29c962c23e3dc8"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/普通事件扩展.json",
+      "sha256": "4243242ea7fddcfcab2836e480e5c4383c51c070d581b2776925f550c9d4c75b"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/构筑与学习.json",
+      "sha256": "88ada805a1cdc75d21e5d1ba922b7aa5152ff5d26bc7e093c4a9a28a6db52a56"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/联合抽样验收配置.json",
+      "sha256": "d0844b09c86d48eef6c9133405f8087510e0cdf41f1b753df7a7769585fc6ee5"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/规则样例.json",
+      "sha256": "482a9d2459fa462b0bbe2a564d5769c5f406897d55eaeddc4b4190db650a2c3d"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/近期事件联动.json",
+      "sha256": "e11378be8e0e19399cdd4c33b289354c589d4e218758ccef2c0517d657384c29"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/远征事件池.json",
+      "sha256": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/校验/连续区域地图合同.json",
+      "sha256": "5dae73060cb3e1c54c306af04c9307089b007d7a8cced8eea97b54c5e22608e9"
+    },
+    {
+      "path": "文档/执灯人_完整设计提案_v4/样片/首次远征流程.json",
+      "sha256": "30227244ccd61620cf3f988a0d32fd553be1ad8b91f719003aefcf1cab7e3d82"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/archive_cache.py",
+      "sha256": "4075985d84fee0fe5e1156970f9efc8dcbdf42a68e9be26bd5dabf1a8c90093d"
+    }
+  ],
+  "candidate": "P03 isolated write and retry candidate",
+  "baseline_bundle_sha256": "a691def0fefdea822fe7a9cedc57649a194cf42212be87404afacd5447d12f02"
+}

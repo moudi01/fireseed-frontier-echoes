@@ -1,0 +1,38 @@
+{
+  "shield": {
+    "name": "盾兵",
+    "hp": 45,
+    "attack": 5,
+    "armor": 25,
+    "attack_interval_ticks": 4,
+    "range": 1,
+    "cost": 1
+  },
+  "cavalry": {
+    "name": "突击兵",
+    "hp": 32,
+    "attack": 9,
+    "armor": 10,
+    "attack_interval_ticks": 3,
+    "range": 1,
+    "cost": 1
+  },
+  "archer": {
+    "name": "弓兵",
+    "hp": 24,
+    "attack": 8,
+    "armor": 0,
+    "attack_interval_ticks": 4,
+    "range": 3,
+    "cost": 1
+  },
+  "lorne": {
+    "name": "洛恩",
+    "hp": 150,
+    "attack": 14,
+    "armor": 35,
+    "attack_interval_ticks": 4,
+    "range": 1,
+    "cost": 8
+  }
+}

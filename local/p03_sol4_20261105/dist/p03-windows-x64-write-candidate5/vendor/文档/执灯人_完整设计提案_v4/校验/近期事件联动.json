@@ -1,0 +1,32 @@
+{
+  "version": "EVENT-LINK-1.0",
+  "ordinary_cross_expedition_cooldown": 0,
+  "ordinary_recent_weight_multiplier": 1,
+  "source_window_ordinary_expeditions": 2,
+  "followup_chance": 0.5,
+  "scope": "First playable ordinary-event links; humanity case aftermath remains unimplemented in greybox.",
+  "rules": [
+    {
+      "id": "LINK-BRACE-REST",
+      "source_event": "EV53",
+      "source_options": {"PRIMARY": "CO03", "SECONDARY": "CO07"},
+      "target_event": "EV54",
+      "budget_parent_option": "PRIMARY",
+      "mode": "consume_brace_heal",
+      "scene": "照料伤员时，队员想起先前在绑带架上试过的护具。若包里还有未用的同类护具，可以拆开固定伤处；这样会失去一份战前准备用品。",
+      "label": "拆用护具，加强一人的治疗",
+      "result_text": "护具拆成了固定伤处的衬片，暂时不能再作为战前准备使用。"
+    },
+    {
+      "id": "LINK-NOTES-SLED",
+      "source_event": "EV56",
+      "source_options": {"PRIMARY": null},
+      "target_event": "EV55",
+      "budget_parent_option": "PRIMARY",
+      "mode": "fiber_instead_of_exertion",
+      "scene": "先前抄下的巡队笔记里画过绳结分担拉力的方法。用一份随行木纤架绳，可以拖出压住的货物，不必再让队员独自顶木。",
+      "label": "按笔记用一份木纤架绳取货",
+      "result_text": "木纤绳磨损后留在倒木旁，队员借着拉力把货物拖了出来。"
+    }
+  ]
+}

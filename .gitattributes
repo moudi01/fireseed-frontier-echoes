@@ -1,0 +1,4 @@
+# Preserve authored bytes across Windows checkouts, including save and runtime fingerprints.
+* -text
+*.import text eol=lf
+原型/P06_首章/assets/** -text

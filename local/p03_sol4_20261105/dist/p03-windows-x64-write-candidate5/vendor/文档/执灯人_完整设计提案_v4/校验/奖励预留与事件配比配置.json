@@ -1,0 +1,1587 @@
+{
+  "version": "CHOICE-1.0",
+  "authority": "专项/奖励预留与事件配比优化.md",
+  "model": "choice_sampling_model.py",
+  "checks": "check_choice_sampling.py",
+  "status": "offline_design_reference_not_production_approval",
+  "unchanged_event_catalog_size": 60,
+  "policy": {
+    "caps": "MULTI-1.1 unchanged",
+    "event_rewards": "all existing reward bundles and amounts unchanged",
+    "goal_materials": "0 or 2 after event reservations; lock before departure; only optional material fixture is movable",
+    "guaranteed_goal_commission": {
+      "copper": 16,
+      "crystal": 2
+    },
+    "elite_actual_win_increment": {
+      "copper": 8,
+      "crystal": 2
+    },
+    "external_reservations": "immutable",
+    "priority": [
+      "existing legal route and site counts",
+      "existing humanity placements and options",
+      "reduce budget-disabled ordinary options without worsening any incumbent path",
+      "optional goal material bundles from residual headroom"
+    ],
+    "mix": "constraint-based complementary reward demand; no fixed card categories or guaranteed event chain",
+    "humanity": "lock after feasible event-first assignment; never add humanity to repair budget",
+    "search_nodes_per_improvement_attempt": 1200,
+    "fallback": "keep feasible plan and report unresolved optimization; remaining budget-disabled choices require author review",
+    "settlement": "no refund or redistribution of unused choice reservation during run",
+    "pair_attempt_limit": 2000,
+    "pair_repair": "two ordinary cards on co-occurring regions, restore both full option sets; never change locked humanity"
+  },
+  "comparison_requests": [
+    {
+      "id": "B1-SHORT-11",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 11,
+        "profile": "SHORT",
+        "start": "RG01",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B1-SHORT-29",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 29,
+        "profile": "SHORT",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B1-SHORT-47",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 47,
+        "profile": "SHORT",
+        "start": "RG06",
+        "target": "RG01"
+      }
+    },
+    {
+      "id": "B1-SHORT-83",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 83,
+        "profile": "SHORT",
+        "start": "RG06",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B1-MEDIUM-11",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 11,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B1-MEDIUM-29",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 29,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B1-MEDIUM-47",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 47,
+        "profile": "MEDIUM",
+        "start": "RG06",
+        "target": "RG01"
+      }
+    },
+    {
+      "id": "B1-MEDIUM-83",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 83,
+        "profile": "MEDIUM",
+        "start": "RG06",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B1-LONG-11",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 11,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B1-LONG-29",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 29,
+        "profile": "LONG",
+        "start": "RG06",
+        "target": "RG01"
+      }
+    },
+    {
+      "id": "B1-LONG-47",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 47,
+        "profile": "LONG",
+        "start": "RG06",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B1-LONG-83",
+      "request": {
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "seed": 83,
+        "profile": "LONG",
+        "start": "RG06",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B2-SHORT-11",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 11,
+        "profile": "SHORT",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B2-SHORT-29",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 29,
+        "profile": "SHORT",
+        "start": "RG02",
+        "target": "RG03"
+      }
+    },
+    {
+      "id": "B2-SHORT-47",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 47,
+        "profile": "SHORT",
+        "start": "RG02",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B2-SHORT-83",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 83,
+        "profile": "SHORT",
+        "start": "RG03",
+        "target": "RG02"
+      }
+    },
+    {
+      "id": "B2-MEDIUM-11",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 11,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG06"
+      }
+    },
+    {
+      "id": "B2-MEDIUM-29",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 29,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B2-MEDIUM-47",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 47,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B2-MEDIUM-83",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 83,
+        "profile": "MEDIUM",
+        "start": "RG02",
+        "target": "RG01"
+      }
+    },
+    {
+      "id": "B2-LONG-11",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 11,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG06"
+      }
+    },
+    {
+      "id": "B2-LONG-29",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 29,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B2-LONG-47",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 47,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B2-LONG-83",
+      "request": {
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "seed": 83,
+        "profile": "LONG",
+        "start": "RG02",
+        "target": "RG01"
+      }
+    },
+    {
+      "id": "B3-SHORT-11",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 11,
+        "profile": "SHORT",
+        "start": "RG02",
+        "target": "RG03"
+      }
+    },
+    {
+      "id": "B3-SHORT-29",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 29,
+        "profile": "SHORT",
+        "start": "RG02",
+        "target": "RG04"
+      }
+    },
+    {
+      "id": "B3-SHORT-47",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 47,
+        "profile": "SHORT",
+        "start": "RG02",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B3-SHORT-83",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 83,
+        "profile": "SHORT",
+        "start": "RG03",
+        "target": "RG02"
+      }
+    },
+    {
+      "id": "B3-MEDIUM-11",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 11,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG05"
+      }
+    },
+    {
+      "id": "B3-MEDIUM-29",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 29,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG06"
+      }
+    },
+    {
+      "id": "B3-MEDIUM-47",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 47,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B3-MEDIUM-83",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 83,
+        "profile": "MEDIUM",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    },
+    {
+      "id": "B3-LONG-11",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 11,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG05"
+      }
+    },
+    {
+      "id": "B3-LONG-29",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 29,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG06"
+      }
+    },
+    {
+      "id": "B3-LONG-47",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 47,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG07"
+      }
+    },
+    {
+      "id": "B3-LONG-83",
+      "request": {
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "seed": 83,
+        "profile": "LONG",
+        "start": "RG01",
+        "target": "RG08"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "JS01",
+      "title": "早期短途与可选分支",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07"
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "export": true
+    },
+    {
+      "case_id": "JS02",
+      "title": "早期中途多分支",
+      "request": {
+        "seed": 42,
+        "profile": "MEDIUM",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG08"
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "export": true
+    },
+    {
+      "case_id": "JS03",
+      "title": "早期长途完整联合计划",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07"
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "export": true
+    },
+    {
+      "case_id": "JS04",
+      "title": "晚期长途完整联合计划",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "start": "RG07",
+        "target": "RG05"
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "export": true
+    },
+    {
+      "case_id": "JS05",
+      "title": "普通卡近期全见允许降权回补",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "history": [
+          [
+            "EV01",
+            "EV02",
+            "EV04",
+            "EV06",
+            "EV08",
+            "EV10",
+            "EV11",
+            "EV13",
+            "EV14",
+            "EV15",
+            "EV17",
+            "EV18",
+            "EV20",
+            "EV21",
+            "EV23",
+            "EV24",
+            "EV26",
+            "EV27",
+            "EV29",
+            "EV30",
+            "EV31",
+            "EV32",
+            "EV33",
+            "EV34",
+            "EV35",
+            "EV36",
+            "EV37",
+            "EV38",
+            "EV39",
+            "EV40",
+            "EV41",
+            "EV42",
+            "EV43",
+            "EV44",
+            "EV45",
+            "EV46",
+            "EV47",
+            "EV48",
+            "EV49",
+            "EV50",
+            "EV51",
+            "EV52",
+            "EV53",
+            "EV54",
+            "EV55",
+            "EV56",
+            "EV57",
+            "EV58",
+            "EV59",
+            "EV60"
+          ],
+          [
+            "EV01",
+            "EV02",
+            "EV04",
+            "EV06",
+            "EV08",
+            "EV10",
+            "EV11",
+            "EV13",
+            "EV14",
+            "EV15",
+            "EV17",
+            "EV18",
+            "EV20",
+            "EV21",
+            "EV23",
+            "EV24",
+            "EV26",
+            "EV27",
+            "EV29",
+            "EV30",
+            "EV31",
+            "EV32",
+            "EV33",
+            "EV34",
+            "EV35",
+            "EV36",
+            "EV37",
+            "EV38",
+            "EV39",
+            "EV40",
+            "EV41",
+            "EV42",
+            "EV43",
+            "EV44",
+            "EV45",
+            "EV46",
+            "EV47",
+            "EV48",
+            "EV49",
+            "EV50",
+            "EV51",
+            "EV52",
+            "EV53",
+            "EV54",
+            "EV55",
+            "EV56",
+            "EV57",
+            "EV58",
+            "EV59",
+            "EV60"
+          ]
+        ],
+        "case_states": {
+          "EV03": "PROTECTED",
+          "EV05": "PROTECTED",
+          "EV07": "PROTECTED",
+          "EV09": "PROTECTED",
+          "EV12": "PROTECTED",
+          "EV16": "PROTECTED",
+          "EV19": "PROTECTED",
+          "EV22": "PROTECTED",
+          "EV25": "PROTECTED",
+          "EV28": "PROTECTED"
+        }
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "ordinary_fallback",
+      "export": true
+    },
+    {
+      "case_id": "JS06",
+      "title": "人性近期卡不随普通回补重开",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "history": [
+          [
+            "EV01",
+            "EV02",
+            "EV04",
+            "EV06",
+            "EV08",
+            "EV10",
+            "EV11",
+            "EV13",
+            "EV14",
+            "EV15",
+            "EV17",
+            "EV18",
+            "EV20",
+            "EV21",
+            "EV23",
+            "EV24",
+            "EV26",
+            "EV27",
+            "EV29",
+            "EV30",
+            "EV31",
+            "EV32",
+            "EV33",
+            "EV34",
+            "EV35",
+            "EV36",
+            "EV37",
+            "EV38",
+            "EV39",
+            "EV40",
+            "EV41",
+            "EV42",
+            "EV43",
+            "EV44",
+            "EV45",
+            "EV46",
+            "EV47",
+            "EV48",
+            "EV49",
+            "EV50",
+            "EV51",
+            "EV52",
+            "EV53",
+            "EV54",
+            "EV55",
+            "EV56",
+            "EV57",
+            "EV58",
+            "EV59",
+            "EV60",
+            "EV03",
+            "EV05",
+            "EV07",
+            "EV09",
+            "EV12",
+            "EV16",
+            "EV19",
+            "EV22",
+            "EV25",
+            "EV28"
+          ],
+          [
+            "EV01",
+            "EV02",
+            "EV04",
+            "EV06",
+            "EV08",
+            "EV10",
+            "EV11",
+            "EV13",
+            "EV14",
+            "EV15",
+            "EV17",
+            "EV18",
+            "EV20",
+            "EV21",
+            "EV23",
+            "EV24",
+            "EV26",
+            "EV27",
+            "EV29",
+            "EV30",
+            "EV31",
+            "EV32",
+            "EV33",
+            "EV34",
+            "EV35",
+            "EV36",
+            "EV37",
+            "EV38",
+            "EV39",
+            "EV40",
+            "EV41",
+            "EV42",
+            "EV43",
+            "EV44",
+            "EV45",
+            "EV46",
+            "EV47",
+            "EV48",
+            "EV49",
+            "EV50",
+            "EV51",
+            "EV52",
+            "EV53",
+            "EV54",
+            "EV55",
+            "EV56",
+            "EV57",
+            "EV58",
+            "EV59",
+            "EV60",
+            "EV03",
+            "EV05",
+            "EV07",
+            "EV09",
+            "EV12",
+            "EV16",
+            "EV19",
+            "EV22",
+            "EV25",
+            "EV28"
+          ]
+        ]
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "no_humanity_selected"
+    },
+    {
+      "case_id": "JS07",
+      "title": "三类服务均缺席仍保留基础三处",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "services": {
+          "RG01": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG02": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG03": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG04": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG05": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG06": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG07": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG08": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          }
+        },
+        "case_states": {
+          "EV03": "PROTECTED",
+          "EV05": "PROTECTED",
+          "EV07": "PROTECTED",
+          "EV09": "PROTECTED",
+          "EV12": "PROTECTED",
+          "EV16": "PROTECTED",
+          "EV19": "PROTECTED",
+          "EV22": "PROTECTED",
+          "EV25": "PROTECTED",
+          "EV28": "PROTECTED"
+        }
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "no_services",
+      "export": true
+    },
+    {
+      "case_id": "JS08",
+      "title": "缺服务又缺必要场景导致容量失败",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "services": {
+          "RG01": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG02": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG03": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG04": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG05": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG06": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG07": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          },
+          "RG08": {
+            "scouting": false,
+            "workbench": false,
+            "variant": false
+          }
+        },
+        "case_states": {
+          "EV03": "PROTECTED",
+          "EV05": "PROTECTED",
+          "EV07": "PROTECTED",
+          "EV09": "PROTECTED",
+          "EV12": "PROTECTED",
+          "EV16": "PROTECTED",
+          "EV19": "PROTECTED",
+          "EV22": "PROTECTED",
+          "EV25": "PROTECTED",
+          "EV28": "PROTECTED"
+        },
+        "missing_props": [
+          "EV04"
+        ]
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "BASE_EVENT_CAPACITY",
+      "export": true
+    },
+    {
+      "case_id": "JS09",
+      "title": "四区起终点不合法不得暗减区数",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07"
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "NO_EXACT_ROUTE"
+    },
+    {
+      "case_id": "JS10",
+      "title": "未开放地区不能成为目的地",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG03"
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "NO_EXACT_ROUTE"
+    },
+    {
+      "case_id": "JS11",
+      "title": "原有奖励预留已超总额",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "pre_reserved_by_region": {
+          "RG01": {
+            "material_units": 100
+          }
+        }
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "PRE_RESERVED_BUDGET_EXCEEDED",
+      "export": true
+    },
+    {
+      "case_id": "JS12",
+      "title": "移走可选目标材料预留后恢复合法计划",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "exclude_events": [
+          "EV01",
+          "EV02",
+          "EV03",
+          "EV04",
+          "EV05",
+          "EV06",
+          "EV31",
+          "EV54"
+        ],
+        "pre_reserved_by_region": {
+          "RG01": {
+            "material_units": 4
+          }
+        },
+        "fourth_sites": false
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "export": true
+    },
+    {
+      "case_id": "JS13",
+      "title": "无共同棋盘时剔除改路卡",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "fault_board_allowlist": {
+          "RG01": [],
+          "RG02": [],
+          "RG03": [],
+          "RG04": [],
+          "RG05": [],
+          "RG06": [],
+          "RG07": [],
+          "RG08": []
+        }
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "no_variant_common_board"
+    },
+    {
+      "case_id": "JS14",
+      "title": "未交割人性案件在必经地区预留",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "directed_case": "EV03"
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "directed_once_each_path",
+      "export": true
+    },
+    {
+      "case_id": "JS15",
+      "title": "已保全案件不能重新指定",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "directed_case": "EV03",
+        "case_states": {
+          "EV03": "PROTECTED"
+        }
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "CASE_ALREADY_TERMINAL"
+    },
+    {
+      "case_id": "JS16",
+      "title": "已出卖案件不能重新指定",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "directed_case": "EV03",
+        "case_states": {
+          "EV03": "EXPLOITED"
+        }
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "CASE_ALREADY_TERMINAL"
+    },
+    {
+      "case_id": "JS17",
+      "title": "指定案件缺接收者不得伪造交割",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "directed_case": "EV03",
+        "services": {
+          "RG01": {
+            "receiver": false
+          }
+        }
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "DIRECTED_CASE_INELIGIBLE"
+    },
+    {
+      "case_id": "JS18",
+      "title": "待护送案件近期出现仍可定向续办",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "directed_case": "EV03",
+        "case_states": {
+          "EV03": "PROTECTION_PENDING"
+        },
+        "history": [
+          [
+            "EV03"
+          ]
+        ]
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "directed_pending_cooldown",
+      "export": true
+    },
+    {
+      "case_id": "JS19",
+      "title": "定向案件不在所有分支必经地区",
+      "request": {
+        "seed": 42,
+        "profile": "MEDIUM",
+        "chapter": 2,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104"
+        ],
+        "start": "RG01",
+        "target": "RG03",
+        "directed_case": "EV09"
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "DIRECTED_ROUTE_NOT_COVERED"
+    },
+    {
+      "case_id": "JS20",
+      "title": "真相未解锁时铭牌不入候选",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE"
+        ],
+        "start": "RG07",
+        "target": "RG05",
+        "exclude_events": [
+          "EV22",
+          "EV23",
+          "EV24",
+          "EV25",
+          "EV26",
+          "EV28",
+          "EV52"
+        ],
+        "fourth_sites": false
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "BASE_EVENT_CAPACITY"
+    },
+    {
+      "case_id": "JS21",
+      "title": "真相已解锁才能补足该铭牌组合",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 3,
+        "facts": [
+          "ST-101",
+          "ST-102",
+          "ST-104",
+          "CH2_COMPLETE",
+          "ST-303"
+        ],
+        "start": "RG07",
+        "target": "RG05",
+        "exclude_events": [
+          "EV22",
+          "EV23",
+          "EV24",
+          "EV25",
+          "EV26",
+          "EV28",
+          "EV52"
+        ],
+        "fourth_sites": false
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "knowledge_card_present"
+    },
+    {
+      "case_id": "JS22",
+      "title": "搜索耗尽必须返回未决而非无解",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "search_limit": 0
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "SEARCH_LIMIT"
+    },
+    {
+      "case_id": "JS23",
+      "title": "负预留值不能扩大预算",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "pre_reserved_by_region": {
+          "RG01": {
+            "material_units": -1
+          }
+        }
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "INVALID_RESERVATION"
+    },
+    {
+      "case_id": "JS24",
+      "title": "超过最近两趟的历史不影响本次",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "history": [
+          [
+            "EV01",
+            "EV02",
+            "EV04",
+            "EV06",
+            "EV08",
+            "EV10",
+            "EV11",
+            "EV13",
+            "EV14",
+            "EV15",
+            "EV17",
+            "EV18",
+            "EV20",
+            "EV21",
+            "EV23",
+            "EV24",
+            "EV26",
+            "EV27",
+            "EV29",
+            "EV30",
+            "EV31",
+            "EV32",
+            "EV33",
+            "EV34",
+            "EV35",
+            "EV36",
+            "EV37",
+            "EV38",
+            "EV39",
+            "EV40",
+            "EV41",
+            "EV42",
+            "EV43",
+            "EV44",
+            "EV45",
+            "EV46",
+            "EV47",
+            "EV48",
+            "EV49",
+            "EV50",
+            "EV51",
+            "EV52",
+            "EV53",
+            "EV54",
+            "EV55",
+            "EV56",
+            "EV57",
+            "EV58",
+            "EV59",
+            "EV60",
+            "EV03",
+            "EV05",
+            "EV07",
+            "EV09",
+            "EV12",
+            "EV16",
+            "EV19",
+            "EV22",
+            "EV25",
+            "EV28"
+          ],
+          [],
+          []
+        ]
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "equals_JS03"
+    },
+    {
+      "case_id": "JS25",
+      "title": "不根据队伍和人性偏好暗改抽卡",
+      "request": {
+        "seed": 42,
+        "profile": "LONG",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG06",
+        "target": "RG07",
+        "party": [
+          "OTHER_TEAM"
+        ],
+        "morality_preference": "profit",
+        "inventory": {
+          "copper": 0,
+          "CO10": 0
+        }
+      },
+      "expected_status": "SUCCESS",
+      "expected_reason": null,
+      "check": "equals_JS03"
+    },
+    {
+      "case_id": "CS26",
+      "title": "外部预留占满额度仍不能伪造事件收益",
+      "request": {
+        "seed": 42,
+        "profile": "SHORT",
+        "chapter": 1,
+        "facts": [
+          "ST-101",
+          "ST-102"
+        ],
+        "start": "RG01",
+        "target": "RG07",
+        "exclude_events": [
+          "EV01",
+          "EV02",
+          "EV03",
+          "EV04",
+          "EV05",
+          "EV06",
+          "EV31",
+          "EV54"
+        ],
+        "pre_reserved_by_region": {
+          "RG01": {
+            "material_units": 8
+          }
+        },
+        "fourth_sites": false
+      },
+      "expected_status": "FAILURE",
+      "expected_reason": "JOINT_BUDGET_OR_BINDING",
+      "export": true
+    }
+  ],
+  "snapshot": "历史材料/文案归档/火种计划_CHOICE-1.0_奖励选择空间优化前_20261027",
+  "scope_exclusions": [
+    "runtime integration",
+    "real combat and movement",
+    "optimal choice mix",
+    "population probabilities",
+    "all interaction affordability",
+    "full loot table",
+    "long term economy"
+  ]
+}

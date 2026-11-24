@@ -1,0 +1,38 @@
+{
+  "baseline": "a691def0fefdea822fe7a9cedc57649a194cf42212be87404afacd5447d12f02",
+  "vendor_changes": [
+    {
+      "path": "原型/火种计划_远征灰盒/data.py",
+      "before": "384e9a7c6447bfef5e47348da5339de6207db4efc4f0ab95255c96612e1baa64",
+      "after": "6792ba275b9b5ecd3a0c91c8aab280c3666dc35c8c89c7b24a22e0c6a22f235a"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/engine.py",
+      "before": "2516d9667756f7553b17ed148f8a261f5b18a8c5ccb3c2f21c959ee956ba6945",
+      "after": "f567e46f541751fe485b1337f000b72d2a0bc52ddce0a41eb739a3d2590671c6"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/finale.py",
+      "before": "be75775491cf1e278eee99ce80a0153dd69de4da61a28b4f7b5a02e943577482",
+      "after": "3b2d400c60aedc27918bce2ac67a01877073c103de60792db63a3cb9d57ac750"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/learning.py",
+      "before": "747656a1a7e270b4d406670595efdbe1b0af8e0afb4bd6279aecb759f037684f",
+      "after": "fdb922991286f61092f3ad9b0f7637cdb58aed9650e5d9e847e8b6ffba7f6424"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/save_storage.py",
+      "before": "472d15634c84ae2f2abf6fcbcc6b73e0713bed68729e08aa43c45aa27d64f2cc",
+      "after": "231c7ea861acfdfe6271a4e437ff907037510197830194eba2ae62e810ed1ac3"
+    },
+    {
+      "path": "原型/火种计划_远征灰盒/save_validation.py",
+      "before": "8e041f54e4e0c007cec1368b1539ba953bb54f4c326771fb90954d3354a5220c",
+      "after": "45297a23e7080532d495ed2f64a9ef32095e9ac7d7c1514067236f5a14c1889f"
+    }
+  ],
+  "added": [
+    "原型/火种计划_远征灰盒/archive_cache.py"
+  ]
+}

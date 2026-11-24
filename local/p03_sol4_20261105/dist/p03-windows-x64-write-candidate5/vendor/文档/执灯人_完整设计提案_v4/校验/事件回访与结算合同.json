@@ -1,0 +1,884 @@
+{
+  "version": "REVISIT-1.0",
+  "authority": "专项/事件暂离回访与结算规则.md",
+  "runtime_implemented": false,
+  "scope": {
+    "profiles": [
+      "SHORT",
+      "MEDIUM",
+      "LONG"
+    ],
+    "new_ordinary_runs_only": true,
+    "fixed_tasks": "keep_explicit_original_profile",
+    "existing_saves": "retain_locked_lifecycle_version_no_reopen_no_midrun_migration"
+  },
+  "states": [
+    "UNSEEN",
+    "OPEN",
+    "ACTIVE",
+    "RESOLVED",
+    "DECLINED"
+  ],
+  "access_states": [
+    "LOCAL",
+    "SEALED"
+  ],
+  "controls": {
+    "PASS": "SUSPEND",
+    "close_window": "SUSPEND",
+    "walk_away": "SUSPEND",
+    "cancel_preview": "SUSPEND",
+    "DECLINE": "explicit_confirmed_close_current_instance_only_before_committed_action"
+  },
+  "rules": {
+    "suspend_keeps_event_reward_seed_and_progress": true,
+    "suspend_releases_budget": false,
+    "shown_history_once_per_run_not_visit": true,
+    "ordinary_cooldown_blocks_next_run_not_same_instance_revisit": true,
+    "plan_offer_locked_before_preview": true,
+    "first_durable_checkpoint_locks_choice": true,
+    "atomic_effects_costs_reward_and_receipt_commit_together": true,
+    "failed_commit_no_mutation": true,
+    "receipt_retry_precedes_current_availability": true,
+    "temporary_unavailability_keeps_open": true,
+    "service_invalidation_does_not_spawn_alternative_target": true,
+    "sealed_region_no_local_revisit": true,
+    "humanity_case_state_separate_from_local_event": true,
+    "humanity_suspend_decline_or_seal_is_not_exploitation": true,
+    "return_protection_commits_immediate_extraction_not_local_quest": true,
+    "optional_zero_benefit_recovery_does_not_charge": true,
+    "consumed_reserved_claims_never_refund_on_revisit": true,
+    "pending_case_resume_uses_existing_obligation_not_duplicate_cost": true,
+    "explicit_plan_decline_finishes_selected_branch": true,
+    "cancel_plan_preview_keeps_open": true,
+    "no_effect_not_implicit_decline": true
+  },
+  "events": [
+    {
+      "event_id": "EV01",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV02",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV03",
+      "processing_mode": "HUMANITY_ESCORT",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "ESCORT_DISPATCHED",
+        "RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": true,
+      "case_terminal_receipt_required": true,
+      "staged_option": "HUMANITY",
+      "protection_routes": [
+        "SQUAD_ESCORT",
+        "WHOLE_PARTY_RETURN"
+      ]
+    },
+    {
+      "event_id": "EV04",
+      "processing_mode": "LOCAL_STAGED",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "BELL_A_RUBBING",
+        "BELL_B_RUBBING"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": "PRIMARY"
+    },
+    {
+      "event_id": "EV05",
+      "processing_mode": "HUMANITY_RETURN",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "SAFE_RETURN_AND_RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": true,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV06",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV07",
+      "processing_mode": "HUMANITY_ESCORT",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "ESCORT_DISPATCHED",
+        "RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": true,
+      "case_terminal_receipt_required": true,
+      "staged_option": "HUMANITY",
+      "protection_routes": [
+        "SQUAD_ESCORT",
+        "WHOLE_PARTY_RETURN"
+      ]
+    },
+    {
+      "event_id": "EV08",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV09",
+      "processing_mode": "HUMANITY_CARGO",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "CARGO_LOADED",
+        "RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": true,
+      "case_terminal_receipt_required": true,
+      "staged_option": "HUMANITY"
+    },
+    {
+      "event_id": "EV10",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV11",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV12",
+      "processing_mode": "HUMANITY_LOCAL",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "WITNESS_OR_RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": true,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV13",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV14",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV15",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV16",
+      "processing_mode": "HUMANITY_LOCAL",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "WITNESS_OR_RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": true,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV17",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV18",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV19",
+      "processing_mode": "HUMANITY_RETURN",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "SAFE_RETURN_AND_RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": true,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV20",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV21",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV22",
+      "processing_mode": "HUMANITY_LOCAL",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "WITNESS_OR_RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": true,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV23",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV24",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV25",
+      "processing_mode": "HUMANITY_LOCAL",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "WITNESS_OR_RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": true,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV26",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV27",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV28",
+      "processing_mode": "HUMANITY_ESCORT",
+      "committable_options": [
+        "HUMANITY",
+        "EXPLOIT"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [
+        "ESCORT_DISPATCHED",
+        "RECEIVER_ACCEPTED"
+      ],
+      "continues_after_region_seal": true,
+      "case_terminal_receipt_required": true,
+      "staged_option": "HUMANITY",
+      "protection_routes": [
+        "SQUAD_ESCORT",
+        "WHOLE_PARTY_RETURN"
+      ]
+    },
+    {
+      "event_id": "EV29",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV30",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV31",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV32",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV33",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV34",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV35",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV36",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV37",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV38",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV39",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV40",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV41",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV42",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV43",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV44",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV45",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV46",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV47",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV48",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV49",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV50",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV51",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV52",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV53",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV54",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV55",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV56",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV57",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV58",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV59",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    },
+    {
+      "event_id": "EV60",
+      "processing_mode": "ATOMIC",
+      "committable_options": [
+        "PRIMARY",
+        "SECONDARY"
+      ],
+      "pass_action": "SUSPEND",
+      "checkpoints": [],
+      "continues_after_region_seal": false,
+      "case_terminal_receipt_required": false,
+      "staged_option": null
+    }
+  ],
+  "base_sources_sha256": {
+    "远征事件池.json": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6",
+    "普通事件扩展.json": "4243242ea7fddcfcab2836e480e5c4383c51c070d581b2776925f550c9d4c75b"
+  },
+  "snapshot": "历史材料/文案归档/火种计划_REVISIT-1.0_事件回访修订前_20261027",
+  "snapshot_files": 10,
+  "validation_scope": "offline_document_state_and_receipt_examples_not_runtime_or_full_event_effect_simulation"
+}

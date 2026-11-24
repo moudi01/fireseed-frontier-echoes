@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "models": {
+    "infantry": {
+      "scene_path": "res://assets/infantry_armor036.glb",
+      "clips": {
+        "Armature|walking_man|baselayer": {
+          "left_floor": 0.0365599021315575,
+          "right_floor": 0.0356581024825573
+        }
+      }
+    },
+    "archer": {
+      "scene_path": "res://assets/archer_armor036.glb",
+      "clips": {
+        "Armature|walking_man|baselayer": {
+          "left_floor": 0.0365554429590702,
+          "right_floor": 0.0356600619852543
+        }
+      }
+    },
+    "shield": {
+      "scene_path": "res://assets/shield_armor036.glb",
+      "clips": {
+        "Armature|walking_man|baselayer": {
+          "left_floor": 0.0475891977548599,
+          "right_floor": 0.041692815721035
+        },
+        "ShieldWalk": {
+          "left_floor": 0.047588807397655086,
+          "right_floor": 0.04169219173491
+        }
+      }
+    }
+  }
+}

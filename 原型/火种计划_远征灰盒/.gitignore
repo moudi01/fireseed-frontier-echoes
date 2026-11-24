@@ -1,0 +1,6 @@
+__pycache__/
+local/
+
+# 本地验证证据及修改前文件夹快照；现有已跟踪历史不受影响
+/evidence/
+/history/

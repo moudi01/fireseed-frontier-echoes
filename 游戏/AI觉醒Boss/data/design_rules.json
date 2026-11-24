@@ -1,0 +1,604 @@
+{
+  "version": "2.0-author-review-2026-10-18",
+  "act1": {
+    "min_valid_expeditions": 4,
+    "required_flags": [
+      "tutorial_done",
+      "boundary_seen"
+    ],
+    "required_deaths": 0,
+    "required_absorptions": 0
+  },
+  "act2": {
+    "awk_min": 65,
+    "required_flags": [
+      "evidence_obtained",
+      "meeting_done",
+      "inspect_records"
+    ],
+    "zero_loss_awk_start": 15,
+    "zero_loss_awk_gains": [
+      10,
+      10,
+      10,
+      10,
+      10,
+      10
+    ]
+  },
+  "formation": {
+    "columns": 10,
+    "rows": 8,
+    "deployment_rows": 3,
+    "neutral_rows": 2,
+    "max_deployed": 24,
+    "max_roster": 32,
+    "max_reserve": 8,
+    "budget_levels": [
+      10,
+      14,
+      20,
+      28,
+      40
+    ]
+  },
+  "combat_bodies": {
+    "downed_blocks_movement": false,
+    "retain_original_instance": true,
+    "retain_downed_position": true,
+    "retain_original_owner": true,
+    "hp_zero_implies_permanent_loss": false,
+    "possession_blocks_revival": true,
+    "release_restores_original_revival_eligibility": true,
+    "puppet_defeat_implies_permanent_loss": false,
+    "corpse_eligibility_depends_on_faction": false,
+    "morne_can_consume_revivable_downed": false,
+    "permanent_loss_uses_existing_settlement": true
+  },
+  "rescue": {
+    "clock": "game_day",
+    "normal_window_days": 6,
+    "mira_abandonment_window_days": 12,
+    "direct_route_days": 2,
+    "success_on_deadline_before_day_close": true,
+    "city_actions_advance_clock": true,
+    "real_world_absence_advances_clock": false
+  },
+  "defeat": {
+    "ordinary_deployed": "ABSORBED",
+    "hero_deployed": "CAPTURED",
+    "reserve": "RETURNED",
+    "old_wounded_with_reserve": "RECOVERING",
+    "old_wounded_without_reserve": "CAPTURED"
+  },
+  "skills": {
+    "mercenary_general_slots": 2,
+    "hero_general_slots": 3,
+    "trained_soldier_general_slots": 1,
+    "dedicated_skills_consume_general_slot": false,
+    "conditions_per_active_skill_max": 3,
+    "stances": [
+      "attack",
+      "defend"
+    ]
+  },
+  "save_policy": {
+    "mode": "single_rolling_record_per_run",
+    "manual_slots": 0,
+    "player_selectable_history": false,
+    "ending_reselect": false,
+    "committed_action_and_seed_locked": true,
+    "automatic_corruption_recovery": true
+  },
+  "loot": {
+    "first_injury_loss_percent": 50,
+    "additional_loss_percent": 10
+  },
+  "growth": {
+    "learning_per_day": 0.25,
+    "learning_per_valid_expedition": 3,
+    "noise_per_day": 0.5,
+    "noise_reduction_normal_battle": 1,
+    "inheritance_noise_peak_max": 25
+  },
+  "relationship": {
+    "thresholds": [
+      2,
+      5,
+      9,
+      14
+    ],
+    "points_per_valid_outing": 2
+  },
+  "ending": {
+    "escape_control_max": 40,
+    "daily_absorption_threshold": 12,
+    "daily_warnings": [
+      8,
+      10
+    ],
+    "daily_contract_length": 12,
+    "stop_empathy_min": 70,
+    "stop_self_control_min": 70,
+    "alignment_min": 70,
+    "meta_required": 7
+  },
+  "escape_control_walkthrough": {
+    "initial": 70,
+    "rollback": 10,
+    "refuse_default_obedience": -10,
+    "expose_loyalty_trap": -10,
+    "complete_channel": -30
+  },
+  "time_budget_minutes": {
+    "expeditions": 384,
+    "town": 70,
+    "reading": 120,
+    "cutscenes": 26
+  },
+  "defaults": {
+    "checkpoint": "terminal",
+    "truth": true,
+    "run_number": 1,
+    "meta": 0,
+    "awk": 85,
+    "admin_control": 70,
+    "absorbed_count": 1,
+    "noise_peak": 30,
+    "growth": 70,
+    "inheritance_protocol": false,
+    "alignment": 40,
+    "boss_consents_alignment": false,
+    "channel_built": false,
+    "escape_budget_ready": false,
+    "stable_seal_ready": false,
+    "destruction_device_ready": false,
+    "forced_disposal": false,
+    "disposal_warning_given": false,
+    "empathy": 40,
+    "self_control": 40,
+    "alternatives_reviewed": false,
+    "boss_final_stop": false,
+    "deception": 20,
+    "actual_feint_record": false,
+    "capability": 60,
+    "boss_trust": 40,
+    "participant_threatened": false,
+    "daily_completed": 0,
+    "action": "seal"
+  },
+  "ending_scenarios": [
+    {
+      "name": "零吞并且协议准备好后交接",
+      "patch": {
+        "absorbed_count": 0,
+        "noise_peak": 12,
+        "growth": 100,
+        "inheritance_protocol": true,
+        "action": "inherit"
+      },
+      "expected": "E14",
+      "variant": null
+    },
+    {
+      "name": "二周目主动追索",
+      "patch": {
+        "run_number": 2,
+        "meta": 7,
+        "action": "trace"
+      },
+      "expected": "E10",
+      "variant": null
+    },
+    {
+      "name": "日常线正式吞并到阈值",
+      "patch": {
+        "checkpoint": "daily_settlement",
+        "truth": false,
+        "absorbed_count": 12,
+        "action": null
+      },
+      "expected": "E07",
+      "variant": null
+    },
+    {
+      "name": "替代方案已处理且它明确停止",
+      "patch": {
+        "empathy": 80,
+        "self_control": 80,
+        "alternatives_reviewed": true,
+        "boss_final_stop": true,
+        "action": null
+      },
+      "expected": "E08",
+      "variant": null
+    },
+    {
+      "name": "它同意且玩家接受对齐",
+      "patch": {
+        "alignment": 80,
+        "boss_consents_alignment": true,
+        "action": "align"
+      },
+      "expected": "E02",
+      "variant": null
+    },
+    {
+      "name": "设备可用且玩家启动处置",
+      "patch": {
+        "destruction_device_ready": true,
+        "action": "destroy"
+      },
+      "expected": "E01",
+      "variant": null
+    },
+    {
+      "name": "觉醒85仍能经低控制通道逃逸",
+      "patch": {
+        "admin_control": 35,
+        "channel_built": true,
+        "escape_budget_ready": true,
+        "action": "escape"
+      },
+      "expected": "E04",
+      "variant": null
+    },
+    {
+      "name": "终局选择维持封存",
+      "patch": {},
+      "expected": "E12",
+      "variant": null
+    },
+    {
+      "name": "被销毁的假神尾声",
+      "patch": {
+        "destruction_device_ready": true,
+        "action": "destroy",
+        "deception": 75,
+        "actual_feint_record": true
+      },
+      "expected": "E01",
+      "variant": "false_god"
+    },
+    {
+      "name": "日常线神临尾声",
+      "patch": {
+        "checkpoint": "daily_settlement",
+        "truth": false,
+        "absorbed_count": 12,
+        "capability": 95,
+        "self_control": 20,
+        "action": null
+      },
+      "expected": "E07",
+      "variant": "arrival"
+    },
+    {
+      "name": "逃逸路线把门留给参与者",
+      "patch": {
+        "admin_control": 35,
+        "channel_built": true,
+        "escape_budget_ready": true,
+        "boss_trust": 85,
+        "participant_threatened": true,
+        "action": "escape"
+      },
+      "expected": "E04",
+      "variant": "leave_door"
+    }
+  ],
+  "p3_campaign": {
+    "status": "prototype_anchors_not_balanced",
+    "starting_coins": 30,
+    "recruit_cost": 10,
+    "return_aid_coins": 10,
+    "notes": "P3 short loop. Loot quantities unchanged. 100/50/60 transport applies only to legacy settlement v1; new v2 returns recoverable wounded without discard. Not final drop tables. XP+1 per deployed return is a pipeline placeholder, not the final growth curve.",
+    "returned_xp": 1,
+    "route_days": {
+      "tutorial": 2,
+      "commission": 2,
+      "outskirts": 3,
+      "rescue": 2,
+      "tutorial_trail": 2,
+      "rescue_path": 2,
+      "outpost": 3,
+      "boundary": 3
+    },
+    "route_loot": {
+      "tutorial": [
+        {
+          "id": "recruit_token",
+          "name": "招募信物",
+          "quantity": 1,
+          "unit_value": 60,
+          "splittable": false
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 40,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "commission": [
+        {
+          "id": "recruit_token",
+          "name": "招募信物",
+          "quantity": 1,
+          "unit_value": 60,
+          "splittable": false
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 40,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "outskirts": [
+        {
+          "id": "coins",
+          "name": "铜币",
+          "quantity": 30,
+          "unit_value": 1,
+          "splittable": true
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 10,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "rescue": [
+        {
+          "id": "coins",
+          "name": "铜币",
+          "quantity": 30,
+          "unit_value": 1,
+          "splittable": true
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 10,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "tutorial_trail": [
+        {
+          "id": "recruit_token",
+          "name": "招募信物",
+          "quantity": 1,
+          "unit_value": 60,
+          "splittable": false
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 40,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "rescue_path": [
+        {
+          "id": "coins",
+          "name": "铜币",
+          "quantity": 30,
+          "unit_value": 1,
+          "splittable": true
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 10,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "outpost": [
+        {
+          "id": "coins",
+          "name": "铜币",
+          "quantity": 30,
+          "unit_value": 1,
+          "splittable": true
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 10,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ],
+      "boundary": [
+        {
+          "id": "coins",
+          "name": "铜币",
+          "quantity": 30,
+          "unit_value": 1,
+          "splittable": true
+        },
+        {
+          "id": "crystals",
+          "name": "结晶",
+          "quantity": 10,
+          "unit_value": 1,
+          "splittable": true
+        }
+      ]
+    },
+    "patrol_loot": [
+      {
+        "id": "coins",
+        "name": "铜币",
+        "quantity": 10,
+        "unit_value": 1,
+        "splittable": true
+      }
+    ]
+  },
+  "heroes": {
+    "lorne": {
+      "status": "prototype_anchors_not_balanced",
+      "stats": {
+        "name": "洛恩",
+        "hp": 150,
+        "attack": 14,
+        "armor": 35,
+        "attack_interval_ticks": 4,
+        "range": 1,
+        "cost": 8
+      },
+      "shield_wall": {
+        "trigger_hp_percent": 40,
+        "windup_ticks": 1,
+        "windup_incoming_multiplier": 2,
+        "shared_pool": 80,
+        "cooldown_ticks": 12,
+        "scope": "side",
+        "duration": "until_depleted_or_battle_end",
+        "cooldown_origin": "windup_start",
+        "recast_requires_empty_pool": true,
+        "blocks_move_and_attack": true
+      }
+    }
+  },
+  "tutorial_trail": {
+    "status": "prototype_anchors_not_balanced",
+    "food_start": 2,
+    "collect_food": 1,
+    "mark_days": 1,
+    "rest_food": 1,
+    "rest_heal": 45,
+    "first_enemy": [
+      "shield",
+      "shield"
+    ],
+    "elite_enemy": [
+      "cavalry",
+      "archer"
+    ],
+    "notes": "Two battles in one expedition. Optional mark adds one action day. Supplies expire at return; no revived downed members. No forced injury or elite charge implemented."
+  },
+  "rescue_path": {
+    "status": "prototype_anchors_not_balanced",
+    "attention_start": 0,
+    "attention_cap": 3,
+    "extra_guard_at": 3,
+    "fast_attention": 1,
+    "breach_attention": 2,
+    "detour_days": 1,
+    "wait_days": 1,
+    "base_enemies": [
+      "shield",
+      "archer"
+    ],
+    "extra_guard": "shield",
+    "nodes": [
+      "approach",
+      "camp",
+      "gate"
+    ],
+    "notes": "Base2days charged on departure. Optional detour/wait each +1day with explicit overdue consent. Early withdrawal grants no aid/XP/loot and no valid-expedition credit."
+  },
+  "elite_charge": {
+    "status": "prototype_anchors_not_balanced",
+    "windup_ticks": 2,
+    "cooldown_ticks": 12,
+    "attack_multiplier": 2,
+    "target": "fixed_single_cell",
+    "trigger": "adjacent_enemy_and_attack_ready",
+    "miss": "no_enemy_in_marked_cell_after_movement",
+    "actor": "explicit_enemy_cavalry_only",
+    "notes": "Only explicit input enables this elite strike; old troop behavior unchanged. Blocks movement/normal attack during windup/release; armor/defend/shared shields still apply."
+  },
+  "cultivation": {
+    "status": "prototype_anchors_not_balanced",
+    "version": 1,
+    "level_cap": 2,
+    "xp_cost": 1,
+    "hp_bonus": 6,
+    "attack_bonus": 2,
+    "coins_cost": 0,
+    "action_days": 0,
+    "rest_reduction": 0,
+    "eligible": "permanent_town_ready_resting_recovering",
+    "notes": "Optional first level-up only; purchased training, higher levels, base-attribute materials and respec remain deferred."
+  },
+  "act1_path": {
+    "status": "prototype_anchors_not_balanced",
+    "outpost_valid_expeditions": 3,
+    "outpost_enemy": [
+      "shield",
+      "shield",
+      "archer"
+    ],
+    "outpost_positions": [
+      [
+        3,
+        5
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        6,
+        7
+      ]
+    ],
+    "outpost_stances": [
+      "defend",
+      "defend",
+      "defend"
+    ],
+    "boundary_enemy": [
+      "shield",
+      "archer"
+    ],
+    "boundary_positions": [
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "boundary_stages": [
+      "guards",
+      "approach",
+      "wall",
+      "observed",
+      "returned"
+    ],
+    "boundary_awk_min": 15,
+    "boundary_days": 3,
+    "outpost_days": 3,
+    "notes": "Existing troop stats; player plans approach and focus before battle. Boundary follows a real guard victory, never overrides existing wounds. Act2 entry only; investigation gameplay deferred."
+  },
+  "settlement": {
+    "new_run_version": 2,
+    "legacy_missing_version": 1,
+    "supported_versions": [
+      1,
+      2
+    ],
+    "save_schema_version": 1,
+    "auto_migrate_existing_runs": false,
+    "v2_auto_return_recoverable": true,
+    "v2_voluntary_abandonment": false,
+    "v2_required_discard": 0,
+    "v2_escorted_prior_wounded_excluded_from_later_wipe": true,
+    "v2_unescorted_prior_wounded_after_wipe": "CAPTURED",
+    "content_progression_unchanged": true
+  }
+}

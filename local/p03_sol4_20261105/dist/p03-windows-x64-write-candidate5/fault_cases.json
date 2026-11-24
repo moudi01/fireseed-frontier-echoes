@@ -1,0 +1,8 @@
+{
+  "format": "P03-FAULTS-1",
+  "implemented": ["duplicate committed request", "ID payload conflict", "stale protocol version", "transport response discard and query after graceful restart", "prepare-only synthetic interruption and UNKNOWN refusal"],
+  "pending": ["hard process exit before prepare", "hard process exit after prepare", "retry sidecar temporary write", "retry sidecar replace", "backup temporary write", "backup replace", "primary temporary write", "primary replace", "result ledger temporary write", "result ledger replace", "five-class natural legal preconditions", "corrupt or missing primary", "corrupt retry", "concurrent writer", "disk full", "access denied", "nonfinite or duplicate JSON keys", "overlong frames"],
+  "recovery_policy": "UNKNOWN preserves all files and refuses new commands; no automatic repair or blind replay",
+  "independent_validation": false,
+  "performance_approval": false
+}

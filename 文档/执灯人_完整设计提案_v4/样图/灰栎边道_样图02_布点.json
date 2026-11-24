@@ -1,0 +1,42 @@
+{
+  "version": "MAP-SKETCH-02",
+  "region_id": "RG01",
+  "status": "spatial_sample_not_production_or_balanced_profile",
+  "mandatory_encounters": {
+    "B1": "RG01-N01",
+    "B3": "RG01-N04",
+    "B4": "RG01-N02"
+  },
+  "optional_encounters": {
+    "E1": "RG01-E01"
+  },
+  "events": {
+    "①": "EV29",
+    "②": "EV30",
+    "③": "EV01",
+    "④": "EV03"
+  },
+  "baseline_supply_points": [
+    "S1"
+  ],
+  "supply_quantities": "多区域远征配置.json:supply",
+  "all_sites_can_be_visited": true,
+  "minimum_completed_battles_for_objective": 3,
+  "maximum_distinct_battles": 4,
+  "early_return_can_complete_fewer": true,
+  "total_event_budget_proposal": 4,
+  "separate_event_and_battle_rewards_require_budget_profile": true,
+  "randomness": "one_authored_spatial_example_only_not_every_run_same_layout",
+  "battlefield_footprints": "schematic_no_verified_7x9_geometry",
+  "inputs_preserved": "existing_encounter_stats_event_choices_recipes_and_humanity_contracts",
+  "runtime_implemented": false,
+  "current_contract": "MULTI-1.1",
+  "goal_exit": {
+    "advance_to": "departure_locked_adjacent_region_if_not_final",
+    "camp": "one_boundary_service_if_not_final",
+    "extraction": "end_entire_run"
+  },
+  "early_exit": "southern_ingress",
+  "supersedes_sample": "MAP-SKETCH-01",
+  "event_density_note": "前三处为基础普通事件；第四处EV03仅在案件合法时替换可选地点，不用于保证普通事件容量；整趟联合分配仍待生成器验证"
+}

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>火种计划 · 远征灰盒</title>
+<style>
+body{font:15px system-ui,sans-serif;margin:12px;color:#222;background:#f4f4f4}button,input,select{font:inherit;padding:5px;margin:3px}button{cursor:pointer}button:disabled{cursor:wait}main{display:grid;grid-template-columns:minmax(350px,1fr) minmax(360px,1fr);gap:12px}pre{white-space:pre-wrap;word-break:break-word;background:white;padding:12px;max-height:68vh;overflow:auto;font:13px/1.65 monospace}svg{width:100%;height:440px;background:white;border:1px solid #ccc}#notice{padding:8px;background:#fff1c7;min-height:22px}#command{width:min(680px,80%)}details{margin:8px 0}.row{display:flex;align-items:center;flex-wrap:wrap}@media(max-width:800px){main{display:block}svg{height:360px}}
+button{min-height:44px} :focus-visible{outline:3px solid #1868a5;outline-offset:3px}.spatial-controls{display:grid;grid-template-columns:repeat(3,64px);gap:8px;margin:8px 0} #map{touch-action:manipulation} @media(max-width:600px){main{display:block}body{margin:8px}pre{max-height:40vh}}
+</style>
+<style>
+/* Keep one scale on both axes, so the hexagons stay regular at any panel width. */
+#map{display:block;height:auto;aspect-ratio:14/11;box-sizing:border-box}
+</style>
+<h2>火种计划 · 流程灰盒</h2>
+<p>独立试验档。战斗采用简化实算，暂不用于正式平衡结论。普通区域与教学使用连续地面：逐格移动、视野探索、现场交互及原地战斗。格距为灰盒尺度，未做美术。</p>
+<p><a href="boards" target="_blank" rel="noopener">查看八种场地的棋盘边界与部署区</a></p>
+<div class="row"><label>路线<select id="route"></select></label><label>队伍<select id="team"></select></label><label>补给<select id="pack"><option>P1</option><option>P0</option><option>P2</option><option>P3</option></select></label><label>资质<select id="birth"><option>MID</option><option>LOW</option></select></label><label>种子<input id="seed" type="number" value="11" style="width:80px"></label><label>事件试验<select id="caseMode"><option value="EV03">避难者事件</option><option value="EV09">运水事件（CH2起）</option><option value="EV19">药箱事件（CH3起）</option><option value="EV25">行李现场交割（CH3起）</option><option value="EV05">伤工返城（CH1起）</option><option value="EV07">逃工护送（CH2起）</option><option value="EV12">地址页（CH2起）</option><option value="EV16">遗嘱原契（CH2起）</option><option value="EV22">工票（CH3起）</option><option value="EV28">家属护送（CH3起）</option><option value="BOTH">避难者＋运水</option><option value="ALL">全部十项案件</option><option value="NONE">普通循环对照</option></select></label><label>新档难度<select id="newDifficulty"><option>D0</option><option>D1</option><option>D2</option></select></label><button id="new">新建独立试验</button><button id="newCampaign">新开自然周目</button></div>
+<div class="row"><select id="saves" aria-label="选择存档"></select><button id="load">续玩选定存档</button><button id="export">导出记录</button><button id="refresh">刷新</button></div>
+<div id="notice" role="status"></div><section id="rescuePanel"></section><section id="escortPanel"></section><section id="casePanel"></section><section id="waterPanel"></section><section id="medicinePanel"></section><section id="localCasesPanel"></section>
+<section id="narrativePanel" aria-label="剧情与引导"></section>
+<main><section><section id="townControls" hidden><h3>城镇整备 · 沿用当前存档</h3>
+<div class="row"><label>普通远征档位<select id="difficulty"><option value="D0">D0 常规</option><option value="D1">D1 强敌</option><option value="D2">D2 险境</option></select></label><button id="setDifficulty">设置档位</button><button id="setRoute">将上方路线设为下趟路线</button><button data-town="rest">休整1日（免费，侵蚀−30）</button><button data-town="maintain">维护1日（资产计入救济）</button><button data-town="build_hospital">医舍一级（20铜4晶／2日）</button></div>
+<div class="row"><label>采购份数<input id="supplyCount" type="number" min="1" max="100" value="2" style="width:60px"></label><button id="buySupply">购买补给（2铜／份）</button><label>随行救护份数<select id="medicalCount"><option>0</option><option>1</option><option selected>2</option></select></label><button id="packMedical">按此数量装配救护</button><label>新人职业<select id="recruitKind"><option>S01</option><option>S02</option><option>S03</option><option>M01</option><option>M02</option><option>M03</option><option>M04</option><option>M05</option><option>M06</option><option>M07</option><option>M08</option></select></label><button id="recruit">招募（士兵8铜／佣兵16铜）</button></div>
+<div class="row"><button id="squadOn">目标加入随行</button><button id="squadOff">目标留城</button><button id="care">目标伤护（1补给／下次行动生效）</button><button id="levelUp">目标升级（6铜＋所需经验）</button><label>消耗品配方<select id="recipe"></select></label><button id="craft">按配方制作</button><button id="stash">收起所选携带物品</button></div><p>下方“操作目标”同时列出随行与留城人员。倒地伤员需恢复后才能随行；留城后可由新人顶替。装备库与取出物品可用指令操作。</p></section><svg id="map" viewBox="0 0 560 440" aria-label="地图或战斗棋盘"></svg><p id="legend" hidden>地形：⬜ 地面　<span style="background:#b9d9e9">浅水（可走、移动较慢）</span>　<span style="background:#649abb">深水（不可走）</span>　<span style="background:#b0a18b">低障碍（不可走）</span>　<span style="background:#666;color:white">高障碍（不可走、挡视线）</span>　<span style="background:#debe8f">桥面</span>　<span style="background:#dfdcaa">高地</span>。蓝／红圆点是单位，橙色轮廓是招式预警。</p><div id="context"></div><div id="event"></div></section><pre id="state"></pre></main>
+
+<div class="row" id="actions"></div>
+<div class="row"><label>操作目标<select id="target"></select></label><label>携带物品<select id="item"></select></label><button id="use">使用所选物品</button><button id="discard">丢弃未用物品</button><button id="deploy">部署目标</button><button id="reserve">目标转预备</button></div>
+<details open><summary>技能书 · 学习与战前构筑</summary><section id="bookPanel"></section></details>
+<form id="form"><label for="command">指令</label><input id="command" autocomplete="off" placeholder="例如 place 01 2 1 或 use CO02 01,02,03"><button>执行</button></form>
+<details><summary>近期见闻（最近12处实际现场）</summary><pre id="memory"></pre></details>
+<details><summary>操作说明与灰盒边界</summary><pre id="help"></pre><p>当前0.95：隐藏技能书SB-Z01从每战1次改为冷却20拍、按动作循环，每次仍只无效一次伤害动作。0.94：撤销0.93的EXPLOIT物价代价，道德经济按不对等设计——EXPLOIT只兑现当次报酬，不追加物价/机械惩罚；PROTECT每次回信+1随队补给，十案全部保全获得隐藏技能书SB-Z01（终局对策卡：选定高威胁敌人，使其下次攻击无效），不给价格折扣；完美结局仍须按真实结果满足全部条件。0.93的FIN-C重试（finale retry → finale retry CONFIRM）与自然周目每2趟道德案件保底保留；0.92城镇付费治疗/庇护账（价格中立）、换装HP回填、案件自动入口、地图坐标/英雄列表、终局后备损耗、薄血远程避AOE、管理员法令优先目标、M05/SB-H01/H08、MG03/MG04 Cost校准保留，0.92的assemble/answer固定补给已移除，改为每保全一案+1补给并保留十案隐藏书；40本技能书覆盖伤害、治疗、护盾、位移、控制、增益和构筑被动；支持阶段商购、任务自选、战后与事件掉落、定向以及魔将首报。技能按真实动作执行，主攻可按书籍射程接敌，携书安全带回后学习。维护救济按现金、可回收装备价值及可退费用计算；商店未升阶Q1只可售卖回铜，不拆材料。最高险境真实关口胜利发递进铜晶／碎晶津贴，须安全带回。炮台推进、驻足施法、存档提交互斥与状态校验沿用。前中期委任强度、最高险境断阵重击与重创休战、魔王强化复制、管理员点名及条件范围攻击保留。战前敌情、回信任务线、机制行军约定、连续地图、城镇整备、案件续办、研究、结局和十二英雄应召已有灰盒入口。支持对白阅读、跳过和历史回看，实际任务与结局选择仍需单独提交。部分验证使用受控测试条件，尚不能据此认定自然周目全程可达或全部构筑已平衡；正式引擎整合、美术、语音与过场尚未完成。新档与旧档分开保存。</p></details>
+<script src="space_view.js"></script>
+<script src="narrative_view.js"></script>
+<script>
+'use strict';let state=null,busy=false,playing=false,lastSave=null,selectedBook='SB-D02';const $=id=>document.getElementById(id);const NS='http://www.w3.org/2000/svg';
+function el(tag,text){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n}
+function svg(tag,attributes,text){const n=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attributes))n.setAttribute(k,v);if(text!==undefined)n.textContent=text;$('map').append(n);return n}
+function button(parent,label,command){const b=el('button',label);b.type='button';b.onclick=()=>act(command);parent.append(b);return b}
+function options(id,values){const old=$(id).value;$(id).replaceChildren();for(const [value,label]of values){const o=el('option',label);o.value=value;$(id).append(o)}if(values.some(v=>v[0]===old))$(id).value=old}
+async function request(body){if(busy||!state)return;busy=true;document.querySelectorAll('button').forEach(b=>b.disabled=true);try{const response=await fetch('action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,sequence:state.sequence,save:state.save})});const next=await response.json();if(!next.phase)throw Error(next.error||'请求失败');state=next;if(!response.ok)playing=false;render()}catch(e){playing=false;$('notice').textContent='连接失败，进度保留在自动存档中：'+e.message}finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=false)}}
+function act(command){return request({op:'command',command})}
+function dayAction(command){if(state.due_next.length){if(!confirm(`本次结算到第${state.next_day}日，届时未救回者将永久失去：${state.due_next.join('、')}。仍要继续？`))return;command+=' CONFIRM'}return act(command)}
+async function refresh(){if(busy)return;try{state=await(await fetch('state')).json();render()}catch(e){$('notice').textContent=String(e)}}
+function target(){return $('target').value||'01'}
+function render(){
+ if(state.phase!=='BATTLE')playing=false;
+ renderNarrative();
+ $('difficulty').value=state.expedition_tier.selected;
+ $('state').textContent=state.text;$('notice').textContent=(state.message||'就绪')+' | 自动保存：'+state.save;$('help').textContent=state.help;$('memory').textContent=state.event_memory;
+ if(!$('route').options.length){options('route',state.routes.map(r=>[r.route_id,`${r.route_id} ${r.profile} ${r.selected_path.join('→')}`]));options('team',state.teams.map(t=>[t.team_id,`${t.team_id} ${t.name}`]))}
+ options('target',[...state.party,...(state.phase==='TOWN'?state.home_roster:[])].map(m=>[m.instance_id,`${m.instance_id} ${m.unit_id} HP${m.hp} 伤势${m.injury_days}日${state.party.some(p=>p.instance_id===m.instance_id)?' 随行':' 留城'}`]));options('item',state.pouch.map(i=>[i,i]));options('saves',state.save_choices.map(v=>[v,v]));if(lastSave!==state.save){$('saves').value=state.save.replaceAll('\\','/').split('/').slice(-2,-1)[0];lastSave=state.save;}
+ renderBooks();
+ $('townControls').hidden=state.phase!=='TOWN';$('map').style.display=state.phase==='TOWN'?'none':'block';$('legend').hidden=state.phase!=='BATTLE';
+ options('recipe',state.recipes.map(r=>[r.recipe_id.replace('RC-',''),`${r.recipe_id}：${r.copper}铜 ${JSON.stringify(r.materials)}`]));
+ $('context').replaceChildren();$('event').replaceChildren();$('actions').replaceChildren();$('map').replaceChildren();$('map').style.background='white';$('map').onkeydown=null;
+ $('localCasesPanel').replaceChildren();
+ for(const c of state.local_cases||[]){
+  const p=el('section');$('localCasesPanel').append(p);p.append(el('h3','边境见闻 · '+c.name),el('p',c.text));
+  const command='event '+c.id+' ';
+  if(c.open){
+   p.append(el('p',c.scene),el('p','保全会放弃整笔报价：'+c.reward_text+'。'));
+   if(c.mode==='LOCAL'){
+    p.append(el('p','现场完成，不占材料额度、不新增行动日，之后继续探索。'));
+    const actLocal=el('button',c.action_label);actLocal.onclick=()=>askCommand(p,'确认'+c.action_label+'，并放弃'+c.reward_text+'？',command+c.action+' CONFIRM');p.append(actLocal);
+   }else{
+    if(c.mode==='ESCORT'&&!c.in_transit){
+     const lead=el('select');lead.setAttribute('aria-label',c.name+'护送者');for(const id of c.leaders){const o=el('option',id);o.value=id;lead.append(o)}p.append(lead);
+     const send=el('button',c.action_label);send.onclick=()=>{if(!lead.value){$('notice').textContent='没有可行动的人类预备，可调整部署或全队早返。';return}askCommand(p,'派'+lead.value+'退出本趟护送，Cost不退；须实际接收才完成，放弃'+c.reward_text+'。',command+'escort '+lead.value+' CONFIRM')};p.append(send);
+    }
+    const ret=el('button','全队提前返城并交付');ret.onclick=()=>askCommand(p,`确认立即结束本趟？已携物资正常入库，未得收益不补发，放弃${c.reward_text}。下一日${state.next_day}；届时到期未救回者：${state.due_next.join('、')||'无'}。`,command+'return CONFIRM');p.append(ret);
+   }
+   if(c.can_trade){
+    const selectors=[];if(c.equipment_count)p.append(el('p','确认前选择'+c.equipment_count+'件'+c.equipment_quality+'装备的完整报价；城镇兑现，途中不可换装。'));
+    for(let i=0;i<c.equipment_count;i++){const select=el('select');select.setAttribute('aria-label',c.name+'装备家族'+(i+1));for(const quote of c.equipment_quotes[i]||[]){const o=el('option',quote.selection+'：'+quote.description);o.value=quote.selection;select.append(o)}selectors.push(select);p.append(select)}
+    const trade=el('button','确认交易，领取凭单');trade.onclick=()=>{if(selectors.some(s=>!s.value)){$('notice').textContent='请选齐适用装备家族。';return}const family=selectors.map(s=>s.value).join(',');askCommand(p,c.trade_warning+(family?' 选定装备：'+selectors.map(s=>s.selectedOptions[0].textContent).join('；'):''),command+'trade '+(family?family+' ':'')+'CONFIRM')};p.append(trade);
+   }
+   button(p,'暂离现场','choose PASS');if(!c.in_transit){const no=el('button','本趟不再接手');no.onclick=()=>askCommand(p,'关闭本趟现场，原委托仍可归城后续办。','decline CONFIRM');p.append(no)}
+  }
+  if(c.in_transit&&state.phase==='EXPLORE')button(p,'完成原名单接收交接',command+'receive CONFIRM');
+  if(c.can_followup){button(p,c.directed?'取消原案件定向':'下趟定向原案件',command+'followup '+(c.directed?'off':'on'));
+   const visit=el('button','前往原接洽处');visit.onclick=()=>askCommand(p,`固定接洽，无普通战斗和奖励，归城1日。下一日${state.next_day}；到期未救回者：${state.due_next.join('、')||'无'}。`,command+'visit CONFIRM');p.append(visit);}
+  if(c.waiting_credit)button(p,'重试兑现保留的凭单',command+'redeem');
+ }
+ $('medicinePanel').replaceChildren();
+ if(state.medicine){
+  const c=state.medicine,p=$('medicinePanel');
+  p.append(el('h3','边境见闻 · 药箱的买家'),el('p',c.text));
+  if(c.open){
+   p.append(el('p',c.scene),el('p','送医：全队立即结束本趟，放弃剩余遭遇、未领取收益和80铜＋8结晶报价；已携物资照常归城。不占2份材料额度，也不能分队送药后继续探索。'));
+   const ret=el('button','全队立即返城送药');
+   ret.onclick=()=>askCommand(p,`确认立即结束本趟，把原药箱交给暮汀医舍？已携物资正常归城，未领收益不发。下一结算日${state.next_day}；届时未救回将到期：${state.due_next.join('、')||'无'}。`,'medicine return CONFIRM');p.append(ret);
+   const sell=el('button','出售药箱，领取收购凭单');sell.onclick=()=>askCommand(p,c.trade_warning,'medicine trade CONFIRM');p.append(sell);
+   button(p,'暂时离开药箱现场','choose PASS');
+   const decline=el('button','本趟不再接手药箱');decline.onclick=()=>askCommand(p,'仅关闭本趟现场，不算出售；原药箱由采药班保管，之后可续办。','decline CONFIRM');p.append(decline);
+  }
+  if(c.can_followup){
+   button(p,c.directed?'取消药箱定向续办':'下趟定向续办药箱','medicine followup '+(c.directed?'off':'on'));
+   const visit=el('button','前往药箱固定接洽处');visit.onclick=()=>askCommand(p,`固定接洽，无普通战斗、额外补给费或普通奖励，归城1行动日。下一结算日${state.next_day}；届时到期：${state.due_next.join('、')||'无'}。`,'medicine visit CONFIRM');p.append(visit);
+  }
+ }
+ $('waterPanel').replaceChildren();
+ if(state.water){
+  const c=state.water,p=$('waterPanel');
+  p.append(el('h3','边境见闻 · 水车最后的载重'),el('p',c.text));
+  if(state.phase==='EXPLORE'||state.phase==='BATTLE')p.append(el('p',`材料回收额度：已占 ${c.used}/${c.capacity}，未用 ${c.free}，其中定向运水预留 ${c.reserved}。两桶水不占消耗品袋，不消耗仓库材料。`));
+  if(c.open){
+   p.append(el('p',c.scene),el('p','运水：占本趟2份未用材料额度，可以继续探索和跨区；只有归城交货才完成。出售：40铜＋8结晶，下次城镇结算兑现，原定住户收不到水。'));
+   if(c.can_load){
+    const load=el('button','装载两桶水');
+    load.onclick=()=>askCommand(p,'占用2份未使用材料回收额度，放弃40铜＋8结晶报价；本趟不可卸货退额度或改卖。确认装载？','water load CONFIRM');p.append(load);
+    if(c.free<2)p.append(el('p',`目前缺少 ${2-c.free} 份未用材料额度；已经领取的额度不因用掉材料恢复。可暂离，或下趟定向预留后续运。`));
+   }
+   if(c.can_trade){const sell=el('button','卖水，领取收购凭单');sell.onclick=()=>askCommand(p,c.trade_warning,'water trade CONFIRM');p.append(sell)}
+   button(p,'暂时离开运水现场','choose PASS');
+   if(c.can_trade){const decline=el('button','本趟不再接手运水');decline.onclick=()=>askCommand(p,'关闭本趟现场，原运单仍可续办，不算出售。确认？','decline CONFIRM');p.append(decline)}
+  }
+  if(c.loaded)p.append(el('p','两桶水仍在运输，材料额度持续占用；抵达区域入口或跨区都不会提前交货。'));
+  if(c.can_followup){
+   button(p,c.directed?'取消下趟运水定向':'下趟定向续运（预留2份额度）','water followup '+(c.directed?'off':'on'));
+   const visit=el('button','前往固定货物续运处');visit.onclick=()=>askCommand(p,`本任务只有取水与归城，结算1行动日，无普通奖励。下一结算日${state.next_day}；届时到期：${state.due_next.join('、')||'无'}。确认？`,'water visit CONFIRM');p.append(visit);
+  }
+ }
+ $('casePanel').replaceChildren();
+ if(state.refugee){const c=state.refugee,p=$('casePanel');p.append(el('h3','边境见闻 · 哨棚里的避难者'),el('p',c.text));if(c.open){p.append(el('p',c.scene),el('p','护送：1名可行动预备退出本趟，Cost不退；也可全队提前返城。交易：64铜＋4补给，下次城镇结算兑现；搬运工被带回私牢，不能由本委托赎回。'));if(!c.in_transit){const select=el('select');select.id='caseLeader';select.setAttribute('aria-label','避难者护送者');for(const id of c.leaders){const o=el('option',id);o.value=id;select.append(o)}const send=el('button','派预备队员护送');send.onclick=()=>{if(!select.value){$('notice').textContent='没有适任预备，可调整部署或全队提前返城。';return}if(confirm(`派${select.value}护送，本趟离队且Cost不退；派出不等于交接完成，放弃64铜＋4补给交易。确认？`))act('case escort '+select.value+' CONFIRM')};p.append(select,send)}const ret=el('button','全队提前返城并交付');ret.onclick=()=>{if(confirm('结束本趟远征，放弃剩余遭遇与未领收益；交付后不能再交易。整趟仍计1日。确认？'))act('case return CONFIRM')};p.append(ret);if(c.can_trade){const sell=el('button','交给管事，领取军需凭单');sell.onclick=()=>{if(confirm(c.trade_warning))act('case trade CONFIRM')};p.append(sell)}button(p,'暂时离开，之后再来','choose PASS');if(!c.in_transit){const no=el('button','本趟不再接手');no.onclick=()=>{if(confirm('仅关闭本趟现场，不算出卖；之后仍可定向续办。确认？'))act('decline CONFIRM')};p.append(no)}}if(c.in_transit&&state.phase==='EXPLORE'){p.append(el('p','护送者已退出队伍，沿已清道路到入口接驳，并由护运班转送暮汀接收站。完成交接后，余队败战不会抹掉接收结果。'));button(p,'完成转送与暮汀接收','case receive CONFIRM')}if(c.can_followup){button(p,c.directed?'取消下趟定向续办':'下趟远征定向续办','case followup '+(c.directed?'off':'on'));const visit=el('button','前往固定续办接洽处');visit.onclick=()=>{if(confirm(`归城计1行动日，无出发补给费和普通奖励。下一结算日${state.next_day}；届时未救回将到期：${state.due_next.join('、')||'无'}。确认？`))act('case visit CONFIRM')};p.append(visit)}}
+ $('escortPanel').replaceChildren();
+ if(state.escort.protected.length)$('escortPanel').append(el('p',`已安全护送离队：${state.escort.protected.join('、')}。保留本趟Cost ${state.escort.reserved_cost}，不能重新加入或远程换装。共享包仍在余队；本趟结算时安置。`));
+ if(state.phase==='EXPLORE'&&state.escort.wounded.length){$('escortPanel').append(el('h3','护送伤员提前归城'),el('p',`全部倒地者：${state.escort.wounded.join('、')}。派1名可行动预备护送，余队继续；也可走回入口全队安全归城。`));const select=el('select');select.setAttribute('aria-label','护送者');for(const id of state.escort.leaders){const o=el('option',id);o.value=id;select.append(o)}const b=el('button','护送全部倒地者');b.onclick=()=>{if(!select.value){$('notice').textContent='没有可行动预备；可调整部署后选择护送者，或走回入口全队早返。';return}if(confirm(`派${select.value}护送${state.escort.wounded.join('、')}安全退出；余队剩${state.party.length-state.escort.wounded.length-1}人。只带原穿戴装备，不带共享包；整趟仍只结算1日。确认？`))act('escort '+select.value+' CONFIRM')};$('escortPanel').append(select,b)}
+ $('rescuePanel').replaceChildren();
+ if(state.rescue_batches.length){$('rescuePanel').append(el('h3','待救援人员'),el('p',`下一行动结算：第${state.next_day}日。截止日当天成功救回仍有效；休整、维护、普通远征也会推进期限。`));for(const b of state.rescue_batches){const row=el('div');row.append(el('p',`${b.id}｜${b.members.join('、')}｜被俘第${b.capture_day}日，最晚第${b.deadline}日救回。原装备随本人锁定。`));if(state.phase==='TOWN'){const btn=el('button',`救援 ${b.id}（1战／1补给／1日）`);btn.onclick=()=>{if(confirm(`本次结算第${state.next_day}日；目标截止第${b.deadline}日。使用当前随行和部署队伍，战胜轻巡矛兵HP28、盾兵HP32才能救回本批人员；不发铜晶经验。其他到期者：${state.due_next.filter(id=>!b.members.includes(id)).join('、')||'无'}。出发？`))act('rescue '+b.id+' CONFIRM')};row.append(btn)}$('rescuePanel').append(row)}}
+ if(state.phase==='TOWN'){const b=button($('actions'),'出发','depart');b.onclick=()=>dayAction('depart');const mode=el('select');mode.setAttribute('aria-label','将来捕获期限模式');for(const [value,label]of [['standard','标准：捕获后3日'],['relaxed','宽松：捕获后5日']]){const o=el('option',label);o.value=value;mode.append(o)}mode.value=state.capture_mode;const set=el('button','设置将来捕获期限');set.onclick=()=>act('capture_mode '+mode.value);$('rescuePanel').append(mode,set)}
+ if(state.phase==='TOWN'&&state.campaign){
+  if(!state.campaign.facts.includes('ST-101'))button($('actions'),'领取委任','quest commission CONFIRM');
+  else if(!state.campaign.facts.includes('ST-102')){button($('actions'),'采用初始编队','tutorial recommend CONFIRM');button($('actions'),'出发侦路','tutorial start')}
+ }
+ if(state.phase==='RETURNED')button($('actions'),'保留队伍与库存，进入下趟整备','town');
+ if(state.phase==='FAILED')button($('actions'),'返回城镇，安排救援与补员','town');
+ if(state.summary?.escorted_home?.length)$('escortPanel').append(el('p',`护送人员已安置：${state.summary.escorted_home.map(m=>`${m.id}（伤势${m.injury_days}日，经验+${m.xp}）`).join('、')}。原装备随人保留。`));
+ if(state.phase==='BATTLE'&&state.battle_enrage){const rage=state.battle_enrage;$('context').append(el('p',rage.active?`狂暴${rage.tier}阶 · 怪物伤害×${rage.damage_multiplier} · 本场${rage.elapsed_ticks}拍；每10拍再升1阶。`:`本场${rage.elapsed_ticks}/120拍 · 第121拍怪物伤害×2，此后每10拍再增加1倍基础伤害。`))}
+ if(state.enemy_intel?.encounters?.length){const p=$('context');p.append(el('h3','战前敌情'));for(const encounter of state.enemy_intel.encounters){p.append(el('p',encounter.name+' · '+encounter.board_name+' · '+encounter.notice));for(const u of [...encounter.units,...encounter.mechanisms]){const d=el('details');d.open=true;d.append(el('summary',u.name+' '+u.id+' · 生命'+u.stats.hp+' · 物防'+u.stats.physical_defense+'／魔防'+u.stats.magic_defense));d.append(el('p','位置'+JSON.stringify(u.position)+' · 朝向'+(u.facing??'—')+' · 物/魔攻'+u.stats.physical_attack+'/'+u.stats.magic_attack+' · 治疗'+u.stats.healing_power+' · 普攻'+(u.basic.damage_type==='magic'?'魔法':'物理')+' · 射程'+(u.basic.range??'—')+' · 间隔'+(u.basic.attack_interval??'—')+'拍'));for(const m of u.skills)d.append(el('p',m.name+' · 起手'+(m.windup??0)+'拍／冷却'+(m.cooldown??0)+'拍／射程'+(m.range_display??m.range??0)+' · 目标：'+m.target+' · '+m.shape+' · '+m.details));if(u.briefing)d.append(el('p',u.briefing));for(const hint of u.counterplay)d.append(el('p','应对：'+hint));p.append(d)}if(encounter.reserves.length)p.append(el('p','召唤预留：'+encounter.reserves.map(u=>u.name+' 生命'+u.stats.hp).join('、')))}if(state.enemy_intel.can_adjust)p.append(el('p','战前可调整：'+state.enemy_intel.adjustments))}
+ if(state.phase==='EXPLORE'){
+  if(state.space){renderSpace()}else{
+  const loc={I:[70,375],U:[170,325],B1:[180,270],V:[180,215],S:[55,165],B2:[270,155],W:[340,110],T:[405,85],G:[455,45],X:[530,25],A:[55,250],B:[350,280],C:[220,65],D:[370,375],L:[500,170]};
+  for(const [a,b]of state.layout.edges)svg('line',{x1:loc[a][0],y1:loc[a][1],x2:loc[b][0],y2:loc[b][1],stroke:'#999','stroke-width':2});
+  for(const node of state.layout.nodes){const[x,y]=loc[node.id];const c=svg('circle',{cx:x,cy:y,r:17,fill:node.id===state.site?'#ffe49a':state.cleared.includes(node.id)?'#b9dfbd':'white',stroke:'#333',tabindex:0,role:'button','aria-label':'前往'+node.id+' '+node.name});c.onclick=()=>act('move '+node.id);c.onkeydown=e=>{if(e.key==='Enter')c.onclick()};svg('text',{x,y:y+5,'text-anchor':'middle','pointer-events':'none'},node.id)}
+  svg('text',{x:10,y:425,'font-size':13},'点相邻地点行走 · 黄当前位置 / 绿已清 · 道路可回走');
+  const neighbors=state.layout.edges.filter(e=>e.includes(state.site)).map(e=>e.find(n=>n!==state.site));
+  for(const id of neighbors)button($('context'),'走到 '+id,'move '+id);
+  if(['B1','B2','G','L'].includes(state.site)&&!state.cleared.includes(state.site)){button($('actions'),'开战','fight');button($('actions'),'返回来路','retreat')}
+  }
+  if(state.site==='S')button($('actions'),'使用固定补给站','station');
+  if(state.site==='X'&&state.next.length)button($('actions'),'使用边界营地','camp');
+  button($('actions'),'使用额外医疗','medical');
+  if(['I','X'].includes(state.site)){const b=el('button','安全返城');b.onclick=()=>{if(confirm('结束本趟并结算，未完成事件会封存。继续？'))act('return CONFIRM')};$('actions').append(b)}
+  if(state.site==='X')for(const rid of state.next){const b=el('button','进入 '+rid);b.onclick=()=>{if(confirm('单向跨区，之后不能回到本区。继续？'))act('next '+rid+' CONFIRM')};$('actions').append(b)}
+  if(state.event&&state.event.card.type!=='humanity'&&['RESOLVED','DECLINED'].includes(state.event.state.state))$('event').append(el('p','本趟事件已关闭：'+JSON.stringify(state.event.state.receipt||state.event.state.state)));
+  if(state.event&&state.event.card.type!=='humanity'&&!['RESOLVED','DECLINED'].includes(state.event.state.state)){const e=state.event;$('event').append(el('h3',e.card.name+' ['+e.state.state+']'),el('p',e.card.scene));for(const o of e.card.options){const row=el('div');const b=el('button',o.label+(o.option_id==='PASS'?'（暂离）':''));const offers=e.offers[o.option_id];let select=null;if(offers){select=el('select');for(const id of offers){const op=el('option',e.plan_labels[id]);op.value=id;select.append(op)}}let targetSelect=null;if(o.target_choices){targetSelect=el('select');targetSelect.setAttribute('aria-label','行军约定');for(const c of o.target_choices){const op=el('option',c.label);op.value=c.id;targetSelect.append(op)}}let conditionSelect=null;if(o.option_id==='CLEANSE'){conditionSelect=el('select');conditionSelect.setAttribute('aria-label','处理的途中状态');for(const c of state.journey_conditions.cleansable){const op=el('option',c.id+' '+c.name+'（整组处理）');op.value=c.id;conditionSelect.append(op)}b.disabled=!conditionSelect.options.length}b.onclick=()=>act('choose '+o.option_id+' '+(targetSelect?targetSelect.value:conditionSelect?conditionSelect.value:target())+(select?' '+select.value:''));row.append(b);if(select)row.append(select);if(conditionSelect)row.append(conditionSelect);if(targetSelect)row.append(targetSelect);row.append(el('span',o.mechanical_summary||''));if(!e.binding.enabled_options.includes(o.option_id))row.append(el('strong',' [出发预算限制]'));$('event').append(row)}if(e.card.event_id==='EV04'){button($('event'),'拓印第一钟','rub 1');button($('event'),'拓印第二钟','rub 2')}const b=el('button','明确放弃本趟事件');b.onclick=()=>{if(confirm('关闭本趟事件？只是暂离请使用上面的暂离选项。'))act('decline CONFIRM')};$('event').append(b)}
+ }else if(state.phase==='BATTLE'){
+  if(state.space){renderSpace()}else{
+  const root3=Math.sqrt(3),centers=state.board.cells.map(c=>[root3*(c.q+c.r/2),1.5*c.r]);
+  svg('text',{x:280,y:18,'text-anchor':'middle','font-size':13},state.board.name+' · '+state.board.shape_name+' · '+state.board.cell_count+'格');
+  const minX=Math.min(...centers.map(p=>p[0]))-root3/2,maxX=Math.max(...centers.map(p=>p[0]))+root3/2;
+  const minY=Math.min(...centers.map(p=>p[1]))-1,maxY=Math.max(...centers.map(p=>p[1]))+1;
+  const radius=Math.min(512/(maxX-minX),352/(maxY-minY));
+  const point=(q,r)=>[280+(root3*(q+r/2)-(minX+maxX)/2)*radius,208+(1.5*r-(minY+maxY)/2)*radius];
+  const hex=(x,y,scale=1)=>Array.from({length:6},(_,i)=>[x+radius*scale*Math.cos(Math.PI*i/3+Math.PI/6),y+radius*scale*Math.sin(Math.PI*i/3+Math.PI/6)].join(',')).join(' ');
+  const colors={GROUND:'#fff',SHALLOW_WATER:'#b9d9e9',DEEP_WATER:'#649abb',LOW_OBSTACLE:'#b0a18b',HIGH_OBSTACLE:'#666',FIXED_BRIDGE:'#debe8f',HIGH_GROUND:'#dfdcaa'};
+  for(const c of state.board.cells){const[x,y]=point(c.q,c.r);const tile=svg('polygon',{points:hex(x,y),fill:colors[c.terrain_id],stroke:'#aaa','stroke-width':1,'stroke-linejoin':'round','data-cell':`${c.q},${c.r}`});const title=document.createElementNS(NS,'title');title.textContent=`(${c.q}, ${c.r}) ${c.terrain_id}`;tile.append(title)}
+  for(const a of state.battle.actors)if(a.hp>0&&a.pending)for(const cell of a.pending.peril_outer_cells||[]){const[x,y]=point(...cell);const mark=svg('polygon',{points:hex(x,y,.88),fill:'none',stroke:'#a46212','stroke-width':2,'stroke-dasharray':'4 4'});const hint=document.createElementNS(NS,'title');hint.textContent='条件外圈：内圈有人未撤才引爆，内圈撤空则整招落空';mark.append(hint)}
+  for(const a of state.battle.actors)if(a.hp>0&&a.pending)for(const cell of a.pending.cells){const[x,y]=point(...cell);svg('polygon',{points:hex(x,y,.88),fill:'none',stroke:a.side==='enemy'?'#e58200':'#447acc','stroke-width':2.5});svg('text',{x:x+radius*.5,y:y-radius*.48,'font-size':11},a.pending.due)}
+  for(const a of state.battle.actors)if(a.hp>0&&a.pending)for(const row of a.pending.push_destinations||[])if(row.to){const[x,y]=point(...row.to);svg('circle',{cx:x,cy:y,r:radius*.30,fill:'none',stroke:'#9a5a00','stroke-width':2,'stroke-dasharray':'3 3'});svg('text',{x,y:y+4,'text-anchor':'middle','font-size':10},'推');}
+  for(const a of state.battle.actors)if(a.hp>0){const row=a.pending?.destination?{destination:a.pending.destination,facing:a.pending.deflect_facing}:a.deflection;if(row&&(!row.expires||row.expires>=state.battle.tick)){const[x,y]=point(...row.destination);svg('text',{x,y:y+4,'text-anchor':'middle',fill:'#7a4ba0','font-size':12},'折');}if(a.concealment?.expires>=state.battle.tick){const[x,y]=point(...a.pos);svg('circle',{cx:x,cy:y,r:21,fill:'none',stroke:'#7a4ba0','stroke-dasharray':'3 3'});}}
+  for(const a of state.battle.actors)if(a.hp>0&&(a.trigger_delay||a.deferred_start)){const[x,y]=point(...a.pos);svg('text',{x:x+18,y:y-17,'font-size':11,fill:'#7a4ba0'},a.trigger_delay?'噤':'缓');}
+  const drawEdge=(row,active)=>{if(!row)return;const[a,b]=row.edge.map(p=>point(...p));const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,h=radius/2;svg('line',{x1:mx-dy/len*h,y1:my+dx/len*h,x2:mx+dy/len*h,y2:my-dx/len*h,stroke:active?'#b22':'#e58200','stroke-width':5,'stroke-dasharray':active?'none':'4 3','data-edge':JSON.stringify(row.edge)});};
+  drawEdge(state.battle.edge_reservation,false);if(state.battle.closed_edge?.expires>=state.battle.tick)drawEdge(state.battle.closed_edge,true);
+  for(const a of state.battle.actors){const[x,y]=point(...a.pos);const c=svg('circle',{cx:x,cy:y,r:15,fill:a.hp<=0?'#888':a.side==='player'?'#276ab3':'#b83e39'});const title=document.createElementNS(NS,'title');title.textContent=a.id+' '+a.kind+' HP'+a.hp+' D'+a.facing+(a.pending?' 蓄力 '+a.pending.move_id:'');c.append(title);const d=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]][a.facing];const end=point(a.pos[0]+d[0]*.4,a.pos[1]+d[1]*.4);svg('line',{x1:x,y1:y,x2:end[0],y2:end[1],stroke:'black','stroke-width':2});svg('text',{x,y:y+4,fill:'white','text-anchor':'middle','font-size':12},a.hp)}
+  svg('text',{x:280,y:415,'text-anchor':'middle','font-size':12},'第'+state.battle.tick+'拍 · 蓝我方 / 红敌方 / 灰倒地 · 橙框预警 · 虚线预约／红线封边（非整格）');}
+  button($('actions'),'单步','step');button($('actions'),'推进120拍','run 120');
+  const play=el('button',playing?'暂停':'按0.5秒播放');play.onclick=()=>{playing=!playing;render()};$('actions').append(play);if(state.can_flee){const flee=el('button','撤退返城');flee.onclick=()=>{playing=false;if(confirm('执行1拍公开追击，至少1人站立才可安全返城。继续？'))act('flee CONFIRM')};$('actions').append(flee)}
+ }else{let title=state.phase==='TOWN'?'城镇整备：检查伤员、库存与随行名单。':'本趟已结束，结算记录已保存。';let detail=state.phase==='RETURNED'?'点击下方整备按钮，沿用此档开始下一趟。':'进入城镇整备；新建独立试验会另建初始档。';if(state.summary?.result==='RESCUE_SUCCESS'){title=`救援成功：${state.summary.rescued_ids.length}名原队员已带回。`;detail=`原装备和成长保留；伤势需恢复${state.summary.rescued_injury_days}个行动日。`}if(state.phase==='FAILED'){title=`败战归城：${state.summary.captured_ids.length}名随行队员被俘。`;detail='救援截止日见上方；请返回城镇安排救援与补员。'}if(state.ending_text){const lines=state.ending_text.split('\n');title=lines[0];detail=lines.slice(1).join('\n')}else if(state.phase==='FIN_C'){title='本轮结束：已无可恢复的队员。';detail='永久损失和原装备已记入档案；本轮无法继续。'}svg('text',{x:25,y:80,'font-size':20},title);let line=0;for(const paragraph of detail.split('\n')){const chars=Array.from(paragraph);for(let start=0;start<chars.length;start+=34)svg('text',{x:25,y:120+24*line++,'font-size':14},chars.slice(start,start+34).join(''))}playing=false}
+}
+$('form').onsubmit=e=>{e.preventDefault();act($('command').value)};
+$('target').addEventListener('change',()=>renderBooks());
+document.querySelectorAll('[data-town]').forEach(b=>b.onclick=()=>['rest','maintain'].includes(b.dataset.town)?dayAction(b.dataset.town):act(b.dataset.town));
+$('setDifficulty').onclick=()=>act('difficulty '+$('difficulty').value);
+$('setRoute').onclick=()=>act('route '+$('route').value);$('buySupply').onclick=()=>act('buy_supply '+$('supplyCount').value);$('packMedical').onclick=()=>act('pack_medical '+$('medicalCount').value);$('recruit').onclick=()=>act('recruit '+$('recruitKind').value);
+$('squadOn').onclick=()=>act('squad '+target()+' on');$('squadOff').onclick=()=>act('squad '+target()+' off');$('care').onclick=()=>act('care '+target());$('levelUp').onclick=()=>act('level_up '+target());$('craft').onclick=()=>act('craft '+$('recipe').value);$('stash').onclick=()=>act('stash '+$('item').value);
+$('newCampaign').onclick=()=>request({op:'new_campaign',seed:Number($('seed').value)});
+$('new').onclick=()=>{playing=false;request({op:'new',route:$('route').value,team:$('team').value,pack:$('pack').value,birth:$('birth').value,seed:Number($('seed').value),case_mode:$('caseMode').value,difficulty:$('newDifficulty').value})};
+$('load').onclick=()=>{playing=false;request({op:'load',name:$('saves').value})};$('export').onclick=()=>request({op:'export'});$('refresh').onclick=refresh;
+$('use').onclick=()=>act('use '+$('item').value+(['CO11','CO12'].includes($('item').value)?'':' '+target()));$('discard').onclick=()=>act('discard '+$('item').value);$('deploy').onclick=()=>act('deploy '+target()+' on');$('reserve').onclick=()=>act('deploy '+target()+' off');
+for(const [id,label]of [['advance','推进'],['hold','守位'],['flank','迂回'],['evade','避险']]){const b=el('button',label);b.onclick=()=>act('stance '+target()+' '+id);$('reserve').parentNode.append(b)}
+setInterval(()=>{if(playing&&!busy&&state?.phase==='BATTLE')act('step')},500);refresh();
+
+function askCommand(parent,text,command){
+ document.getElementById('waterConfirmation')?.remove();
+ const box=el('div');box.id='waterConfirmation';box.setAttribute('role','alert');
+ box.append(el('p',text));
+ const yes=el('button','确认本次操作');yes.onclick=()=>act(command);
+ const no=el('button','取消，保留原状');no.onclick=()=>box.remove();
+ box.append(yes,no);parent.append(box);
+}
+
+function renderBooks(){
+ const box=$('bookPanel');box.replaceChildren();const data=state?.books;if(!data)return;
+ const catalog=data.catalog,byId=Object.fromEntries(catalog.map(b=>[b.id,b]));
+ const names=ids=>ids.map(id=>byId[id]?.name||id).join('、')||'无';
+ const member=data.members.find(m=>m.id===target());
+ const city=state.phase==='TOWN',canConfig=city||state.phase==='EXPLORE';
+ const rewards=data.rewards;
+ box.append(el('p',`研究目标：${byId[rewards.target]?.name||'未指定'}，定向进度${rewards.progress}/2。已携带：${names(rewards.carried.map(r=>r.book_id))}。新书安全带回后学习，每人两个书槽。`));
+ const selector=el('select');selector.setAttribute('aria-label','技能书目录');
+ const category={damage:'伤害',heal:'治疗',shield:'护盾',move:'位移',control:'控制',buff:'增益',passive:'被动',boss:'魔将'};
+ for(const b of catalog){const o=el('option',`${b.name} · ${category[b.category]||b.category} · ${b.price}铜${b.unlocked?'':' · 未开放'}`);o.value=b.id;selector.append(o)}
+ selector.value=selectedBook;if(!selector.value){selector.selectedIndex=0;selectedBook=selector.value}
+ selector.onchange=()=>{selectedBook=selector.value;renderBooks()};box.append(selector);
+ const book=byId[selectedBook];if(book){
+  const card=book.card;box.append(el('p',book.summary));
+  box.append(el('p',(card?`起手${card.windup}拍，冷却${card.cooldown}拍，${card.cast_limit===null?'按冷却循环':`每战${card.cast_limit}次`}。`:'装备后按条件触发。')+' '+book.auto_summary));
+  box.append(el('p',`仓库${data.stock[book.id]||0}本。${member?.reasons[book.id]||''}`));
+  if(city&&member&&!member.reasons[book.id]&&!member.learned.includes(book.id)){
+   if(book.unlocked)button(box,`为目标采购（${book.price}铜）`,`book buy ${member.id} ${book.id}`);
+   if((data.stock[book.id]||0)>0)button(box,'目标学习所选书',`book learn ${member.id} ${book.id}`);
+  }
+  if(city&&book.unlocked&&book.stage!=='X')button(box,'设为研究目标',`book target ${book.id}`);
+ }
+ if(member){
+  box.append(el('p',`目标已学：${names(member.learned)}。当前装备：${names(member.equipped)}。`));
+  if(canConfig){
+   const slots=[0,1].map((i)=>{const select=el('select');select.setAttribute('aria-label',`书槽${i+1}`);for(const id of ['',...member.learned]){const o=el('option',id?byId[id].name:'留空');o.value=id;select.append(o)}select.value=member.equipped[i]||'';box.append(select);return select});
+   const apply=el('button','应用两个书槽');apply.onclick=()=>{const ids=slots.map(x=>x.value).filter(Boolean);act(`book equip ${member.id} ${ids.join(' ')||'clear'}`)};box.append(apply);
+   const main=el('select');main.setAttribute('aria-label','主要接敌招式');
+   const attacks=member.active.filter(mid=>byId[mid.slice(3)]?.card?.kind==='damage'&&!member.disabled.includes(mid));
+   for(const [value,label]of [['AUTO','自动选择主攻'],['BASIC','以普攻接敌'],...attacks.map(mid=>[mid,member.skill_names[mid]||mid])]){const o=el('option',label);o.value=value;main.append(o)}main.value=member.main;
+   const setMain=el('button','设置接敌招式');setMain.onclick=()=>act(`book main ${member.id} ${main.value}`);box.append(main,setMain);
+   for(const [i,mid]of member.active.entries()){
+    const row=el('div');row.className='row';row.append(el('span',`${i+1}. ${member.skill_names[mid]||mid}`));
+    button(row,member.disabled.includes(mid)?'启用':'关闭',`book auto ${member.id} ${mid} ${member.disabled.includes(mid)?'on':'off'}`);
+    for(const [delta,label]of [[-1,'提前'],[1,'后移']]){if(i+delta<0||i+delta>=member.active.length)continue;const b=el('button',label);b.onclick=()=>{const order=member.active.slice();[order[i],order[i+delta]]=[order[i+delta],order[i]];act(`book queue ${member.id} ${order.join(' ')}`)};row.append(b)}box.append(row);
+   }
+  }
+ }
+ const offer=rewards.pending_offer;if(offer){box.append(el('p',`战后手册：${byId[offer.book_id]?.name||offer.book_id}，本趟剩余额度${offer.remaining_cap}。离开现场即放弃。`));if(state.phase==='EXPLORE'){if(offer.can_claim)button(box,'领取战利书','book claim');button(box,'放弃本册','book drop')}}
+ const eventOffer=data.event_offer;if(eventOffer){box.append(el('p',`现场可选：${byId[eventOffer.book_id]?.name||eventOffer.book_id}，替代这里的原事件选项，本趟剩余额度${eventOffer.remaining_cap}。`));if(state.phase==='EXPLORE'&&eventOffer.can_claim)button(box,'选择本册，放弃原选项','choose BOOK')}
+ if(city){
+  for(const [source,row]of Object.entries(rewards.entitlements)){if(row.selected)continue;const select=el('select');select.setAttribute('aria-label',`${source}自选奖励`);for(const id of row.allowed){const o=el('option',byId[id]?.name||id);o.value=id;select.append(o)}const take=el('button',`领取${source}自选`);take.onclick=()=>act(`book choice ${source} ${select.value} CONFIRM`);box.append(select,take)}
+  for(const [id,label]of [['SB-T01','近战研习'],['SB-T02','远击研习'],['SB-T03','战地照护']]){if(rewards.tasks[id])box.append(el('p',`${label}：已安全带回${rewards.tasks[id].banked}/3场记录`));else if(state.campaign?.facts.includes('ST-104'))button(box,`接取${label}`,`book task accept ${id}`)}
+ }
+}
+</script>
+</html>

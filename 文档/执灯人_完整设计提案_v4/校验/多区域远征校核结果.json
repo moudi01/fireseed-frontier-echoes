@@ -1,0 +1,358 @@
+{
+  "version": "MULTI-1.1",
+  "passed": 59,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "八区无圈层与配对字段",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "14条无重复无自连合法边",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "相邻表与边双向一致",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "四将原驻地保留且不构成圈层",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "区域名章节档位与开放事实保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "八区网络连通",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST101 SHORT路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST101 MEDIUM路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST101 LONG路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST102 SHORT路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST102 SHORT目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST102 MEDIUM路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST102 MEDIUM目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST102 LONG路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST102 LONG目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST104 SHORT路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST104 SHORT目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST104 MEDIUM路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST104 MEDIUM目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST104 LONG路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ST104 LONG目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "CH2_COMPLETE SHORT路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "CH2_COMPLETE SHORT目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "CH2_COMPLETE MEDIUM路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "CH2_COMPLETE MEDIUM目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "CH2_COMPLETE LONG路线长度与解锁",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "CH2_COMPLETE LONG目标端点可筛",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "短中长区数2/3/4且空间合同同步",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "示例路径 ['RG01', 'RG07']",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "示例路径 ['RG06', 'RG07', 'RG04']",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "示例路径 ['RG01', 'RG06', 'RG03', 'RG02']",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "示例路径 ['RG06', 'RG01', 'RG08', 'RG07']",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "SHORT数量与预算计算",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "SHORT侵蚀有限算例",
+      "passed": true,
+      "detail": {
+        "full_optional_before_return": 35,
+        "after_return": 15,
+        "main_only_before_return": 25
+      }
+    },
+    {
+      "name": "MEDIUM数量与预算计算",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "MEDIUM侵蚀有限算例",
+      "passed": true,
+      "detail": {
+        "full_optional_before_return": 45,
+        "after_return": 25,
+        "main_only_before_return": 30
+      }
+    },
+    {
+      "name": "LONG数量与预算计算",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "LONG侵蚀有限算例",
+      "passed": true,
+      "detail": {
+        "full_optional_before_return": 55,
+        "after_return": 35,
+        "main_only_before_return": 35
+      }
+    },
+    {
+      "name": "营地与区内补给限次且不复活",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "区内补给首战后第二战前可达且不要求额外交易",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "基础三处与额外第四处须联合合法匹配",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "自由探索后的服务选项再次检查且保留免费退出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "侦察目标与双候选改路槽不冲突",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "药品预备上限及普通技能范围不因换区重置",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "事件整趟唯一和普通回补不能重开人性",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "不合法的四区起终点组合不能降为两区",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "跨区只写位置进度不洗资源或入库",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "目标未完成拒绝跨区",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "非相邻或无法按剩余长度抵达拒绝",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "跨区保存失败不部分写入",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "重复出口请求不二次写入与不同载荷拒绝",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "日期、工单和入库只在整趟结算",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "七主源文件保留供内容与固定任务基线",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "修订前63文件快照未变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "正文链接 专项/多区域远征与八区网络.md",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "正文链接 专项/多区域远征耗损与事件承载校核.md",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "正文链接 样图/灰栎边道_连续小地图_样图02.md",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "正文链接 专项/八区域外围与内围结构.md",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "灰栎02适配每区3+1且出口明确",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "legal_directed_path_counts": {
+    "ST101": {
+      "SHORT": 0,
+      "MEDIUM": 0,
+      "LONG": 0
+    },
+    "ST102": {
+      "SHORT": 10,
+      "MEDIUM": 16,
+      "LONG": 12
+    },
+    "ST104": {
+      "SHORT": 18,
+      "MEDIUM": 42,
+      "LONG": 64
+    },
+    "CH2_COMPLETE": {
+      "SHORT": 28,
+      "MEDIUM": 84,
+      "LONG": 182
+    }
+  },
+  "input_sha256": {
+    "文档/执灯人_完整设计提案_v4/校验/check_multi_region.py": "c45614b077b6c870afd2953468c8ef4342492e0f4dd98a1af4cd60f83628c014",
+    "文档/执灯人_完整设计提案_v4/校验/多区域远征配置.json": "cddbeff39f21738f28672dda88b4a9336cef3d6823168c20aea91c92e52663e2",
+    "文档/执灯人_完整设计提案_v4/校验/连续区域地图合同.json": "5dae73060cb3e1c54c306af04c9307089b007d7a8cced8eea97b54c5e22608e9",
+    "文档/执灯人_完整设计提案_v4/校验/地图地形.json": "2b871b3e3ed6a664ee96389a89f976fa08d73195dc5d772db91cb532f19bed1f",
+    "历史材料/文案归档/火种计划_MULTI-1.0_多区域远征修订前_20261026/快照哈希.json": "5dd051c59d795d96928daa031e2df20bd00da1d49d268cc9f1bc0a87fef30144",
+    "文档/执灯人_完整设计提案_v4/专项/多区域远征与八区网络.md": "1f65579e26dd5bc673e417b44a5b32ffb265645e26a19e4765ea5c717c5f9cc1",
+    "文档/执灯人_完整设计提案_v4/专项/多区域远征耗损与事件承载校核.md": "61f6d715a3a20e2c3580d53648d3debd748bb569427b06e993434b5f56a185f7",
+    "文档/执灯人_完整设计提案_v4/样图/灰栎边道_连续小地图_样图02.md": "fcd3cc5d1640f4d1d8de32187f17e64d6621279fd8d234789290c2bffee51569",
+    "文档/执灯人_完整设计提案_v4/专项/八区域外围与内围结构.md": "f3bd28278f71fbc3a7dcccfd391c8604f08a5ad36aecdcefef12cf7a5845d33c",
+    "文档/执灯人_完整设计提案_v4/样图/灰栎边道_样图02_布点.json": "c4cb5c7b53e3cba2f8ffd889124ddcbbfbd0e1188338ec037e652d5ceb69452f"
+  },
+  "scope": "design_consistency_topology_arithmetic_and_abstract_transfer_only",
+  "not_proven": [
+    "runtime_generator",
+    "navigation_mesh",
+    "combat_balance",
+    "resource_balance",
+    "save_storage_atomicity",
+    "event_density_after_all_gates",
+    "player_choices"
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "version": "MAP-CONT-1.1",
+  "base_design_version": "TINDER-1.7",
+  "authority": "专项/多区域远征与八区网络.md",
+  "status": "continuous_maps_with_multi_region_profiles_authored_pending_runtime_and_balance",
+  "user_direction": "一个区域设置成一个连续的小地图，在小地图中分布有各种事件和战斗",
+  "region_count": 8,
+  "regions_per_expedition": {
+    "SHORT": 2,
+    "MEDIUM": 3,
+    "LONG": 4
+  },
+  "exploration": "continuous_world_space_locomotion_with_physical_branches_loops_and_backtracking",
+  "minimap": "known_space_navigation_only_no_node_teleport",
+  "battle": {
+    "same_physical_site": true,
+    "local_board_size": [
+      7,
+      9
+    ],
+    "preview_before_commit": true,
+    "leave_before_commit": "return_outside_engagement_boundary_no_battle_receipt",
+    "after_commit": "original_automatic_combat_and_retreat_contract",
+    "neighbor_encounters_merge": false,
+    "visible_enemies_replaced_by_event": false
+  },
+  "randomness": {
+    "layout_and_contents_locked_at_departure": true,
+    "new_run_new_map": true,
+    "resume_rerolls": false,
+    "full_layout_revealed_to_player": false,
+    "current_party_tailors_draw": false
+  },
+  "event_binding": {
+    "replace_layer_filter_with_valid_physical_site": true,
+    "preserve_chapter_region_knowledge_case_service_cooldown": true,
+    "selection_requires_interaction": true,
+    "pass_rerolls": false,
+    "crafting_preserves_FIELD_CO_1_0": true,
+    "variant_requires_unseen_unstarted_target_and_real_guidance_service": true,
+    "missing_service": "exclude_before_draw",
+    "two_independent_attackable_camps_may_share_one_reward_slot": false,
+    "lifecycle_contract": "事件回访与结算合同.json",
+    "new_ordinary_run_lifecycle_version": "REVISIT-1.0"
+  },
+  "supply": {
+    "baseline_opportunity_independent_of_random_event_card": true,
+    "safe_site_means_free_heal": false,
+    "new_free_supplies_require_explicit_budget": true,
+    "visiting_refreshes_stock": false,
+    "quantity": "多区域远征配置.json:supply"
+  },
+  "risk": {
+    "steps_add_days": false,
+    "backtrack_adds_erosion": false,
+    "landmark_auto_creates_danger_zone": false,
+    "danger_zone_exposure_and_battle_receipts_separate": true,
+    "scope": "MULTI ordinary profiles use 多区域远征配置.json:erosion; fixed special routes retain original"
+  },
+  "profiles": {
+    "MULTI_PROFILES": {
+      "source": "多区域远征配置.json:profiles"
+    },
+    "FIXED_SPECIAL_TASKS": {
+      "source": "original_explicit_task_templates",
+      "not_short_medium_long_ordinary_runs": true
+    }
+  },
+  "superseded_for_CONTINUOUS_REGION_only": [
+    "地图地形.json:route_templates mandatory layer order",
+    "地图地形.json:expedition_map_generation_contract standard 2_to_3 battle constraint",
+    "地图地形.json:region_structure_contract ordinary_battle_count_range",
+    "规则样例.json:region_structure_contract ordinary_battle_count_range",
+    "远征事件池.json:events[*].trigger.layers",
+    "远征事件池.json:contracts.route.max_presented_events_per_expedition"
+  ],
+  "preserved": [
+    "eight_region_names_unlocks_and_generals_without_old_ring_partition",
+    "fixed_tutorial_and_special_routes",
+    "combat_rules_and_stats",
+    "humanity_and_endings",
+    "equipment_and_recipes",
+    "existing_reward_receipts_and_claim_limits_until_explicit_new_budget"
+  ],
+  "generation_gate": "MULTI-1.1 explicit profiles; validate full route content and budget before payment; no old single-region fallback",
+  "existing_save": "continue_saved_layout_do_not_convert_mid_run",
+  "base_source_sha256": {
+    "校验/规则样例.json": "482a9d2459fa462b0bbe2a564d5769c5f406897d55eaeddc4b4190db650a2c3d",
+    "校验/敌人与遭遇.json": "8077f6ae2be68d13e3dae271a7face5ddaea326e21c91545cc29c962c23e3dc8",
+    "校验/构筑与学习.json": "88ada805a1cdc75d21e5d1ba922b7aa5152ff5d26bc7e093c4a9a28a6db52a56",
+    "校验/地图地形.json": "2b871b3e3ed6a664ee96389a89f976fa08d73195dc5d772db91cb532f19bed1f",
+    "校验/远征事件池.json": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6",
+    "校验/战利品.json": "13af056d16072bb2ae27b6c1a4c5f6397c81651eeef7930561f7711a901d8a46",
+    "样片/首次远征流程.json": "30227244ccd61620cf3f988a0d32fd553be1ad8b91f719003aefcf1cab7e3d82"
+  },
+  "pre_revision_snapshot": "历史材料/文案归档/火种计划_MAP-CONT-1.0_连续小地图修订前_20261026",
+  "snapshot_files": 10,
+  "runtime_implemented": false,
+  "current_expedition_contract": "多区域远征配置.json",
+  "joint_placement_contract": "八区联合布点.json"
+}

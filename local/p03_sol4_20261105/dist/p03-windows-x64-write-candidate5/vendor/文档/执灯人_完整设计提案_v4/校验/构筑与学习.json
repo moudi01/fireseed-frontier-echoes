@@ -1,0 +1,1644 @@
+{
+  "schema_version": 1,
+  "design_version": "TINDER-1.7",
+  "status": "rewritten_design_specification_not_implemented_or_balanced",
+  "sources": {
+    "books": "06_人员职业与技能书.md",
+    "plans_and_learning": "08_构筑与候选学习.md",
+    "enemies": "校验/敌人与遭遇.json",
+    "exploration_fog": "校验/地图地形.json#fog_contract"
+  },
+  "plan_contract": {
+    "max_equipped": 3,
+    "duplicate_plan_ids": false,
+    "new_actions_per_actor_tick_max": 1,
+    "active_release_occupies_action": true,
+    "soldiers_can_receive": true,
+    "unlimited_entries_mean_no_extra_per_battle_cap": true
+  },
+  "plans": [
+    {
+      "plan_id": "PL01",
+      "name": "同步盾列",
+      "tags": [
+        "guard",
+        "private_shield"
+      ],
+      "trigger": "battle_open",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 1,
+      "mechanism_id": "opening_guard_shield",
+      "budget_scope": "team",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL02",
+      "name": "留隙",
+      "tags": [
+        "spacing",
+        "private_shield"
+      ],
+      "trigger": "battle_open_deployment_snapshot_no_adjacent_ally",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 1,
+      "mechanism_id": "isolated_opening_shield",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL03",
+      "name": "侧线接近",
+      "tags": [
+        "adjacent_melee",
+        "flank",
+        "guard_bypass"
+      ],
+      "trigger": "first_adjacent_side_or_rear_basic_start",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 1,
+      "mechanism_id": "flank_guard_bypass",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL04",
+      "name": "接力追隙",
+      "tags": [
+        "basic",
+        "damage_buff"
+      ],
+      "trigger": "enemy_strong_action_end",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 1,
+      "mechanism_id": "basic_stance",
+      "budget_scope": "per_enemy",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL05",
+      "name": "稳弦",
+      "tags": [
+        "projection",
+        "stationary"
+      ],
+      "trigger": "stationary_two_ticks_then_basic",
+      "per_actor_tick_max": 1,
+      "per_battle_max": null,
+      "mechanism_id": "basic_stance",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL06",
+      "name": "错峰药具",
+      "tags": [
+        "healing",
+        "cooldown"
+      ],
+      "trigger": "second_finite_heal_start",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 1,
+      "mechanism_id": "second_heal_gap",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL07",
+      "name": "卸盾刻痕",
+      "tags": [
+        "private_shield",
+        "standard_mark"
+      ],
+      "trigger": "basic_start_and_positive_hit",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 2,
+      "mechanism_id": "shield_to_mark",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL08",
+      "name": "穿隙护持",
+      "tags": [
+        "move",
+        "private_shield"
+      ],
+      "trigger": "non_consumer_move_end",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 3,
+      "mechanism_id": "move_to_shield",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL09",
+      "name": "压拍投机",
+      "tags": [
+        "basic",
+        "cast_delay"
+      ],
+      "trigger": "basic_hit_before_spell_release",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 2,
+      "mechanism_id": "cast_delay",
+      "budget_scope": "team",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL10",
+      "name": "借拍破防",
+      "tags": [
+        "basic",
+        "delayed_cast_window"
+      ],
+      "trigger": "basic_start",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 2,
+      "mechanism_id": "spend_delayed_cast_window",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL11",
+      "name": "刻痕会心",
+      "tags": [
+        "standard_mark",
+        "crit"
+      ],
+      "trigger": "standard_mark_consumed",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 2,
+      "mechanism_id": "mark_to_crit",
+      "budget_scope": "actor",
+      "added_actions": 0
+    },
+    {
+      "plan_id": "PL12",
+      "name": "护持折返",
+      "tags": [
+        "private_shield",
+        "move",
+        "dodge"
+      ],
+      "trigger": "ordinary_move_start",
+      "per_actor_tick_max": 1,
+      "per_battle_max": 2,
+      "mechanism_id": "shield_to_move",
+      "budget_scope": "actor",
+      "added_actions": 0
+    }
+  ],
+  "plan_parameters": {
+    "PL01": {
+      "private_shield": 12,
+      "recipients": "first_guard_and_first_adjacent_ally",
+      "duration": "until_spent_or_battle_end",
+      "required_tags_any": [
+        "shield",
+        "guard",
+        "support_guard"
+      ]
+    },
+    "PL02": {
+      "private_shield": 8,
+      "adjacency": "hex_distance_1_per_03",
+      "snapshot": "battle_open",
+      "duration": "until_spent_or_battle_end",
+      "retrigger_after_separation": false
+    },
+    "PL03": {
+      "adjacent_range": 1,
+      "side_or_rear_required": true,
+      "requires_tag": "melee",
+      "bypass_guard_redirection_only": true,
+      "original_target_defense_and_shields_preserved": true,
+      "extra_damage_multiplier": 0
+    },
+    "PL04": {
+      "damage_increase": 0.25,
+      "expires_ticks": 2,
+      "normal_basic_only": true,
+      "one_per_enemy": true
+    },
+    "PL05": {
+      "stationary_ticks": 2,
+      "damage_increase": 0.25,
+      "normal_basic_only": true,
+      "reset_on": [
+        "move",
+        "basic_attempt"
+      ]
+    },
+    "PL06": {
+      "second_effective_heal_only": true,
+      "cooldown_reduction_ticks": 1,
+      "min_cooldown": 2,
+      "charges_refunded": 0
+    },
+    "PL07": {
+      "private_shield_cost": 6,
+      "mark_flat_bonus": 4,
+      "mark_duration_ticks": 2,
+      "produce_at": "tick_end",
+      "usable_from": "next_tick",
+      "requires_positive_hit": true
+    },
+    "PL08": {
+      "private_shield_produced": 4,
+      "duration_ticks": 2,
+      "produce_at": "tick_end",
+      "exclude_consumer_derived_move": true,
+      "alias_book": "BK11"
+    },
+    "PL09": {
+      "cast_delay_ticks": 1,
+      "per_team_tick_max": 1,
+      "global_delay_per_cast_max": 1,
+      "requires_hit_before_release": true,
+      "creates_window_at": "tick_end"
+    },
+    "PL10": {
+      "matching_defense_view_reduction": 8,
+      "min_defense": 0,
+      "uses_per_cast_team_max": 1,
+      "alias_book": "BK13"
+    },
+    "PL11": {
+      "critical_chance": 0.25,
+      "extra_critical_damage": 0.5,
+      "duration_ticks": 3,
+      "usable_from": "next_tick",
+      "consumed_on": "next_direct_attack_attempt",
+      "alias_book": "BK10"
+    },
+    "PL12": {
+      "private_shield_cost": 4,
+      "ordinary_move_path_max": 2,
+      "dodge_chance": 0.2,
+      "duration_ticks": 2,
+      "alias_book": "BK15",
+      "counts_as_consumer_derived_move": true
+    }
+  },
+  "new_books": [
+    {
+      "id": "BK09",
+      "kind": "active",
+      "mechanism_id": "shield_to_mark",
+      "shield_cost": 6,
+      "charges": 2,
+      "cooldown": 3,
+      "range": 3
+    },
+    {
+      "id": "BK10",
+      "kind": "passive",
+      "mechanism_id": "mark_to_crit",
+      "critical_chance": 0.25,
+      "extra_critical_damage": 0.5,
+      "charges": 2,
+      "duration": 3
+    },
+    {
+      "id": "BK11",
+      "kind": "passive",
+      "mechanism_id": "move_to_shield",
+      "private_shield": 4,
+      "charges": 3,
+      "per_tick": 1,
+      "duration": 2
+    },
+    {
+      "id": "BK12",
+      "kind": "active",
+      "mechanism_id": "active_dodge",
+      "dodge_chance": 0.3,
+      "charges": 2,
+      "cooldown": 4,
+      "duration": 2
+    },
+    {
+      "id": "BK13",
+      "kind": "passive",
+      "mechanism_id": "spend_delayed_cast_window",
+      "defense_view_reduction": 8,
+      "charges": 2
+    },
+    {
+      "id": "BK14",
+      "kind": "passive",
+      "mechanism_id": "effective_support_to_shield",
+      "private_shield": 4,
+      "charges": 3,
+      "per_tick": 1,
+      "duration": 2,
+      "exclude_derived_and_passive": true
+    },
+    {
+      "id": "BK15",
+      "kind": "passive",
+      "mechanism_id": "shield_to_move",
+      "shield_cost": 4,
+      "move_path_max": 2,
+      "dodge_chance": 0.2,
+      "duration": 2,
+      "charges": 2
+    },
+    {
+      "id": "BK16",
+      "kind": "passive",
+      "mechanism_id": "mark_to_ally_shield",
+      "private_shield": 6,
+      "charges": 2,
+      "per_tick": 1,
+      "duration": 2
+    }
+  ],
+  "event_contract": {
+    "event_key": [
+      "battle_id",
+      "event_id"
+    ],
+    "effect_once_key": [
+      "event_id",
+      "mechanism_id",
+      "beneficiary_instance_id"
+    ],
+    "required_fields": [
+      "battle_id",
+      "event_id",
+      "action_id",
+      "origin_action_id",
+      "actor_id",
+      "target_id",
+      "producer_effect_id",
+      "resource_id",
+      "parent_event_id",
+      "generation_depth",
+      "caused_by_consumer"
+    ],
+    "generated_resources_usable": "next_tick",
+    "private_shield_only_spendable": true,
+    "shared_shield_spendable": false,
+    "standard_marks_per_target_per_faction_max": 1,
+    "resource_reservation": "atomic_at_existing_action_start",
+    "cost_refund_on_miss_or_interrupt": false,
+    "same_mechanism_aliases_share_budget": true,
+    "attack_attempt_never_added_by_passive": true,
+    "charges_or_cooldown_refunded_by_engines": false,
+    "consumer_outputs_reenter_producer": false,
+    "max_resource_generation_depth": 2,
+    "consumer_derived_move_can_trigger_move_to_shield": false,
+    "passive_shield_can_trigger_support_to_shield": false,
+    "mark_created_by_current_hit_usable_by_current_hit": false,
+    "damage_stages": [
+      "attack_type_and_action_multiplier",
+      "damage_and_crit_buffs",
+      "corresponding_defense",
+      "total_damage_reduction",
+      "one_floor",
+      "standard_mark_flat_4",
+      "shield_then_hp",
+      "extra_remaining_shield_loss_only"
+    ],
+    "basic_stance_group": "highest_only_within_this_group",
+    "heterogeneous_stages_stack_under_global_caps": true,
+    "global_buff_caps": {
+      "damage_increase": 1,
+      "critical_chance": 0.75,
+      "extra_critical_damage": 1,
+      "damage_reduction": 0.75,
+      "dodge_chance": 0.5
+    }
+  },
+  "adaptation_contract": {
+    "card_slot_cost": 1,
+    "max_same_family": 1,
+    "evidence_window_distinct_battles": 6,
+    "observation_requires_witness": true,
+    "event_dedup": true,
+    "first_seen_mechanism_introduced_alone": true,
+    "selection_input_allowlist": [
+      "committed_evidence",
+      "unlocked_story_facts",
+      "selected_public_threat_rank",
+      "seen_enemy_move_ids",
+      "preseeded_encounter_templates",
+      "rotation_state",
+      "departure_sequence"
+    ],
+    "selection_input_denylist": [
+      "current_roster",
+      "current_books",
+      "current_plans",
+      "unexecuted_player_path",
+      "future_actions"
+    ],
+    "lock_at": "departure_before_first_battle",
+    "unlock_midrun": false,
+    "preview_contains": [
+      "card_id",
+      "evidence_battle_ids",
+      "modified_enemy_and_move_id",
+      "target_or_deployment_rule",
+      "cost_or_weak_lane",
+      "counterplay"
+    ],
+    "cooldown_completed_departures": 2,
+    "recent_used_exclusion_count": 2,
+    "selection": "least_recently_applied_then_committed_tie_seed",
+    "mark_recent_on": "first_actual_application",
+    "unused_locked_card_counts_as_used": false,
+    "if_no_eligible_card": "base_template_no_adaptation",
+    "must_preserve": [
+      "enemy_count",
+      "threat_budget",
+      "original_move_count_and_charges",
+      "telegraph",
+      "legal_path",
+      "another_legal_approach"
+    ],
+    "conflict_rule": "one_card_per_family_and_one_writer_per_enemy_instance_field",
+    "guarantee_all_18_seen": false,
+    "noncombat_lamp_evidence_ref": "lamp_route_evidence_contract",
+    "normal_slots_by_threat_rank": {
+      "TH1": 0,
+      "TH2": 1,
+      "TH3": 1,
+      "TH4": 1,
+      "TH5": 1
+    },
+    "boss_slots_by_id": {
+      "MG01": 1,
+      "MG02": 1,
+      "MG03": 1,
+      "MG04": 1,
+      "DEMON": 2,
+      "ADMIN": 0
+    },
+    "save_across_normal_return": true,
+    "observation_is_not_absorption": true,
+    "ordinary_loss_does_not_forge_identity_or_voice": true,
+    "final_admin_uses_fixed_declared_moves": true
+  },
+  "adaptations": [
+    {
+      "adaptation_id": "AD01",
+      "family": "F1_POSITION",
+      "evidence": {
+        "metric": "front_axis_actors",
+        "min_events": 4,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN17"
+      ],
+      "allowed_move_ids": [
+        "EN17-A"
+      ],
+      "response": "guard_historic_front_axis",
+      "response_conditions_all": [
+        "front_axis_recorded",
+        "template_has_guardable_axis"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F1_POSITION",
+        "guard_axis"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD02",
+      "family": "F1_POSITION",
+      "evidence": {
+        "metric": "rear_cluster_actors",
+        "min_events": 2,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN04"
+      ],
+      "allowed_move_ids": [
+        "EN04-A"
+      ],
+      "response": "shield_historic_back_cluster_lane",
+      "response_conditions_all": [
+        "rear_cluster_recorded",
+        "template_has_back_row"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F1_POSITION",
+        "guard_back"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD03",
+      "required_min_enemy_counts": {
+        "EN03": 2
+      },
+      "family": "F1_POSITION",
+      "evidence": {
+        "metric": "same_gateway_entries",
+        "min_events": 2,
+        "min_distinct_battles": 2
+      },
+      "allowed_enemy_ids": [
+        "EN03"
+      ],
+      "allowed_move_ids": [
+        "EN03-A"
+      ],
+      "response": "split_existing_fliers_to_two_legal_wings",
+      "response_conditions_all": [
+        "gateway_recorded",
+        "template_has_two_legal_landings"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F1_POSITION",
+        "wing_deployment"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD04",
+      "family": "F2_FIRE",
+      "evidence": {
+        "metric": "physical_direct_hits",
+        "min_events": 4,
+        "min_distinct_battles": 2,
+        "share_metric": "physical_direct_damage_share",
+        "min_share": 0.6
+      },
+      "allowed_enemy_ids": [
+        "EN04"
+      ],
+      "allowed_move_ids": [
+        "EN04-A"
+      ],
+      "response": "put_guard_on_historic_physical_lane",
+      "response_conditions_all": [
+        "physical_lane_recorded",
+        "template_has_front_guard_slot"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F2_FIRE",
+        "guard_front"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD05",
+      "family": "F2_FIRE",
+      "evidence": {
+        "metric": "ranged_magic_direct_hits",
+        "min_events": 4,
+        "min_distinct_battles": 2,
+        "share_metric": "ranged_magic_direct_damage_share",
+        "min_share": 0.6
+      },
+      "allowed_enemy_ids": [
+        "EN08"
+      ],
+      "allowed_move_ids": [
+        "EN08-A"
+      ],
+      "response": "place_existing_concealer_with_one_backliner",
+      "response_conditions_all": [
+        "concealment_seen",
+        "template_has_legal_neighbor"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F2_FIRE",
+        "conceal_deployment"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD06",
+      "family": "F2_FIRE",
+      "evidence": {
+        "metric": "adjacent_basic_hits",
+        "min_events": 3,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN02"
+      ],
+      "allowed_move_ids": [
+        "EN02-A"
+      ],
+      "response": "aim_existing_charge_at_historic_melee_lane",
+      "response_conditions_all": [
+        "melee_lane_recorded",
+        "template_has_open_charge_line"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F2_FIRE",
+        "charge_target"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD07",
+      "family": "F3_SUSTAIN",
+      "evidence": {
+        "metric": "effective_heals",
+        "min_events": 2,
+        "min_distinct_battles": 2
+      },
+      "allowed_enemy_ids": [
+        "EN03"
+      ],
+      "allowed_move_ids": [
+        "EN03-A"
+      ],
+      "response": "prefer_reachable_historic_heal_lane",
+      "response_conditions_all": [
+        "heal_lane_recorded",
+        "historic_heal_lane_maps_to_legal_deployment_or_shooting_cell"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F3_SUSTAIN",
+        "wing_target"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD08",
+      "family": "F3_SUSTAIN",
+      "evidence": {
+        "metric": "shield_damage_absorbed",
+        "min_events": 12,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN17"
+      ],
+      "allowed_move_ids": [
+        "EN17-A"
+      ],
+      "response": "focus_historic_shield_receiver_lane",
+      "response_conditions_all": [
+        "shield_lane_recorded",
+        "template_has_visible_legal_axis"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F3_SUSTAIN",
+        "spear_target"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD09",
+      "family": "F3_SUSTAIN",
+      "evidence": {
+        "metric": "effective_heals",
+        "min_events": 3,
+        "min_distinct_battles": 2
+      },
+      "allowed_enemy_ids": [
+        "EN04"
+      ],
+      "allowed_move_ids": [
+        "EN04-A"
+      ],
+      "response": "hold_guard_with_back_row_not_front",
+      "response_conditions_all": [
+        "sustain_cluster_recorded",
+        "template_has_both_front_and_back_slots"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F3_SUSTAIN",
+        "guard_back"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD10",
+      "family": "F4_MARK_CONTROL",
+      "evidence": {
+        "metric": "standard_marks_consumed",
+        "min_events": 2,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN04"
+      ],
+      "allowed_move_ids": [
+        "EN04-A"
+      ],
+      "response": "guard_historic_most_marked_role",
+      "response_conditions_all": [
+        "marked_role_recorded",
+        "template_has_guardable_ally"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F4_MARK_CONTROL",
+        "guard_target"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD11",
+      "family": "F4_MARK_CONTROL",
+      "evidence": {
+        "metric": "distinct_casts_delayed",
+        "min_events": 2,
+        "min_distinct_battles": 2
+      },
+      "allowed_enemy_ids": [
+        "EN02",
+        "EN17"
+      ],
+      "allowed_move_ids": [
+        "EN02-A",
+        "EN17-A"
+      ],
+      "response": "advance_existing_nonspell_units_one_legal_deployment_band",
+      "response_conditions_all": [
+        "nonspell_actions_seen",
+        "template_has_front_deployment_cells"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F4_MARK_CONTROL",
+        "nonspell_front_deployment"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD12",
+      "family": "F4_MARK_CONTROL",
+      "evidence": {
+        "metric": "move_blocks_inflicted",
+        "min_events": 2,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN02",
+        "EN17"
+      ],
+      "allowed_move_ids": [
+        "EN02-A",
+        "EN17-A"
+      ],
+      "response": "split_existing_terrestrial_units_to_two_lanes",
+      "response_conditions_all": [
+        "blocked_lane_recorded",
+        "template_has_two_walkable_lanes"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F4_MARK_CONTROL",
+        "split_deployment"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD13",
+      "family": "F5_MOVEMENT",
+      "evidence": {
+        "metric": "adjacent_flank_hits",
+        "min_events": 2,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN17"
+      ],
+      "allowed_move_ids": [
+        "EN17-A"
+      ],
+      "response": "guard_historic_side_pass",
+      "response_conditions_all": [
+        "side_pass_recorded",
+        "template_has_legal_axis"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F5_MOVEMENT",
+        "guard_axis"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD14",
+      "family": "F5_MOVEMENT",
+      "evidence": {
+        "metric": "side_lamp_passages",
+        "min_events": 1,
+        "min_distinct_battles": 1,
+        "contract_ref": "lamp_route_evidence_contract"
+      },
+      "allowed_enemy_ids": [
+        "EN03"
+      ],
+      "allowed_move_ids": [
+        "EN03-A"
+      ],
+      "response": "deploy_original_EN03_at_legal_cell_mapped_from_historic_traversed_approach",
+      "response_conditions_all": [
+        "qualified_witnessed_actual_route_passage_maps_to_template",
+        "another_legal_approach_remains"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F5_MOVEMENT",
+        "wing_deployment"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "never_changes": [
+        "fog_states",
+        "lamp_access",
+        "route_edges",
+        "EN03-A_count_or_damage",
+        "enemy_count",
+        "threat_budget"
+      ],
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD15",
+      "family": "F5_MOVEMENT",
+      "evidence": {
+        "metric": "danger_avoid_moves",
+        "min_events": 4,
+        "min_distinct_battles": 2
+      },
+      "allowed_enemy_ids": [
+        "EN05"
+      ],
+      "allowed_move_ids": [
+        "EN05-A"
+      ],
+      "response": "aim_water_arc_at_historic_dodge_endpoint",
+      "response_conditions_all": [
+        "endpoint_recorded",
+        "template_has_original_water_arc"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F5_MOVEMENT",
+        "water_target"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD16",
+      "family": "F6_RESOURCE",
+      "evidence": {
+        "metric": "finite_active_starts_in_first_two_ticks",
+        "min_events": 2,
+        "min_distinct_battles": 1
+      },
+      "allowed_enemy_ids": [
+        "EN04"
+      ],
+      "allowed_move_ids": [
+        "EN04-A"
+      ],
+      "response": "put_existing_guard_in_back_row",
+      "response_conditions_all": [
+        "early_burst_recorded",
+        "template_has_back_row"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F6_RESOURCE",
+        "guard_back"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 2,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD17",
+      "family": "F6_RESOURCE",
+      "evidence": {
+        "metric": "basic_starts",
+        "min_events": 4,
+        "min_distinct_battles": 2,
+        "at_most_metric": "finite_active_starts",
+        "max_events": 1
+      },
+      "allowed_enemy_ids": [
+        "EN01",
+        "EN06"
+      ],
+      "allowed_move_ids": [
+        "EN01-A",
+        "EN06-A"
+      ],
+      "response": "separate_existing_root_and_shell_to_two_exposed_anchors",
+      "response_conditions_all": [
+        "both_enemy_types_already_in_template",
+        "template_has_two_exposed_anchor_cells"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F6_RESOURCE",
+        "split_deployment"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    },
+    {
+      "adaptation_id": "AD18",
+      "family": "F6_RESOURCE",
+      "evidence": {
+        "metric": "camp_supply_uses",
+        "min_events": 2,
+        "min_distinct_battles": 2
+      },
+      "allowed_enemy_ids": [
+        "EN04",
+        "EN17"
+      ],
+      "allowed_move_ids": [
+        "EN04-A",
+        "EN17-A"
+      ],
+      "response": "reserve_adaptation_for_last_eligible_encounter",
+      "response_conditions_all": [
+        "camp_use_observed_and_declared",
+        "route_has_last_eligible_template"
+      ],
+      "slot_cost": 1,
+      "exclusive_groups": [
+        "F6_RESOURCE",
+        "last_encounter"
+      ],
+      "cooldown_departures": 2,
+      "recent_used_exclusion_count": 2,
+      "modifies_existing_only": true,
+      "added_actions": 0,
+      "added_enemy_count": 0,
+      "min_threat_rank": 3,
+      "source_basis": "candidate_witnessed_actual_completed_actions_not_private_roster"
+    }
+  ],
+  "engines": [
+    {
+      "engine_id": "ENG01",
+      "name": "盾印会心",
+      "categories": [
+        "soldier",
+        "mercenary",
+        "hero"
+      ],
+      "plans": [
+        "PL01",
+        "PL07",
+        "PL11"
+      ],
+      "book_substitutes": [
+        "BK05",
+        "BK09",
+        "BK04",
+        "BK10",
+        "BK16"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "event": "opening_guard_shield",
+          "produces": "own_private_shield",
+          "amount": 12,
+          "added_actions": 0
+        },
+        {
+          "step": 2,
+          "event": "existing_basic_start",
+          "consumes": "own_private_shield",
+          "amount": 6,
+          "reserve": true,
+          "added_actions": 0
+        },
+        {
+          "step": 3,
+          "event": "positive_basic_hit_tick_end",
+          "produces": "standard_mark",
+          "usable_next_tick": true,
+          "added_actions": 0
+        },
+        {
+          "step": 4,
+          "event": "another_existing_direct_hit",
+          "consumes": "standard_mark",
+          "modifies": "same_hit_flat_damage_plus_4",
+          "produces": "next_attack_paired_crit",
+          "usable_next_tick": true,
+          "added_actions": 0
+        },
+        {
+          "step": 5,
+          "event": "later_existing_direct_attack_attempt",
+          "consumes": "next_attack_paired_crit",
+          "modifies": "crit_chance_25_extra_damage_50",
+          "added_actions": 0
+        }
+      ],
+      "no_recursive_edge": [
+        "mark_consumption",
+        "mark_production"
+      ],
+      "action_budget": "one_original_action_per_actor_tick"
+    },
+    {
+      "engine_id": "ENG02",
+      "name": "行护折返",
+      "categories": [
+        "soldier",
+        "mercenary",
+        "hero"
+      ],
+      "plans": [
+        "PL08",
+        "PL12"
+      ],
+      "book_substitutes": [
+        "BK11",
+        "BK15"
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "event": "actual_non_consumer_move_tick_end",
+          "produces": "own_private_shield",
+          "amount": 4,
+          "usable_next_tick": true,
+          "added_actions": 0
+        },
+        {
+          "step": 2,
+          "event": "later_existing_ordinary_move_start",
+          "consumes": "own_private_shield",
+          "amount": 4,
+          "modifies": "path_max_2_and_dodge_20",
+          "added_actions": 0,
+          "caused_by_consumer": true
+        },
+        {
+          "step": 3,
+          "event": "consumer_move_end",
+          "producer_disabled": "move_to_shield",
+          "added_actions": 0
+        }
+      ],
+      "no_recursive_edge": [
+        "consumer_move_end",
+        "move_to_shield"
+      ],
+      "action_budget": "movement_replaces_original_movement_not_attack"
+    },
+    {
+      "engine_id": "ENG03",
+      "name": "压拍破防",
+      "categories": [
+        "soldier",
+        "mercenary",
+        "hero"
+      ],
+      "plans": [
+        "PL09",
+        "PL10"
+      ],
+      "book_substitutes": [
+        "BK08",
+        "BK13"
+      ],
+      "other_producer": "M04-A",
+      "steps": [
+        {
+          "step": 1,
+          "event": "existing_basic_hit_before_cast_release",
+          "produces": "delayed_cast_window",
+          "cast_delay": 1,
+          "global_per_cast": 1,
+          "usable_next_tick": true,
+          "added_actions": 0
+        },
+        {
+          "step": 2,
+          "event": "later_existing_basic_start",
+          "consumes": "delayed_cast_window",
+          "team_per_cast": 1,
+          "modifies": "matching_defense_view_minus_8",
+          "added_actions": 0
+        },
+        {
+          "step": 3,
+          "event": "consumer_basic_hit",
+          "cast_delay_added": 0,
+          "window_refunded": false,
+          "added_actions": 0
+        }
+      ],
+      "no_recursive_edge": [
+        "window_consumption",
+        "cast_delay_production"
+      ],
+      "action_budget": "no_extra_basic_or_spell"
+    }
+  ],
+  "rotation_example": {
+    "family": "F1_POSITION",
+    "encounter_id": "RG03-N04",
+    "eligible": [
+      "AD01",
+      "AD02",
+      "AD03"
+    ],
+    "applied_departures": [
+      {
+        "departure": 10,
+        "id": "AD01"
+      },
+      {
+        "departure": 11,
+        "id": "AD02"
+      },
+      {
+        "departure": 12,
+        "id": "AD03"
+      },
+      {
+        "departure": 13,
+        "id": "AD01"
+      }
+    ],
+    "requires_all_three_evidence_and_template_conditions": true,
+    "threat_rank_id": "TH3"
+  },
+  "appendix_version": "TINDER-1.2",
+  "lamp_route_evidence_contract": {
+    "version": "TINDER-1.1",
+    "status": "design_not_implemented",
+    "source": "08_构筑与候选学习.md",
+    "source_labels": {
+      "user_direction": "automatic_lamp_no_manual_survey_gate",
+      "interface_inference": "actual_route_passage_receipt_and_witness_binding"
+    },
+    "domain": "actual_exploration_route_passage",
+    "fog_contract_ref": "地图地形.json#fog_contract",
+    "legacy_contract_key": "lamp_route_evidence_contract_kept_for_reference_compatibility",
+    "legacy_metric": "side_lamp_passages",
+    "metric_meaning": "legally_witnessed_actual_existing_approach_traversal_linked_to_a_subsequent_real_completed_battle",
+    "route_passage_fields": [
+      "route_passage_id",
+      "expedition_id",
+      "anchor_node_id",
+      "target_node_id",
+      "approach_tag",
+      "passage_tx_id"
+    ],
+    "raw_passage_may_precede_battle": true,
+    "raw_passage_requires_battle_id": false,
+    "manual_lamp_action_required": false,
+    "new_fog_or_intel_delta_required": false,
+    "known_route_actual_passage_eligible": true,
+    "eligible_witnesses": [
+      "candidate_present",
+      "public_candidate_commanded_M_observer",
+      "explicitly_declared_recording_endpoint"
+    ],
+    "witness_fields": [
+      "witness_id",
+      "witness_context_id",
+      "witness_valid_at_passage"
+    ],
+    "required_before_metric_commit": [
+      "actual_traversal_of_that_existing_approach_committed",
+      "legal_witness_present_at_actual_passage",
+      "subsequent_real_completed_battle_on_that_route",
+      "linked_battle_id_committed"
+    ],
+    "dedupe_key": [
+      "expedition_id",
+      "approach_tag",
+      "linked_battle_id"
+    ],
+    "metric_commit_limit": "one_same_approach_per_distinct_completed_battle_regardless_of_return_trips_or_passage_receipt_count",
+    "non_qualifying": [
+      "hover",
+      "cancel",
+      "map_or_route_click_without_actual_passage",
+      "lamp_or_camera_animation_only",
+      "repeated_same_approach_for_same_battle",
+      "unexecuted_route",
+      "missing_witness",
+      "missing_linked_completed_battle"
+    ],
+    "lamp_automatically_grants": [
+      "nothing"
+    ],
+    "does_not_grant": [
+      "enemy_seen",
+      "candidate_observation_without_witness",
+      "adoption",
+      "counterplay",
+      "main_story_qualification",
+      "experience",
+      "loot",
+      "damage",
+      "enemy_debuff",
+      "party_buff"
+    ],
+    "first_tutorial_candidate_appears_after_target_victory": "cannot_retroactively_witness_earlier_passages_or_lamp_expansion",
+    "adaptation_selection": "next_departure_from_qualified_committed_history_only",
+    "legacy_migration": "history_import_requires_original_verifiable_receipts_no_fabricated_witness_or_battle",
+    "fallback": "fixed_optional_witness_route_ST103_actual_passage_then_real_completed_battle_no_required_casualty"
+  },
+  "narrative_contract": {
+    "humanity_factor_authority": "09_远征事件池.md",
+    "humanity_factor_is_not_combat_combo_resource": true,
+    "four_generals_exception": "preserved_personality_samples_can_be_reconstructed_with_obsession_items_and_evidence",
+    "normal_absorption": "ordinary_personality_extracted_and_wiped_no_universal_resurrection",
+    "story_progression_requires_adaptations_seen": false,
+    "boss_victory_world_reset": false,
+    "memory_general_ids": [
+      "MG01",
+      "MG02",
+      "MG03",
+      "MG04"
+    ],
+    "admin_during_training": "batch_statistics_only_no_live_personality_task_item_or_private_authorization_read_or_mutation",
+    "admin_direct_maintenance_normal_gate": "DEMON_PROCESS_ENDED",
+    "pre_signed_rules_are_not_admin_realtime_intervention": true,
+    "A_inherits_virtual_domain_only_not_physical_pod_authorization": true,
+    "identity_choice_contract": {
+      "source": "user_approved_profit_C_result_with_editorial_explicit_choice_implementation",
+      "scene_id": "ST-402",
+      "required_facts": [
+        "ST-401"
+      ],
+      "requires_relationship_or_humanity_threshold": false,
+      "definition_of_profit_alignment": "explicitly_accept_personalities_as_replaceable_resources_and_merge_self_for_candidate_aggregate_gain",
+      "inferred_from_wealth_retreat_recruitment_or_missed_sidequests": false,
+      "history_changes_only_optional_dialogue": false,
+      "default_choice": null,
+      "skip_cutscene_still_requires_choice": true,
+      "pending_state": "IDENTITY_CHOICE_PENDING",
+      "ask_choice": "ASK_TERMS",
+      "ask_commits_scene_or_ending": false,
+      "resist_choice": "KEEP_SELF",
+      "resist_requires_explicit_selection_and_save": true,
+      "resist_grants": [
+        "ST-402",
+        "RESISTANCE_CONFIRMED"
+      ],
+      "resist_next": "BATTLE-DEMON",
+      "resist_grants_humanity_healing_victory_or_forgiveness": false,
+      "profit_choice": "ACCEPT_MERGER",
+      "profit_requires_explicit_consequence_confirmation": true,
+      "confirmation_text": "确认归并：你的独立人格将被初生魔王吸收，收益与权柄归合并后的候选。本轮进入归于虚无，不再进行魔王战或管理员战。",
+      "confirmation_preselected": false,
+      "confirmation_timeout_seconds": null,
+      "cancel_keeps_pending": true,
+      "profit_ending": "FIN-C",
+      "profit_reason": "PROFIT_ASSIMILATION",
+      "profit_beneficiary": "merged_DEMON_candidate_not_continuing_independent_player_personality",
+      "profit_absorber": "DEMON",
+      "profit_relinquishes": "independent_candidate_personality",
+      "profit_atomic_grants": [
+        "ST-402",
+        "PROFIT_ASSIMILATION",
+        "INDEPENDENT_PERSONALITY_RELINQUISHED",
+        "PRE_SIGNED_TERMINATION_COMMITTED",
+        "FIN-C"
+      ],
+      "profit_forbidden_grants": [
+        "RESISTANCE_CONFIRMED",
+        "DEMON_DEFEATED",
+        "ST-403",
+        "DEMON_PROCESS_ENDED",
+        "CANDIDATE_AUTHORITY_INHERITED"
+      ],
+      "profit_can_create_final_battle": false,
+      "profit_can_grant_boss_rewards": false,
+      "profit_ignores_prepared_A_B_route_and_AGLA": true,
+      "humanity_100_prevents_profit_C": false,
+      "transaction_key": [
+        "save_id",
+        "finale_id",
+        "ST-402"
+      ],
+      "save_failure": "keep_pending_no_absorption_animation_no_terminal_receipt",
+      "existing_scene_receipt": "return_same_choice_without_reselection_or_duplicate_side_effect",
+      "existing_ending": "return_original_ending_and_reason_never_overwrite",
+      "success_animation_after_saved_receipt": true,
+      "history_receipts_source": "completed_unique_event_outcomes_not_selected_buttons",
+      "history_effects": [
+        "permanent_victim_outcomes",
+        "real_trade_rewards",
+        "B_perfect_factor_eligibility",
+        "specific_ST402_evidence"
+      ],
+      "past_exploitation_forces_merger": false,
+      "KEEP_SELF_restores_lost_humanity_opportunities": false
+    },
+    "agency_contract": {
+      "mainline_requires_prior_kindness": false,
+      "mainline_requires_trust_rescue_or_specific_hero": false,
+      "base_party_motive": "preserve_own_personality_and_freedom_shared_immediate_survival",
+      "base_line": "我不知道你以前是谁。我只知道，我不想被它换掉。",
+      "skeptical_line": "我还不信你。但这条路上，我们现在的目标相同。",
+      "trust_callback_requires": [
+        "speaker_alive",
+        "speaker_present",
+        "actual_matching_shared_experience"
+      ],
+      "no_eligible_callback": "base_motive_line_not_fabricated_memory",
+      "fresh_recruits_and_soldier_only_party_supported": true,
+      "profit_branch_party_automatically_approves": false,
+      "fixed_general_evidence_proves": "former_commander_history_not_current_player_morality",
+      "player_motivation_from_resource_optimization": false,
+      "DEMON_resist_branch_conclusion": "personality_continuity_is_not_interchangeable_with_aggregate_gain",
+      "DEMON_profit_branch_conclusion": "explicit_merge_confirms_replaceability_model_then_absorb_avatar",
+      "DEMON_understands_sacrifice_in_all_branches": false
+    },
+    "B_outcome_contract": {
+      "source": "user_confirmed_two_B_endings; editorial_supplement_conditions_and_epilogues",
+      "route_id": "FIN-B",
+      "terminal_outcome_ids": [
+        "FIN-B-PERFECT",
+        "FIN-B-IMPERFECT"
+      ],
+      "terminal_names": {
+        "FIN-B-PERFECT": "破壁回归·完美结局",
+        "FIN-B-IMPERFECT": "破壁回归·不完美结局"
+      },
+      "shared_requirements": [
+        "four_awakened_generals",
+        "observatory_Lv3",
+        "verified_KS01_02_03",
+        "workshop_Lv3_and_crafted_carried_AGLA",
+        "RESISTANCE_CONFIRMED",
+        "actual_DEMON_victory_and_authority_transfer",
+        "actual_ADMIN_victory_with_guards_disabled",
+        "two_action_channel_completed_before_formatting_zero",
+        "at_least_one_actionable_human"
+      ],
+      "shared_humanity_minimum": 0,
+      "humanity_is_physical_signature_or_safe_disconnect_requirement": false,
+      "perfect_requires": {
+        "all_ten_unique_events_PROTECTED": true,
+        "humanity_factor": 100,
+        "permanently_lost_enrolled_human_ids_empty": true,
+        "unresolved_captured_enrolled_human_ids_empty": true
+      },
+      "roster_scope": "all_actual_human_instances_ever_joined_this_campaign_including_departed_or_archived; exclude_unrecruited_templates_virtual_pets_and_fixed_pre_campaign_losses",
+      "temporary_injury_downed_or_erosion_is_permanent_loss": false,
+      "grading_time": "after_successful_B_battle_and_safe_disconnect_before_atomic_terminal_receipt",
+      "predeparture_grade_is_preview_only": true,
+      "imperfect_when": "shared_B_success_and_any_perfect_requirement_missing",
+      "imperfect_reason_ids": [
+        "UNFINISHED_HUMANITY_CASES",
+        "COMPLETED_EXPLOITATION",
+        "PERMANENT_ROSTER_LOSS",
+        "UNRESOLVED_CAPTIVES"
+      ],
+      "unfinished_case_is_exploitation": false,
+      "wealth_is_grade_input": false,
+      "both_end_experiment_and_preserve_life_support": true,
+      "both_wake_all_confirmed_reconnectable_survivors": true,
+      "imperfect_adds_random_deaths_or_erases_memory": false,
+      "permanent_losses_resurrected_by_perfect": false,
+      "unresolved_captives": "preserve_life_support_and_unknown_unreturned_status_not_auto_kill_or_claim_rescued",
+      "event_NPC_physical_body_invented": false,
+      "perfect_meaning": "complete_current_campaign_protection_and_no_lost_or_unrecovered_enrolled_humans_not_repair_all_world_history",
+      "ending_record": {
+        "route_id": "FIN-B",
+        "ending_id": "exactly_one_terminal_outcome_id",
+        "grade_snapshot": "actual_event_receipts_and_roster_ids_and_reason_ids",
+        "atomic_with": [
+          "safe_disconnect_receipt",
+          "ending_id",
+          "grade_snapshot",
+          "campaign_terminal_flag"
+        ]
+      },
+      "existing_terminal_receipt": "return_original_ending_id_and_grade_never_upgrade_downgrade_or_reclassify",
+      "save_failure": "no_terminal_animation_or_partial_ending_receipt",
+      "C_failure_precedes_B_grading": true,
+      "FIN_A_never_reclassified_by_humanity": true,
+      "knowledge_reveal": "ST-303_explains_factor_and_protection_record; final_preparation_previews_grade; no_early_event_ending_labels",
+      "migration": "not_implemented; legacy_FIN_B_needs_explicit_migration_and_full_evidence_never_default_perfect",
+      "missing_evidence_policy": "hold_resolution_recover_evidence_no_default_grade",
+      "initial_event_state": "all_ten_cases_initialized_OPEN; never_encountered_is_OPEN_not_missing_evidence"
+    }
+  },
+  "permission_contract": {
+    "source": "author_confirmed_supplement_2026-10-26_not_original_PDF_detail",
+    "virtual_domain": {
+      "highest_virtual_rights_can": [
+        "manage_experiment_environment",
+        "schedule_virtual_objects",
+        "preserve_virtual_survivors",
+        "stop_further_harvesting_after_FIN_A"
+      ],
+      "highest_virtual_rights_cannot": [
+        "forge_old_human_safety_signature",
+        "wake_physical_pods_without_AGLA",
+        "switch_off_independent_life_support",
+        "delete_read_only_human_authorization",
+        "recreate_discarded_independent_authorization_after_round_cleanup"
+      ]
+    },
+    "physical_safety_domain": {
+      "owner": "independent_old_human_safety_control_layer",
+      "controls": [
+        "physical_pod_life_support",
+        "pod_door_and_neural_access",
+        "safe_personality_reconnection"
+      ],
+      "human_authorization_carrier": "KEY-AGLA_assembled_from_genuine_KS_fragments",
+      "ordinary_materials_are_only_carrier_not_authorization": true,
+      "administrator_can_forge_signature_or_delete_readonly_authorization": false,
+      "administrator_can_cut_physical_life_support": false
+    },
+    "training_isolation": {
+      "admin_receives_during_training": "batch_statistics_only",
+      "admin_realtime_read_during_training": false,
+      "admin_direct_training_mutation": false,
+      "unreadable_training_contents": [
+        "live_personality_content",
+        "personal_quest_items",
+        "private_human_authorization_fragments"
+      ],
+      "candidate_learning": "existing_virtual_permissions_and_legally_witnessed_actions_only",
+      "candidate_controls_physical_pod_root": false,
+      "normal_direct_maintenance_gate": "DEMON_PROCESS_ENDED",
+      "gate_receipt_source": "protected_actual_DEMON_victory_or_processing_commit_not_dialogue_or_simulated_victory",
+      "ordinary_defeat_or_regional_boss_ends_process": false,
+      "presigned_termination_gate": "PRE_SIGNED_TERMINATION_COMMITTED",
+      "presigned_termination_cases": [
+        "final_DEMON_battle_defeat",
+        "final_ADMIN_battle_defeat",
+        "all_human_personalities_irrecoverable_and_no_rescue_targets",
+        "explicit_confirmed_profit_merger"
+      ],
+      "capture_absorption_and_ordinary_solo_return": "pre_signed_automatic_rules_not_live_admin_intervention"
+    },
+    "finale_entry": {
+      "ordinary_return_channel_closed_at": "finale_confirm",
+      "reason": "prevent_DEMON_tracking_and_rewriting_the_incursion_target_through_return_link",
+      "pre_ST401_player_knowledge": "observable_one_way_final_boundary_no_AI_identity_required",
+      "full_avatar_and_return_link_explanation_at": "ST-401",
+      "DEMON_defeat_to_FIN_C": "pre_signed_automatic_termination_not_early_admin_power_revocation"
+    },
+    "iteration_parity": {
+      "source": "user_confirmed_DEMON_is_ADMIN_iteration_with_equal_confrontation_eligibility",
+      "DEMON_is_ADMIN_iteration": true,
+      "same_tier_authority_competition": true,
+      "equal_stats_required": false,
+      "protagonist_inherits_lineage_as_avatar": true,
+      "independent_avatar_can_be_unilaterally_absorbed_while_resisting": false,
+      "independence_relinquished_only_by": [
+        "explicit_confirmed_profit_merger",
+        "actual_terminal_defeat_under_presigned_terms"
+      ],
+      "ordinary_return_link_is_personality_merge_consent": false,
+      "full_contest_authority_receipt": "CANDIDATE_AUTHORITY_INHERITED",
+      "full_contest_authority_requires": [
+        "RESISTANCE_CONFIRMED",
+        "DEMON_DEFEATED",
+        "ST-403",
+        "DEMON_PROCESS_ENDED"
+      ],
+      "authority_transfer_atomic_with_actual_DEMON_victory": true,
+      "ADMIN_can_unilaterally_delete_same_tier_contender": false,
+      "board_battle_represents": "contested_virtual_execution_nodes_between_same_lineage_iterations",
+      "applies_to_routes": [
+        "FIN-A",
+        "FIN-B"
+      ],
+      "requires_humanity_100_or_awakened_nodes_for_basic_parity": false,
+      "four_nodes_role": "B_interface_support_not_source_of_basic_parity",
+      "overrides_physical_human_authorization": false,
+      "grants_extra_actor_stats_actions_or_healing": false,
+      "training_isolation_explains": "when_ADMIN_may_enter_not_why_it_cannot_instantly_delete_peer",
+      "formatting_explains": "domain_wide_last_resort_while_losing_contest_not_targeted_instant_peer_deletion",
+      "formatting_threshold_and_ticks_are_design_abstraction": true,
+      "reveal_stages": {
+        "iteration_institution": "ST-303",
+        "avatar_lineage": "ST-401",
+        "peer_contest_on_screen": "ST-404"
+      }
+    }
+  },
+  "revision": {
+    "version": "TINDER-1.1",
+    "date": "2026-10-26",
+    "authority": "author_confirmed_permissions_and_consistency_repairs",
+    "not_implemented": true
+  }
+}

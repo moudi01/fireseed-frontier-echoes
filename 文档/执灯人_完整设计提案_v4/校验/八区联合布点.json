@@ -1,0 +1,4479 @@
+{
+  "version": "JOINT-MAP-1.0",
+  "date": "2026-10-27",
+  "status": "authored_topology_and_binding_contract_not_runtime_geometry",
+  "authority": "专项/八区事件补给与服务联合布点.md",
+  "base_contract": "MULTI-1.1",
+  "event_catalog": "event_catalog.py:load_catalog (60 registered events)",
+  "regions": [
+    {
+      "region_id": "RG01",
+      "name": "灰栎边道",
+      "templates": [
+        {
+          "template_id": "RG01-A",
+          "name": "双桥哨道",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "南驿口",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "桥前路标",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "浅湾双桥",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "旧哨棚前",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "棚内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "北隘空地",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "塔前岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "塔脚旧路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "旧哨塔门",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北军道出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "巡路炭图棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "绑带工作棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "双钟回收台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "交班旗绳口",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "东林警戒场",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W"
+          ]
+        },
+        {
+          "template_id": "RG01-B",
+          "name": "棚后回环",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "南驿口",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "桥前路标",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "浅湾双桥",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "旧哨棚前",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "棚内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "北隘空地",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "塔前岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "塔脚旧路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "旧哨塔门",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北军道出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "巡路炭图棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "绑带工作棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "双钟回收台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "交班旗绳口",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "东林警戒场",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG01-N01",
+            "RG01-N02"
+          ],
+          "default_id": "RG01-N01",
+          "locked_board_id": "DOUBLE_BRIDGE"
+        },
+        "B2": {
+          "encounter_id": "RG01-N04",
+          "locked_board_id": "OPEN"
+        },
+        "G": {
+          "encounter_id": "RG01-N03",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG01-E01",
+            "RG01-E02"
+          ],
+          "example_id": "RG01-E01",
+          "locked_board_id": "OPEN"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": null,
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV29",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV30",
+          "site": "B",
+          "recipe_id": "RC-CO03",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV31",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG01-N01",
+            "RG01-N02"
+          ],
+          "board_id": "DOUBLE_BRIDGE",
+          "default_encounter_id": "RG01-N01",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV01",
+        "EV02",
+        "EV03",
+        "EV04",
+        "EV05",
+        "EV06",
+        "EV29",
+        "EV30",
+        "EV31",
+        "EV53",
+        "EV54"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV29",
+        "B": "EV30",
+        "C": "EV04",
+        "D": "EV31"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV03": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV05": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV01": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV02": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV03": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV04": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV05": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV06": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV29": [
+          "A"
+        ],
+        "EV30": [
+          "B"
+        ],
+        "EV31": [
+          "D"
+        ],
+        "EV53": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV54": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "spatial_variation": "军道连接前后短环，精英据点为独立短支路，便于第一次辨认主路与自选风险。"
+    },
+    {
+      "region_id": "RG06",
+      "name": "雾痕林缘",
+      "templates": [
+        {
+          "template_id": "RG06-A",
+          "name": "林隙双环",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "林南驿点",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "刻痕树口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "并列兽径",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "风倒木空地",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "树洞救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "林北空场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "红绳岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "高根小径",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "林缘巡巢",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北林出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "追踪绳架",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "绑脚雨棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "蛾群旧路牌",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "引路枝门",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "蜂巷侧窝",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ],
+            [
+              "A",
+              "D"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W"
+          ]
+        },
+        {
+          "template_id": "RG06-B",
+          "name": "兽径折返",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "林南驿点",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "刻痕树口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "并列兽径",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "风倒木空地",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "树洞救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "林北空场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "红绳岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "高根小径",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "林缘巡巢",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北林出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "追踪绳架",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "绑脚雨棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "蛾群旧路牌",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "引路枝门",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "蜂巷侧窝",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ],
+            [
+              "B",
+              "D"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG06-N02",
+            "RG06-N03"
+          ],
+          "default_id": "RG06-N02",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "B2": {
+          "encounter_id": "RG06-N04",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "G": {
+          "encounter_id": "RG06-N01",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG06-E01",
+            "RG06-E02"
+          ],
+          "example_id": "RG06-E01",
+          "locked_board_id": "DUAL_FLANK"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": null,
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV32",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV33",
+          "site": "B",
+          "recipe_id": "RC-CO10",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV34",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG06-N02",
+            "RG06-N03"
+          ],
+          "board_id": "DUAL_FLANK",
+          "default_encounter_id": "RG06-N02",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV01",
+        "EV03",
+        "EV04",
+        "EV13",
+        "EV14",
+        "EV17",
+        "EV32",
+        "EV33",
+        "EV34",
+        "EV55",
+        "EV56"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV32",
+        "B": "EV33",
+        "C": "EV01",
+        "D": "EV34"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "PRIMARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV03": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV01": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV03": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV04": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV13": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV14": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV17": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV32": [
+          "A"
+        ],
+        "EV33": [
+          "B"
+        ],
+        "EV34": [
+          "D"
+        ],
+        "EV55": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV56": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "spatial_variation": "交班支路嵌入前段事件回环，树径之间有横向连通；精英窝仍为侧向尽头。"
+    },
+    {
+      "region_id": "RG07",
+      "name": "苇灯湿地",
+      "templates": [
+        {
+          "template_id": "RG07-A",
+          "name": "岸桥环滩",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "南岸渡口",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "岸桩分路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "干岛护岗",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "渡棚前岸",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "渡棚救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "潮痕空场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "上堤路口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "芦桥引道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "北堤据点",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北岸出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "潮痕尺台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "药臼棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "桥下旧箱岸",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "钟湾引路桩",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "回水湾敌巢",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ],
+            [
+              "T",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W",
+            "T"
+          ]
+        },
+        {
+          "template_id": "RG07-B",
+          "name": "渡棚侧岸",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "南岸渡口",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "岸桩分路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "干岛护岗",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "渡棚前岸",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "渡棚救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "潮痕空场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "上堤路口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "芦桥引道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "北堤据点",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北岸出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "潮痕尺台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "药臼棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "桥下旧箱岸",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "钟湾引路桩",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "回水湾敌巢",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ],
+            [
+              "W",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T",
+            "W"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG07-N01",
+            "RG07-N03"
+          ],
+          "default_id": "RG07-N01",
+          "locked_board_id": "DRY_ISLAND"
+        },
+        "B2": {
+          "encounter_id": "RG07-N04",
+          "locked_board_id": "DRY_ISLAND"
+        },
+        "G": {
+          "encounter_id": "RG07-N02",
+          "locked_board_id": "DOUBLE_BRIDGE"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG07-E01",
+            "RG07-E02"
+          ],
+          "example_id": "RG07-E01",
+          "locked_board_id": "DRY_ISLAND"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": null,
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV35",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV36",
+          "site": "B",
+          "recipe_id": "RC-CO01",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV37",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG07-N01",
+            "RG07-N03"
+          ],
+          "board_id": "DRY_ISLAND",
+          "default_encounter_id": "RG07-N01",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV02",
+        "EV04",
+        "EV05",
+        "EV09",
+        "EV10",
+        "EV20",
+        "EV35",
+        "EV36",
+        "EV37",
+        "EV57",
+        "EV58"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV35",
+        "B": "EV36",
+        "C": "EV02",
+        "D": "EV37"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV05": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV09": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV02": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV04": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV05": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV09": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV10": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV20": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV35": [
+          "A"
+        ],
+        "EV36": [
+          "B"
+        ],
+        "EV37": [
+          "D"
+        ],
+        "EV57": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV58": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "spatial_variation": "精英湾可从前后两段岸路接近，主岸路始终能绕开；两入口指向同一精英与同一回执。"
+    },
+    {
+      "region_id": "RG08",
+      "name": "炉灰荒径",
+      "templates": [
+        {
+          "template_id": "RG08-A",
+          "name": "运料双坎",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "护运驿口",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "灰坡分道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "料场盾岗",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "废棚前坪",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "棚内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "卸料空坪",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "炉灰岔路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "高坎便道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "旧运料哨",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "东荒径出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "轮痕记号台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "磨油棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "等风车队坪",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "旗板调度口",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "侧坡刺哨",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ],
+            [
+              "C",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W",
+            "C"
+          ]
+        },
+        {
+          "template_id": "RG08-B",
+          "name": "背风棚道",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "护运驿口",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "灰坡分道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "料场盾岗",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "废棚前坪",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "棚内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "卸料空坪",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "炉灰岔路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "高坎便道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "旧运料哨",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "东荒径出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "轮痕记号台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "磨油棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "等风车队坪",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "旗板调度口",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "侧坡刺哨",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ],
+            [
+              "C",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T",
+            "C"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG08-N01",
+            "RG08-N03"
+          ],
+          "default_id": "RG08-N01",
+          "locked_board_id": "CITADEL_RING"
+        },
+        "B2": {
+          "encounter_id": "RG08-N04",
+          "locked_board_id": "CITADEL_RING"
+        },
+        "G": {
+          "encounter_id": "RG08-N02",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG08-E01",
+            "RG08-E02"
+          ],
+          "example_id": "RG08-E01",
+          "locked_board_id": "CITADEL_RING"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": null,
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV38",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV39",
+          "site": "B",
+          "recipe_id": "RC-CO04",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV40",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG08-N01",
+            "RG08-N03"
+          ],
+          "board_id": "CITADEL_RING",
+          "default_encounter_id": "RG08-N01",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV03",
+        "EV04",
+        "EV06",
+        "EV07",
+        "EV15",
+        "EV23",
+        "EV38",
+        "EV39",
+        "EV40",
+        "EV59",
+        "EV60"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV38",
+        "B": "EV39",
+        "C": "EV60",
+        "D": "EV40"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV03": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV07": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV03": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV04": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV06": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV07": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV15": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV23": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV38": [
+          "A"
+        ],
+        "EV39": [
+          "B"
+        ],
+        "EV40": [
+          "D"
+        ],
+        "EV59": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV60": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "spatial_variation": "后段事件坪与精英侧坡互通，玩家可先看事件再决定是否向危险坡道转入。"
+    },
+    {
+      "region_id": "RG02",
+      "name": "断誓堡垒",
+      "templates": [
+        {
+          "template_id": "RG02-A",
+          "name": "外墙两院",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "堡外接驳营",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "外墙岔道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "守门庭院",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "壕沟营坪",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "营内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "内院侧击场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "堡心路口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "铜哨廊外",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "主堡驻地",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北堡出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "换岗簿岗亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "衬垫棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "铜哨回收墙",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "交班引路门",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "侧壕精英营",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W"
+          ]
+        },
+        {
+          "template_id": "RG02-B",
+          "name": "壕侧营道",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "堡外接驳营",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "外墙岔道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "守门庭院",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "壕沟营坪",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "营内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "内院侧击场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "堡心路口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "铜哨廊外",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "主堡驻地",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北堡出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "换岗簿岗亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "衬垫棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "铜哨回收墙",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "交班引路门",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "侧壕精英营",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG02-N01",
+            "RG02-N02"
+          ],
+          "default_id": "RG02-N01",
+          "locked_board_id": "CITADEL_RING"
+        },
+        "B2": {
+          "encounter_id": "RG02-N04",
+          "locked_board_id": "OPEN"
+        },
+        "G": {
+          "encounter_id": "RG02-N03",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG02-E01",
+            "RG02-E02"
+          ],
+          "example_id": "RG02-E01",
+          "locked_board_id": "CITADEL_RING"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": "MG01",
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV41",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV42",
+          "site": "B",
+          "recipe_id": "RC-CO07",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV43",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG02-N01",
+            "RG02-N02"
+          ],
+          "board_id": "CITADEL_RING",
+          "default_encounter_id": "RG02-N01",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV07",
+        "EV08",
+        "EV09",
+        "EV10",
+        "EV11",
+        "EV41",
+        "EV42",
+        "EV43"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV41",
+        "B": "EV42",
+        "C": "EV11",
+        "D": "EV43"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": null,
+      "humanity_bindings": {
+        "EV07": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV09": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV07": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV08": [
+          "A",
+          "B",
+          "D"
+        ],
+        "EV09": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV10": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV11": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV41": [
+          "A"
+        ],
+        "EV42": [
+          "B"
+        ],
+        "EV43": [
+          "D"
+        ]
+      },
+      "spatial_variation": "调度门改为主路口旁的封闭侧院；接任务需要主动走入，旁路不穿过守军庭院。"
+    },
+    {
+      "region_id": "RG03",
+      "name": "回声林海",
+      "templates": [
+        {
+          "template_id": "RG03-A",
+          "name": "林庭水镜",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "林海旧驿",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "根墙分岔",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "水镜庭院",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "导雾棚前",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "棚内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "林间蜂哨",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "庭心岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "高根廊道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "林庭驻地",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北林海出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "树影测距台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "导雾案棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "商车停靠坪",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "追迹引路枝",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "镜足侧庭",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ],
+            [
+              "A",
+              "D"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W"
+          ]
+        },
+        {
+          "template_id": "RG03-B",
+          "name": "根墙回廊",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "林海旧驿",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "根墙分岔",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "水镜庭院",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "导雾棚前",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "棚内救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "林间蜂哨",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "庭心岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "高根廊道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "林庭驻地",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北林海出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "树影测距台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "导雾案棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "商车停靠坪",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "追迹引路枝",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "镜足侧庭",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ],
+            [
+              "B",
+              "D"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG03-N01",
+            "RG03-N02"
+          ],
+          "default_id": "RG03-N01",
+          "locked_board_id": "MIRROR_COURT"
+        },
+        "B2": {
+          "encounter_id": "RG03-N04",
+          "locked_board_id": "OPEN"
+        },
+        "G": {
+          "encounter_id": "RG03-N03",
+          "locked_board_id": "DOUBLE_BRIDGE"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG03-E01",
+            "RG03-E02"
+          ],
+          "example_id": "RG03-E01",
+          "locked_board_id": "MIRROR_COURT"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": "MG02",
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV44",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV45",
+          "site": "B",
+          "recipe_id": "RC-CO05",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV46",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG03-N01",
+            "RG03-N02"
+          ],
+          "board_id": "MIRROR_COURT",
+          "default_encounter_id": "RG03-N01",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV12",
+        "EV13",
+        "EV14",
+        "EV15",
+        "EV16",
+        "EV17",
+        "EV44",
+        "EV45",
+        "EV46"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV44",
+        "B": "EV45",
+        "C": "EV15",
+        "D": "EV46"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV12": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV16": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV12": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV13": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV14": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV15": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV16": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV17": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV44": [
+          "A"
+        ],
+        "EV45": [
+          "B"
+        ],
+        "EV46": [
+          "D"
+        ]
+      },
+      "spatial_variation": "前段多一条枝道横连，后段商车坪为可原路返回的短支路；辨识地标不能靠循环刷敌。"
+    },
+    {
+      "region_id": "RG04",
+      "name": "沉息湖区",
+      "templates": [
+        {
+          "template_id": "RG04-A",
+          "name": "湖岸双堤",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "湖岸泊船点",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "南堤分路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "盐纹浅湾",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "疗所侧坪",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "疗所救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "北岸空场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "回声堤口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "岸亭引道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "湖心岸驻地",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北湖岸出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "值班图小亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "合药棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "旧宴桌岸亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "引船灯桩",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "剪潮侧湾",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ],
+            [
+              "T",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W",
+            "T"
+          ]
+        },
+        {
+          "template_id": "RG04-B",
+          "name": "疗所后岸",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "湖岸泊船点",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "南堤分路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "盐纹浅湾",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "疗所侧坪",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "疗所救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "北岸空场",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "回声堤口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "岸亭引道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "湖心岸驻地",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北湖岸出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "值班图小亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "合药棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "旧宴桌岸亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "引船灯桩",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "剪潮侧湾",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "I",
+              "D"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ],
+            [
+              "W",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T",
+            "W"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG04-N02",
+            "RG04-N03"
+          ],
+          "default_id": "RG04-N02",
+          "locked_board_id": "SALT_CROSSING"
+        },
+        "B2": {
+          "encounter_id": "RG04-N04",
+          "locked_board_id": "OPEN"
+        },
+        "G": {
+          "encounter_id": "RG04-N01",
+          "locked_board_id": "SALT_CROSSING"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG04-E01",
+            "RG04-E02"
+          ],
+          "example_id": "RG04-E01",
+          "locked_board_id": "SALT_CROSSING"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": "MG03",
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV47",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV48",
+          "site": "B",
+          "recipe_id": "RC-CO02",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV49",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG04-N02",
+            "RG04-N03"
+          ],
+          "board_id": "SALT_CROSSING",
+          "default_encounter_id": "RG04-N02",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV18",
+        "EV19",
+        "EV20",
+        "EV21",
+        "EV47",
+        "EV48",
+        "EV49"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV47",
+        "B": "EV48",
+        "C": "EV21",
+        "D": "EV49"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV19": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV18": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV19": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV20": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV21": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV47": [
+          "A"
+        ],
+        "EV48": [
+          "B"
+        ],
+        "EV49": [
+          "D"
+        ]
+      },
+      "spatial_variation": "引船灯桩靠入口侧湾，宴桌亭是堤边尽头；精英湾两端可接近，但安全岸路不断。"
+    },
+    {
+      "region_id": "RG05",
+      "name": "铸律工场",
+      "templates": [
+        {
+          "template_id": "RG05-A",
+          "name": "炉场双廊",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "工场泊船坡",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "检修分路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "炉侧护茧道",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "构件库前",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "检修救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "校准空坪",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "炉心岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "点名廊道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "工场主炉前",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北工场出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "粉笔巡检台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "隔咒台棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "当值点名亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "护运调度口",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "孵化侧仓",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "I",
+              "A"
+            ],
+            [
+              "A",
+              "U"
+            ],
+            [
+              "V",
+              "B"
+            ],
+            [
+              "B",
+              "S"
+            ],
+            [
+              "W",
+              "L"
+            ],
+            [
+              "A",
+              "D"
+            ],
+            [
+              "T",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "W",
+            "T"
+          ]
+        },
+        {
+          "template_id": "RG05-B",
+          "name": "检修侧环",
+          "nodes": [
+            {
+              "id": "I",
+              "name": "工场泊船坡",
+              "role": "entry_safe_extraction"
+            },
+            {
+              "id": "U",
+              "name": "检修分路",
+              "role": "safe_junction"
+            },
+            {
+              "id": "B1",
+              "name": "炉侧护茧道",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "V",
+              "name": "构件库前",
+              "role": "safe_junction"
+            },
+            {
+              "id": "S",
+              "name": "检修救护箱",
+              "role": "fixed_medical_station"
+            },
+            {
+              "id": "B2",
+              "name": "校准空坪",
+              "role": "mandatory_normal"
+            },
+            {
+              "id": "W",
+              "name": "炉心岔口",
+              "role": "safe_junction"
+            },
+            {
+              "id": "T",
+              "name": "点名廊道",
+              "role": "safe_junction"
+            },
+            {
+              "id": "G",
+              "name": "工场主炉前",
+              "role": "mandatory_goal"
+            },
+            {
+              "id": "X",
+              "name": "北工场出口",
+              "role": "goal_exit_and_nonfinal_camp"
+            },
+            {
+              "id": "A",
+              "name": "粉笔巡检台",
+              "role": "event_anchor"
+            },
+            {
+              "id": "B",
+              "name": "隔咒台棚",
+              "role": "event_anchor"
+            },
+            {
+              "id": "C",
+              "name": "当值点名亭",
+              "role": "event_anchor"
+            },
+            {
+              "id": "D",
+              "name": "护运调度口",
+              "role": "optional_fourth_event_anchor"
+            },
+            {
+              "id": "L",
+              "name": "孵化侧仓",
+              "role": "optional_elite"
+            }
+          ],
+          "edges": [
+            [
+              "I",
+              "U"
+            ],
+            [
+              "U",
+              "B1"
+            ],
+            [
+              "B1",
+              "V"
+            ],
+            [
+              "V",
+              "B2"
+            ],
+            [
+              "B2",
+              "W"
+            ],
+            [
+              "W",
+              "T"
+            ],
+            [
+              "T",
+              "G"
+            ],
+            [
+              "G",
+              "X"
+            ],
+            [
+              "V",
+              "S"
+            ],
+            [
+              "W",
+              "C"
+            ],
+            [
+              "C",
+              "T"
+            ],
+            [
+              "D",
+              "U"
+            ],
+            [
+              "V",
+              "A"
+            ],
+            [
+              "A",
+              "S"
+            ],
+            [
+              "I",
+              "B"
+            ],
+            [
+              "B",
+              "U"
+            ],
+            [
+              "T",
+              "L"
+            ],
+            [
+              "B",
+              "D"
+            ],
+            [
+              "W",
+              "L"
+            ]
+          ],
+          "mandatory_battles": [
+            "B1",
+            "B2",
+            "G"
+          ],
+          "optional_elite": "L",
+          "entry": "I",
+          "goal_exit": "X",
+          "station": "S",
+          "baseline_event_sites": [
+            "A",
+            "B",
+            "C"
+          ],
+          "optional_fourth_site": "D",
+          "all_event_sites_optional_to_visit": true,
+          "scout_site": "A",
+          "scout_target": "B2",
+          "workbench_site": "B",
+          "variant_site": "D",
+          "variant_target": "B1",
+          "safe_receiver_site": "I",
+          "sight_contract": "A and D lie outside all engagement footprints; opaque terrain screens B2 from A and B1 from D until real reveal; must verify actual FOV in greybox",
+          "geometry_status": "topological_template_only_no_meter_coordinates_no_navmesh_or_FOV_proof",
+          "elite_access_landmarks": [
+            "T",
+            "W"
+          ]
+        }
+      ],
+      "encounter_binding_example": {
+        "B1": {
+          "candidate_ids": [
+            "RG05-N01",
+            "RG05-N02"
+          ],
+          "default_id": "RG05-N01",
+          "locked_board_id": "FORGE_CROSSING"
+        },
+        "B2": {
+          "encounter_id": "RG05-N04",
+          "locked_board_id": "OPEN"
+        },
+        "G": {
+          "encounter_id": "RG05-N03",
+          "locked_board_id": "DUAL_FLANK"
+        },
+        "L": {
+          "candidate_ids": [
+            "RG05-E01",
+            "RG05-E02"
+          ],
+          "example_id": "RG05-E01",
+          "locked_board_id": "FORGE_CROSSING"
+        }
+      },
+      "normal_generation": "choose three distinct native normal IDs before departure; with route variant reserve its two IDs in B1, assign remaining two to B2/G in seeded order; board for each slot locked before reveal",
+      "general_goal": {
+        "general_id": "MG04",
+        "slot": "G",
+        "rule": "only designated general task replaces G; use original boss board and parameters; regenerate compatible goal precinct before departure; no extra normal goal battle"
+      },
+      "service_bindings": {
+        "scouting": {
+          "event_id": "EV50",
+          "site": "A",
+          "target": "B2",
+          "target_state": "unrevealed_unstarted"
+        },
+        "crafting": {
+          "event_id": "EV51",
+          "site": "B",
+          "recipe_id": "RC-CO08",
+          "required_props": [
+            "named_artisan",
+            "working_bench",
+            "recipe_tools"
+          ],
+          "free_use_if_card_absent": false
+        },
+        "route_variant": {
+          "event_id": "EV52",
+          "site": "D",
+          "target": "B1",
+          "candidate_ids": [
+            "RG05-N01",
+            "RG05-N02"
+          ],
+          "board_id": "FORGE_CROSSING",
+          "default_encounter_id": "RG05-N01",
+          "requires": "real_guide_and_prelocked_common_board_and_unrevealed_unstarted_target"
+        }
+      },
+      "event_candidates_by_region_only": [
+        "EV22",
+        "EV23",
+        "EV24",
+        "EV25",
+        "EV26",
+        "EV27",
+        "EV28",
+        "EV50",
+        "EV51",
+        "EV52"
+      ],
+      "additional_filters_required": [
+        "chapter",
+        "knowledge",
+        "case_state",
+        "last_two_runs",
+        "same_run_unique",
+        "physical_props_and_receiver",
+        "service_and_target_binding"
+      ],
+      "consistent_assignment_witness": {
+        "A": "EV50",
+        "B": "EV51",
+        "C": "EV26",
+        "D": "EV52"
+      },
+      "witness_not_distribution": true,
+      "witness_budgeted_options": {
+        "A": "PRIMARY",
+        "B": "SECONDARY",
+        "C": "SECONDARY",
+        "D": "PRIMARY"
+      },
+      "witness_goal_material_bundle": "RB-MAT2",
+      "humanity_bindings": {
+        "EV22": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV25": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        },
+        "EV28": {
+          "replaceable_sites": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "custodian_site": "selected_event_anchor",
+          "safe_exit_or_receiver": "I",
+          "trade_counterparty": "visible_at_same_event_anchor_only_when_required_case_is_allocated",
+          "town_acceptance": "actual_existing_station_clinic_cargo_or_local_witness_contract",
+          "factor_on_choice": false
+        }
+      },
+      "event_site_compatibility": {
+        "EV22": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV23": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV24": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV25": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV26": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV27": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV28": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "EV50": [
+          "A"
+        ],
+        "EV51": [
+          "B"
+        ],
+        "EV52": [
+          "D"
+        ]
+      },
+      "spatial_variation": "调度口与前段检修支路互通，孵化侧仓两端都能接近；不进入侧仓仍可沿主廊通行。"
+    }
+  ],
+  "generation_order": [
+    "lock_unlocked_region_network_length_and_all_possible_paths",
+    "choose_per_region_template_and_terrain_variant_with_fixed_seed",
+    "jointly_assign_base_three_ordinary_cards_and_reserve_directed_case_replacement",
+    "bind_real_props_receivers_scout_and_workbench; optional_fourth_only_with_extra_eligible_card",
+    "if_variant_card_selected_reserve_two_encounter_IDs_one_common_board_in_B1; scout_uses_B2",
+    "lock_other_distinct_encounters_boards_goal_and_optional_elite",
+    "reserve_reward_budgets_over_every_possible_path_and_publish_limited_options",
+    "validate_topology_service_visibility_and_content; fail_before_payment",
+    "commit_one_run_seed_and_instances; no_reallocation_on_player_choices"
+  ],
+  "randomness": {
+    "templates_per_region": 2,
+    "template_weights": "provisional_equal_weights_within_legal_candidates_not_final_route_probability",
+    "mirror_rotate": "only entire compatible physical precinct with preserved board coordinates and approach; no unchecked rotation of combat data",
+    "event_site_permutation": "A/B/C may host other compatible ordinary cards; service props exist only where explicitly bound; D may host a nonvariant fourth card",
+    "no_forced_service_category": true,
+    "normal_encounters": "three distinct out of four; two variant candidates count as alternatives of one slot",
+    "new_seed": "new_departure_only",
+    "seed_key": [
+      "expedition_id",
+      "region_id"
+    ],
+    "current_party_or_morality_changes_generation": false
+  },
+  "geometry_rules": {
+    "combat_footprint_cells": [
+      7,
+      9
+    ],
+    "all_four_battle_footprints_disjoint": true,
+    "event_and_service_interactions_outside_engagement": true,
+    "no_edge_crosses_uncleared_battle_footprint_except_that_battle_gate": true,
+    "walkable_roads_are_continuous": true,
+    "sight_checks_required_for_services": true,
+    "abstract_edges_are_not_player_node_teleports": true,
+    "unproven": [
+      "meter_distances",
+      "actual_line_of_sight",
+      "navigation_mesh",
+      "terrain_collision",
+      "walk_time",
+      "camera_and_approach_readability"
+    ]
+  },
+  "variant_contract": {
+    "common_board": "choose from intersection of both encounters allowed_board_variants and region board_ids; not merely default board IDs",
+    "board_locked_before_departure": true,
+    "revealing_target_locks_default_if_no_choice": true,
+    "choice_after_reveal_or_start": "disabled_keep_actual_encounter_and_board",
+    "scouting_target_distinct": true,
+    "remaining_normal_slots_exclude_both_variants": true,
+    "no_more_than_one_battle_or_reward_at_B1": true,
+    "guidance_changes_future_arriving_patrol_not_visible_enemy": true
+  },
+  "scene_binding_rules": {
+    "ordinary": "instantiate visible scene props and any receipt-owning NPC at assigned anchor; secondary objects reachable without extra battle; all alternative props share one event receipt",
+    "scout": "A with real B2 detail; after B2 reveal PRIMARY disabled, remaining budget-legal option or PASS",
+    "workbench": "B with actual artisan and bench; original FIELD-CO-1.0 inputs, output, capacity and transaction; no free crafting when card absent",
+    "variant": "D with guide and sign ropes before B1; one locked board for both variants",
+    "humanity": "safe_receiver_at_I; no uncrossed_battle_on_return_path; actual_handoff_or_town_acceptance_before_factor; original_case_state_and_actor_departure_preserved",
+    "EV04": "two distinct bell landmarks and both rubbing interactions reachable from chosen anchor without an additional uncleared battle; share one receipt; no pre-made second rubbing substituted for player action",
+    "EV08": "requires_real_unstarted_encounter_with_EN04_at_B2 and safe observation binding; exclude if no actor exists or already defeated; no extra enemy spawned",
+    "EV17": "requires real present eligible recruit for personal scene; if absent, show ordinary scene aftermath without fabricated speaker, no reroll or new reward; do not tailor departure draw to party",
+    "EV23": "physical repeating conveyor prop at event anchor, no per_cycle material generation",
+    "EV27": "ST-303 required even if the physical plaque prop exists; no pretruth text display"
+  },
+  "receiver_rules": {
+    "LOCAL": "real witness/counterparty at event anchor; no remote confirmation",
+    "ESCORT": "cleared safe return to I then actual safe station acceptance; one legal reserve human leaves party or whole party returns; no factor on just selecting",
+    "RETURN": "whole party follows cleared safe route to I then safe extraction and clinic acceptance; no unseen-region completion",
+    "CARGO": "reserve two unspent material budget units and actual safe town acceptance; arrival at I alone not completion",
+    "departure_without_completion": "original pending/custody rules; no invented success or harm receipt",
+    "cross_region": "no return to prior region; display unresolved custody and actual leave consequences before committing exit"
+  },
+  "reward_binding": {
+    "supply": "S once per region independent of event; X camp once only nonfinal boundary; I only entry/extraction not extra free heal",
+    "goal": "16 copper +2 crystal credit at actual goal success, bank only on safe run end",
+    "elite": "8 copper +2 crystal only actual L victory; max one per region",
+    "events": "one receipt per event instance; alternative props never have separate reward receipts",
+    "budget_planning": "max debit per resource over enabled mutually exclusive options at each site; sum across simultaneously visitable sites; validate every possible region path, not all eight regions summed nor one chosen path only",
+    "if_budget_exceeded": "reject plan or explicitly disable nonreserved reward options before departure; free PASS remains; no silent cap expansion",
+    "humanity_cargo": "two reserved material units unavailable to ordinary claims; no release for farming same run",
+    "witness_scope": "one budget-feasible option per event plus selected goal materials, not proof all options can pay simultaneously or a required player sequence"
+  },
+  "existing_samples": "MAP-SKETCH-02 remains an authored fixed example, not overwritten; JOINT templates are additional candidate families",
+  "snapshot": "历史材料/文案归档/火种计划_JOINT-MAP-1.0_八区联合布点前_20261027",
+  "snapshot_files": 13,
+  "runtime_implemented": false
+}

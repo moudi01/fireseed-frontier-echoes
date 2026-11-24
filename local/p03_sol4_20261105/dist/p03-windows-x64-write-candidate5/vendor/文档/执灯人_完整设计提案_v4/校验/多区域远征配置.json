@@ -1,0 +1,641 @@
+{
+  "version": "MULTI-1.1",
+  "base_design_version": "TINDER-1.7",
+  "authority": "专项/多区域远征与八区网络.md",
+  "status": "authored_initial_design_pending_runtime_balance_and_playtest",
+  "user_confirmed": {
+    "short_regions": 2,
+    "medium_regions": 3,
+    "long_regions": 4,
+    "four_outer_four_inner_removed": true,
+    "each_region_is_continuous_local_map": true
+  },
+  "region_total": 8,
+  "regions": [
+    {
+      "region_id": "RG01",
+      "name": "灰栎边道",
+      "chapter_id": "CH1",
+      "threat_rank_id": "TH1",
+      "access_requires_all": [
+        "ST-101"
+      ],
+      "general_id": null,
+      "neighbors": [
+        "RG06",
+        "RG07",
+        "RG08"
+      ],
+      "schematic_position": [
+        170,
+        650
+      ],
+      "spatial_role": "旧军道、哨棚与基础接敌"
+    },
+    {
+      "region_id": "RG02",
+      "name": "断誓堡垒",
+      "chapter_id": "CH2",
+      "threat_rank_id": "TH2",
+      "access_requires_all": [
+        "ST-104"
+      ],
+      "general_id": "MG01",
+      "neighbors": [
+        "RG03",
+        "RG04",
+        "RG07"
+      ],
+      "schematic_position": [
+        1090,
+        260
+      ],
+      "spatial_role": "庭院、侧门与守军防线"
+    },
+    {
+      "region_id": "RG03",
+      "name": "回声林海",
+      "chapter_id": "CH2",
+      "threat_rank_id": "TH3",
+      "access_requires_all": [
+        "ST-104"
+      ],
+      "general_id": "MG02",
+      "neighbors": [
+        "RG02",
+        "RG06",
+        "RG07"
+      ],
+      "schematic_position": [
+        650,
+        170
+      ],
+      "spatial_role": "林海庭院与隐匿追猎"
+    },
+    {
+      "region_id": "RG04",
+      "name": "沉息湖区",
+      "chapter_id": "CH3",
+      "threat_rank_id": "TH4",
+      "access_requires_all": [
+        "CH2_COMPLETE"
+      ],
+      "general_id": "MG03",
+      "neighbors": [
+        "RG02",
+        "RG05",
+        "RG07"
+      ],
+      "schematic_position": [
+        1120,
+        690
+      ],
+      "spatial_role": "湖岸疗所与回声堤道"
+    },
+    {
+      "region_id": "RG05",
+      "name": "铸律工场",
+      "chapter_id": "CH3",
+      "threat_rank_id": "TH4",
+      "access_requires_all": [
+        "CH2_COMPLETE"
+      ],
+      "general_id": "MG04",
+      "neighbors": [
+        "RG04",
+        "RG07",
+        "RG08"
+      ],
+      "schematic_position": [
+        910,
+        1080
+      ],
+      "spatial_role": "检修通道、炉场与构件库"
+    },
+    {
+      "region_id": "RG06",
+      "name": "雾痕林缘",
+      "chapter_id": "CH1",
+      "threat_rank_id": "TH1",
+      "access_requires_all": [
+        "ST-102"
+      ],
+      "general_id": null,
+      "neighbors": [
+        "RG01",
+        "RG03",
+        "RG07"
+      ],
+      "schematic_position": [
+        240,
+        250
+      ],
+      "spatial_role": "林缘空地、兽径与分路"
+    },
+    {
+      "region_id": "RG07",
+      "name": "苇灯湿地",
+      "chapter_id": "CH1",
+      "threat_rank_id": "TH1",
+      "access_requires_all": [
+        "ST-102"
+      ],
+      "general_id": null,
+      "neighbors": [
+        "RG01",
+        "RG02",
+        "RG03",
+        "RG04",
+        "RG05",
+        "RG06",
+        "RG08"
+      ],
+      "schematic_position": [
+        650,
+        630
+      ],
+      "spatial_role": "岸路与渡口，连接多条探索方向"
+    },
+    {
+      "region_id": "RG08",
+      "name": "炉灰荒径",
+      "chapter_id": "CH1",
+      "threat_rank_id": "TH1",
+      "access_requires_all": [
+        "ST-102"
+      ],
+      "general_id": null,
+      "neighbors": [
+        "RG01",
+        "RG05",
+        "RG07"
+      ],
+      "schematic_position": [
+        350,
+        1070
+      ],
+      "spatial_role": "护运与回收道，连接军道和工场"
+    }
+  ],
+  "edges": [
+    [
+      "RG01",
+      "RG06"
+    ],
+    [
+      "RG01",
+      "RG07"
+    ],
+    [
+      "RG01",
+      "RG08"
+    ],
+    [
+      "RG06",
+      "RG03"
+    ],
+    [
+      "RG06",
+      "RG07"
+    ],
+    [
+      "RG03",
+      "RG07"
+    ],
+    [
+      "RG03",
+      "RG02"
+    ],
+    [
+      "RG02",
+      "RG07"
+    ],
+    [
+      "RG02",
+      "RG04"
+    ],
+    [
+      "RG07",
+      "RG04"
+    ],
+    [
+      "RG07",
+      "RG05"
+    ],
+    [
+      "RG07",
+      "RG08"
+    ],
+    [
+      "RG08",
+      "RG05"
+    ],
+    [
+      "RG04",
+      "RG05"
+    ]
+  ],
+  "profiles": {
+    "SHORT": {
+      "name": "短途",
+      "region_count": 2,
+      "mandatory_battles": 6,
+      "optional_elites_max": 2,
+      "battle_range": [
+        6,
+        8
+      ],
+      "event_sites_range": [
+        6,
+        8
+      ],
+      "actual_event_cards_min_guaranteed": 0,
+      "regional_supply_uses_max": 2,
+      "inter_region_camps": 1,
+      "departure_supply_cost": 2,
+      "calendar_days_per_final_settlement": 1,
+      "reward_caps": {
+        "equipment": 2,
+        "books": 1,
+        "materials_by_difficulty": {
+          "D0": 8,
+          "D1": 12,
+          "D2": 16
+        },
+        "ordinary_event_copper": 16,
+        "ordinary_event_crystal": 2,
+        "event_found_consumable_claims": 2,
+        "event_recovery_claims": 1
+      },
+      "commission_per_completed_region": {
+        "copper": 16,
+        "crystal": 2
+      },
+      "elite_increment_per_actual_win": {
+        "copper": 8,
+        "crystal": 2
+      },
+      "xp_max_per_eligible_safe_returned_participant": 2
+    },
+    "MEDIUM": {
+      "name": "中途",
+      "region_count": 3,
+      "mandatory_battles": 9,
+      "optional_elites_max": 3,
+      "battle_range": [
+        9,
+        12
+      ],
+      "event_sites_range": [
+        9,
+        12
+      ],
+      "actual_event_cards_min_guaranteed": 0,
+      "regional_supply_uses_max": 3,
+      "inter_region_camps": 2,
+      "departure_supply_cost": 3,
+      "calendar_days_per_final_settlement": 1,
+      "reward_caps": {
+        "equipment": 2,
+        "books": 1,
+        "materials_by_difficulty": {
+          "D0": 12,
+          "D1": 18,
+          "D2": 24
+        },
+        "ordinary_event_copper": 24,
+        "ordinary_event_crystal": 3,
+        "event_found_consumable_claims": 3,
+        "event_recovery_claims": 1
+      },
+      "commission_per_completed_region": {
+        "copper": 16,
+        "crystal": 2
+      },
+      "elite_increment_per_actual_win": {
+        "copper": 8,
+        "crystal": 2
+      },
+      "xp_max_per_eligible_safe_returned_participant": 3
+    },
+    "LONG": {
+      "name": "长途",
+      "region_count": 4,
+      "mandatory_battles": 12,
+      "optional_elites_max": 4,
+      "battle_range": [
+        12,
+        16
+      ],
+      "event_sites_range": [
+        12,
+        16
+      ],
+      "actual_event_cards_min_guaranteed": 0,
+      "regional_supply_uses_max": 4,
+      "inter_region_camps": 3,
+      "departure_supply_cost": 4,
+      "calendar_days_per_final_settlement": 1,
+      "reward_caps": {
+        "equipment": 3,
+        "books": 2,
+        "materials_by_difficulty": {
+          "D0": 16,
+          "D1": 24,
+          "D2": 32
+        },
+        "ordinary_event_copper": 32,
+        "ordinary_event_crystal": 4,
+        "event_found_consumable_claims": 4,
+        "event_recovery_claims": 1
+      },
+      "commission_per_completed_region": {
+        "copper": 16,
+        "crystal": 2
+      },
+      "elite_increment_per_actual_win": {
+        "copper": 8,
+        "crystal": 2
+      },
+      "xp_max_per_eligible_safe_returned_participant": 4
+    }
+  },
+  "region_structure": {
+    "type": "connected_geographic_network",
+    "ring_partition": null,
+    "paired_outer_inner_rule": false,
+    "generals_remain_at_original_regions": true,
+    "native_threat_not_route_depth": true,
+    "automatic_scaling_by_party_or_depth": false
+  },
+  "route": {
+    "unit": "unique_region_id",
+    "repeat_region_in_run": false,
+    "all_visited_regions_must_be_unlocked_at_departure": true,
+    "new_unlock_mid_run_extends_route": false,
+    "fixed_length_at_departure": true,
+    "finish_region_goal_before_advance": true,
+    "start_and_destination": "choose_among_unlocked_endpoints_with_exact_length_legal_route",
+    "next_region": "choose_among_departure_locked_adjacent_candidates_that_still_reach_destination_in_remaining_unique_regions",
+    "single_legal_next_region_allowed": true,
+    "all_route_branches_seeded_before_departure": true,
+    "region_instance_seed_key": [
+      "expedition_id",
+      "region_id"
+    ],
+    "current_party_changes_route": false,
+    "cross_region_return": "committed_forward_exit_one_way_with_explicit_confirmation; no_return_to_previous_region",
+    "local_backtrack": "allowed_before_leaving_same_region",
+    "early_extraction": "entry_safe_exit_or_cleared_goal_exit; ends_whole_run",
+    "empty_route_pool": "reject_before_payment_no_silent_shortening"
+  },
+  "local_map": {
+    "mandatory_normal_slots": 2,
+    "mandatory_goal_slots": 1,
+    "optional_elite_max": 1,
+    "goal_is_not_always_general": true,
+    "general_task_replaces_goal_slot": true,
+    "goal_can_be_noncombat_only_in_explicit_special_task_profile": true,
+    "event_sites_range": [
+      3,
+      4
+    ],
+    "fixed_supply_sites": 1,
+    "supply_not_a_random_event": true,
+    "ingress_and_goal_egress_required": true,
+    "goal_egress_options": [
+      "proceed_if_more_regions",
+      "camp_once_if_more_regions",
+      "extract_end_run"
+    ],
+    "no_incremental_rewards_for_backtracking": true,
+    "placement_contract": "八区联合布点.json"
+  },
+  "continuity": {
+    "one_expedition_id": true,
+    "carry_across": [
+      "person_instances",
+      "HP",
+      "injuries",
+      "erosion",
+      "carried_inventory",
+      "next_battle_preparation_reservations",
+      "expedition_plans_max_3",
+      "adaptation_evidence",
+      "event_case_state",
+      "claim_receipts",
+      "reward_budget_used"
+    ],
+    "new_region_resets_inventory_claims_or_plans": false,
+    "town_access_at_camp": false,
+    "ordinary_skill_counter_scope": "battle_id + instance_id + skill_id; new ordinary battle applies existing per_battle_limit",
+    "finale_counter_scope": "original_shared_DEMON_ADMIN_finale_resource_group",
+    "camp_resets_skill_counts": false
+  },
+  "supply": {
+    "regional_station": {
+      "uses_per_region": 1,
+      "cost": 0,
+      "heal_fraction": 0.3,
+      "rounding": "floor_min_one_if_positive_missing_hp",
+      "targets": "present_living_HP_positive_members; injury_and_deployment_rules_still_apply",
+      "restores_erosion": false,
+      "revives": false,
+      "creates_exportable_items": false,
+      "full_hp_or_no_eligible_target_consumes": false,
+      "placement": {
+        "reachable_after_first_mandatory_battle_before_second": true,
+        "requires_extra_battle_payment_or_humanity_choice": false,
+        "use_is_optional_and_can_be_deferred_within_same_region": true,
+        "route_signpost_before_second_mandatory_battle": true
+      }
+    },
+    "boundary_camp": {
+      "uses_per_completed_boundary": 1,
+      "cost": 0,
+      "heal_fraction": 0.3,
+      "erosion_reduction": 15,
+      "targets": "present_living_HP_positive_members_including_erosion_100; no_lost_or_captured",
+      "revives": false,
+      "heals_permanent_injury": false,
+      "creates_exportable_items": false,
+      "only_before_forward_transfer_or_final_early_extraction_at_nonfinal_boundary": true,
+      "repeat_or_reload_refreshes": false
+    },
+    "carried_consumable_and_preparation_total_cap": 4,
+    "existing_paid_medical_supply_rules_preserved": true,
+    "numeric_source": "editorial_initial_proposal_not_user_confirmed_balance"
+  },
+  "erosion": {
+    "scope": "MULTI_profiles_only_not_fixed_tutorial_special_tasks_or_finale",
+    "first_danger_entry_per_region_instance": 5,
+    "per_actual_battle_result": 5,
+    "local_subareas_add_extra_exposure": false,
+    "boundary_camp_reduction": 15,
+    "safe_return_reduction": 20,
+    "thresholds_and_injury_rules": "unchanged",
+    "event_deltas": "existing_visible_card_values"
+  },
+  "events": {
+    "chapter_region_knowledge_case_service_filters_preserved": true,
+    "same_event_id_once_per_whole_run": true,
+    "cooldown_unit": "completed_whole_expedition",
+    "cooldown_completed_expeditions": 2,
+    "directed_unresolved_case_max_per_run": 1,
+    "directed_case_replaces_existing_site": true,
+    "terminal_humanity_case_never_reopens_on_region_change": true,
+    "insufficient_eligible_cards": "before_departure_reject_layout_if_baseline_assignment_fails; after_player_state_changes_use_aftermath_no_reroll_or_reward",
+    "rewards_charged_to_global_run_budget": true,
+    "field_crafting_original_recipes_and_capacity": true,
+    "recent_ordinary_fallback": {
+      "prefer_not_presented_in_last_two_completed_runs": true,
+      "only_if_otherwise_insufficient_for_locked_sites": true,
+      "fallback_weight_multiplier": 0.25,
+      "still_requires_all_other_gates": true,
+      "does_not_override_same_run_unique": true,
+      "humanity_cases_excluded_from_fallback": true
+    },
+    "site_assignment": "jointly_assign_eligible_cards_to_locked_region_sites_without_replacement; reserve_directed_case_then_exclusive_service_cards; do_not_consume_all_shared_cards_in_first_region",
+    "density_allocation": {
+      "baseline_sites_per_region": 3,
+      "optional_fourth_site_max": 1,
+      "baseline_requires_joint_ordinary_card_assignment_excluding_route_variant_and_humanity": true,
+      "fourth_requires_additional_distinct_eligible_card_after_baseline_assignment": true,
+      "humanity_replaces_site_never_required_to_fill_baseline": true,
+      "all_departure_branches_must_pass_with_consistent_region_instances": true,
+      "failed_layout": "reject_layout_before_payment; no_silent_observation_to_fake_baseline_capacity",
+      "scope": "departure_structural_eligibility_not_player_visit_or_usable_reward_guarantee"
+    },
+    "interaction_revalidation": {
+      "when": [
+        "on_open",
+        "on_confirm_before_atomic_commit"
+      ],
+      "check": [
+        "target_unrevealed_unstarted_if_required",
+        "real_service",
+        "recipe_inputs",
+        "pouch_capacity",
+        "reward_budget",
+        "case_state"
+      ],
+      "invalid_option": "disable_with_in_world_reason_no_payment_no_reward",
+      "other_valid_options_remain": true,
+      "PASS_always_free": true,
+      "all_substantive_options_invalid": "ordinary_aftermath_no_reroll_no_reward",
+      "history": "record_event_only_if_card_actually_presented; keep_instance_consumed_or_closed_even_if_no_card_presented",
+      "already_resolved": "return_saved_result_not_revalidate_as_new_choice"
+    },
+    "encounter_service_allocation": {
+      "route_variant_reserves_both_candidate_ids_in_one_unresolved_normal_slot": true,
+      "other_mandatory_slots_exclude_both_reserved_ids": true,
+      "scout_target_must_differ_from_route_variant_target": true,
+      "no_distinct_valid_target": "do_not_allocate_service_card",
+      "choice_locks_target_before_reveal_or_battle": true,
+      "visited_before_choice": "retain_departure_default_disable_switch_no_enemy_replacement",
+      "PASS_or_never_visited": "retain_departure_default",
+      "adds_battles_or_reward_budget": false
+    },
+    "extension_files": [
+      "普通事件扩展.json"
+    ],
+    "active_catalog": "52 baseline + 8 EVENT-EXT-1.0 = 60 total, 50 ordinary + 10 humanity; fixed tasks keep baseline",
+    "catalog_loader": "event_catalog.py:load_catalog; reads declared extensions and rejects duplicate IDs"
+  },
+  "settlement": {
+    "calendar_days": 1,
+    "once_at_whole_run_end": true,
+    "region_complete_does_not_bank_loot": true,
+    "commission_credit": "earn_at_actual_region_goal_success; bank_only_on_safe_run_end; no_credit_for_uncompleted_regions",
+    "ordinary_failure": "existing_carried_loot_loss_and_personnel_rescue_contract; no_bank_at_region_transfer",
+    "xp": "one_per_completed_region_where_person_actually_deployed_in_settled_battle_and_finally_returned_safely; incomplete_current_region_no_extra_xp",
+    "workshop_job_progress": 1,
+    "workshop_requires_prior_order_and_real_action_receipt": true,
+    "rescue_deadlines": "advance_once_at_whole_run_end_existing_rescue_first_order",
+    "early_return": "no_refund_departure_cost; settle_actual_completed_region_credits_and_claimed_items_only"
+  },
+  "transaction": {
+    "transfer_key": [
+      "expedition_id",
+      "from_region_instance_id",
+      "exit_id"
+    ],
+    "camp_key": [
+      "expedition_id",
+      "boundary_id",
+      "camp_service_id"
+    ],
+    "transfer_atomic": [
+      "validate_completed_goal_next_region_route_length_and_no_pending_result",
+      "commit_exit_choice_current_region_and_progress",
+      "preserve_party_inventory_budgets_receipts_and_fixed_seed"
+    ],
+    "duplicate": "return_original_receipt_no_second_camp_credit_or_reseed",
+    "different_payload_same_key": "reject_conflict",
+    "failed_save": "restore_previous_valid_state_no_partial_transfer_or_reward"
+  },
+  "special_routes": {
+    "fixed_tutorial_rescue_recovery_memory_directed_humanity_tasks": "retain_explicit_fixed_task_templates_not_relabelled_short_expedition",
+    "FINAL_ROUTE": "outside_eight_region_network_and_outside_2_3_4_profiles"
+  },
+  "examples": [
+    {
+      "profile": "SHORT",
+      "regions": [
+        "RG01",
+        "RG07"
+      ]
+    },
+    {
+      "profile": "MEDIUM",
+      "regions": [
+        "RG06",
+        "RG07",
+        "RG04"
+      ]
+    },
+    {
+      "profile": "LONG",
+      "regions": [
+        "RG01",
+        "RG06",
+        "RG03",
+        "RG02"
+      ]
+    },
+    {
+      "profile": "LONG",
+      "regions": [
+        "RG06",
+        "RG01",
+        "RG08",
+        "RG07"
+      ]
+    }
+  ],
+  "supersedes": [
+    "连续区域地图合同.json:regions_per_expedition=1",
+    "连续区域地图合同.json:profiles.CONTINUOUS_REGION unset counts",
+    "规则样例.json:region_structure_contract outer/inner/pairs and single-region limits",
+    "地图地形.json:regions region_ring/paired_region_id and region_structure_contract",
+    "地图地形.json:route_templates standard fixed seven layers",
+    "远征事件池.json:trigger.layers and old max 2 events for ordinary expeditions",
+    "规则样例.json:ordinary single-region departure supply cost, battle erosion and single XP",
+    "战利品.json:ordinary per-expedition caps only as explicitly listed in profiles",
+    "远征事件池.json:ordinary-event last-two-run hard cooldown only when declared insufficient-candidate fallback applies; humanity cooldown stays"
+  ],
+  "base_source_sha256": {
+    "校验/规则样例.json": "482a9d2459fa462b0bbe2a564d5769c5f406897d55eaeddc4b4190db650a2c3d",
+    "校验/敌人与遭遇.json": "8077f6ae2be68d13e3dae271a7face5ddaea326e21c91545cc29c962c23e3dc8",
+    "校验/构筑与学习.json": "88ada805a1cdc75d21e5d1ba922b7aa5152ff5d26bc7e093c4a9a28a6db52a56",
+    "校验/地图地形.json": "2b871b3e3ed6a664ee96389a89f976fa08d73195dc5d772db91cb532f19bed1f",
+    "校验/远征事件池.json": "044684150bad54d249223d534a25899736ce5cec7ea12c5df5d53da70addc7a6",
+    "校验/战利品.json": "13af056d16072bb2ae27b6c1a4c5f6397c81651eeef7930561f7711a901d8a46",
+    "样片/首次远征流程.json": "30227244ccd61620cf3f988a0d32fd553be1ad8b91f719003aefcf1cab7e3d82"
+  },
+  "snapshot": "历史材料/文案归档/火种计划_MULTI-1.0_多区域远征修订前_20261026",
+  "snapshot_files": 63,
+  "runtime_implemented": false,
+  "capacity_revision_snapshot": "历史材料/文案归档/火种计划_MULTI-1.0_承载校核前_20261026",
+  "capacity_revision_snapshot_files": 36
+}
