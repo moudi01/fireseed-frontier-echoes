@@ -43,9 +43,15 @@ func _boss_status(boss: Dictionary, portrait: Texture2D) -> void:
 	row.add_theme_constant_override("separation", 12)
 	status.add_child(row)
 	var image := TextureRect.new()
-	image.texture = portrait
+	# The HUD banner leaves the left side empty for text and places Ado at the right.
+	var crop := AtlasTexture.new()
+	crop.atlas = portrait
+	var edge := mini(portrait.get_width(), portrait.get_height())
+	crop.region = Rect2(portrait.get_width() - edge, 0, edge, edge)
+	crop.filter_clip = true
+	image.texture = crop
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	image.custom_minimum_size = Vector2(72, 72)
 	image.size_flags_vertical = SIZE_SHRINK_CENTER
 	image.mouse_filter = MOUSE_FILTER_IGNORE
