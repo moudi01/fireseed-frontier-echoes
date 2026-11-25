@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $project = $PSScriptRoot
 $workspace = Split-Path -Parent (Split-Path -Parent $project)
 $toolchain = Join-Path $workspace '.toolchain/godot/editor/Godot_v4.7.2-stable_win64_console.exe'
@@ -26,6 +26,7 @@ foreach ($script in @('main.gd', 'smoke.gd')) {
 if ($LASTEXITCODE -ne 0) { throw "Python runtime staging failed ($LASTEXITCODE)" }
 & $toolchain --headless --path $project --log-file (Join-Path $release 'export.log') --export-release 'Windows Desktop' (Join-Path $release 'P06.exe')
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath (Join-Path $release 'P06.exe'))) { throw "Godot export failed ($LASTEXITCODE)" }
+Copy-Item -LiteralPath (Join-Path $project 'sidecar/恢复存档.cmd') -Destination $release
 & $python -X utf8 -B $licenseTool attach --output $release
 if ($LASTEXITCODE -ne 0) { throw "P06 Windows notice staging or verification failed ($LASTEXITCODE)" }
 Get-Item -LiteralPath $release | Select-Object -ExpandProperty FullName

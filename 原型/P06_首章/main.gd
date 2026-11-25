@@ -1038,7 +1038,11 @@ func _render() -> void:
 		if not client.runtime_log.is_empty() and FileAccess.file_exists(client.runtime_log):
 			_button("打开运行时日志", "runtime-log", _open_runtime_log)
 		if opening_failed and FileAccess.file_exists(data_dir.path_join("runs").path_join(case_name).path_join("save.json.bak")):
-			_label(actions, "主档损坏时，试玩入口的 --recover 可从校验后的备份新建会话。", MUTED, 16)
+			var package_root := OS.get_executable_path().get_base_dir()
+			if data_dir == package_root.path_join("data") and FileAccess.file_exists(package_root.path_join("恢复存档.cmd")):
+				_label(actions, "请打开发布包根目录的 恢复存档.cmd。主档损坏时在原位置恢复（--recover %s）；搬移后只剩备份时选择导入。恢复会创建新槽，原文件保留。" % case_name, MUTED, 16)
+			else:
+				_label(actions, "主档损坏时，试玩入口的 --recover 可从校验后的备份新建会话。", MUTED, 16)
 		_button("退出游戏", "quit", _quit)
 	elif settings_open:
 		_label(actions, "设置", GOLD, 23)

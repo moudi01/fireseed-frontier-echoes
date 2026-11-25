@@ -76,6 +76,7 @@ def stage(source, output, release_id=None):
     shutil.copyfile(Path(__file__).with_name('slice_view.py'), output / 'slice_view.py')
     shutil.copyfile(Path(__file__).with_name('deployment.py'), output / 'deployment.py')
     shutil.copyfile(Path(__file__).with_name('launch_runtime.py'), output / 'launch_runtime.py')
+    shutil.copyfile(Path(__file__).with_name('recover_save.py'), output / 'recover_save.py')
     service = output / 'protocol_service.py'
     text = service.read_text(encoding='utf-8')
     text = replace(text, 'def main():',
