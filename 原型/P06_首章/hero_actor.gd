@@ -10,12 +10,20 @@ const WINDUP_TIME := 0.28
 const MODEL_YAW_OFFSET := {
 	"H03": -2.0,
 	"H06": -2.0,
+	"H12": -2.0,
+}
+const EXTRA_CLIP_ALIGNED := {
+	"H03": ["HeroRaise", "HeroHold", "HeroRelease", "HeroCancel", "HeroSkillA"],
+	"H06": ["HeroRaise", "HeroHold", "HeroRelease", "HeroCancel"],
+	"H12": ["HeroRaise", "HeroHold", "HeroRelease", "HeroCancel", "HeroSkillA"],
 }
 
 var hero_kind := ""
 var cast_id := ""
 var cast_move := ""
 var _attack_speed := 1.0
+var _visual: Node3D
+var _base_yaw_offset := 0.0
 
 
 func assemble_hero(scene: PackedScene, travel_library: AnimationLibrary, kind: String) -> bool:
@@ -32,11 +40,11 @@ func assemble_hero(scene: PackedScene, travel_library: AnimationLibrary, kind: S
 	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip]
 	if not _attach_model(scene, travel_library, required, false):
 		return false
-	var yaw_offset: float = float(MODEL_YAW_OFFSET.get(kind, 0.0))
-	if absf(yaw_offset) > 0.001 and get_child_count() > 0:
-		var visual := get_child(get_child_count() - 1) as Node3D
-		if visual != null:
-			visual.rotation.y += yaw_offset
+	_base_yaw_offset = float(MODEL_YAW_OFFSET.get(kind, 0.0))
+	if get_child_count() > 0:
+		_visual = get_child(get_child_count() - 1) as Node3D
+		if _visual != null and absf(_base_yaw_offset) > 0.001:
+			_visual.rotation.y = _base_yaw_offset
 	var attack_len := player.get_animation(attack_clip).length
 	_attack_speed = clampf(attack_len / 0.85, 1.0, 2.8)
 	return true
@@ -175,6 +183,24 @@ func _react_custom(clip_name: String, lag: float, reduced_motion: bool) -> void:
 	)
 	motion.tween_interval(player.get_animation(clip_name).length)
 	motion.tween_callback(_play.bind(guard_clip))
+
+
+func _sync_visual_yaw(clip: String) -> void:
+	if _visual == null or absf(_base_yaw_offset) <= 0.001:
+		return
+	var base_name := clip.get_file()
+	var aligned: Array = EXTRA_CLIP_ALIGNED.get(hero_kind, [])
+	_visual.rotation.y = 0.0 if base_name in aligned else _base_yaw_offset
+
+
+func _play(clip: String, start := 0.0, speed := 1.0, blend := 0.06) -> void:
+	_sync_visual_yaw(clip)
+	super._play(clip, start, speed, blend)
+
+
+func _pose(clip: String, time: float) -> void:
+	_sync_visual_yaw(clip)
+	super._pose(clip, time)
 
 
 func _choose_skill_clip(move: String) -> String:

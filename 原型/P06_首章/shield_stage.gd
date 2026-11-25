@@ -47,7 +47,12 @@ const HERO_MODEL_PATHS := {
 	"H04": HEROES + "H04_Runtime.glb",
 	"H05": HEROES + "H05_Runtime.glb",
 	"H06": HEROES + "H06_Runtime.glb",
+	"H07": HEROES + "H07_Runtime.glb",
 	"H08": HEROES + "H08_Runtime.glb",
+	"H09": HEROES + "H09_Runtime.glb",
+	"H10": HEROES + "H10_Runtime.glb",
+	"H11": HEROES + "H11_Runtime.glb",
+	"H12": HEROES + "H12_Runtime.glb",
 }
 const CONCURRENT_MODEL_LOADS := 4
 const CONTACT_MODEL_PATHS := {
@@ -1389,7 +1394,8 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		var medical: bool = event.get("move") == "M02-A"
 		var mist: bool = event.get("move") == "M04-A"
 		var hero_actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
-		var hero_skill: bool = hero_actor_node is Hero and str(event.get("move", "")).begins_with("H")
+		var event_move := str(event.get("move", ""))
+		var hero_skill: bool = hero_actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
 		if hero_skill:
 			if event.type == "windup" and by_id[event.actor].get("hero_pending", {}).get("id") == event.action_id:
 				_prepare_hero_skill(hero_actor_node, by_id[event.actor], false)

@@ -191,6 +191,142 @@ HERO_RECIPES = {
             }
         ],
     },
+    "H07": {
+        "name": "陆衡",
+        "output": "H07_Runtime.glb",
+        "base_blend": r"TwoHand_Attacks_v2\H07_Tripo\H07_Tripo_24_Keyframe_Actions.blend",
+        "base_actions": {
+            "HeroIdle-loop": "H07_Tripo_05_GuardHold",
+            "HeroWalk-loop": "H07_Tripo_02_Walk",
+            "HeroStop": "H07_Tripo_08_WalkStop",
+            "HeroAttack": "H07_Tripo_04_LowCut",
+            "HeroHit": "H07_Tripo_13_HitLight",
+            "HeroDown": "H07_Tripo_06_Down",
+            "HeroBlock": "H07_Tripo_21_BlockImpact",
+        },
+        "extra_blends": [
+            {
+                "blend": r"动画\Luheng_Command_Actions\H07_Tripo_Command_Actions.blend",
+                "actions": {
+                    "HeroSkillA": "H07_Tripo_01_FocusMark",
+                    "HeroRelease": "H07_Tripo_02_VolleyOrder",
+                    "HeroCancel": "H07_Tripo_03_CommandCancel",
+                },
+            }
+        ],
+    },
+    "H09": {
+        "name": "闻笺",
+        "output": "H09_Runtime.glb",
+        "base_blend": r"Paper_LoL_Keyframe_Actions\H09_Meshy\H09_Meshy_24_Keyframe_Actions.blend",
+        "base_actions": {
+            "HeroIdle-loop": "H09_Meshy_01_Idle",
+            "HeroWalk-loop": "H09_Meshy_02_Walk",
+            "HeroStop": "H09_Meshy_08_WalkStop",
+            "HeroAttack": "H09_Meshy_04_Attack",
+            "HeroHit": "H09_Meshy_13_HitLight",
+            "HeroDown": "H09_Meshy_06_Down",
+        },
+        "extra_blends": [
+            {
+                "blend": r"Paper_Motion_v2\H09_Meshy\H09_Meshy_Natural_Actions.blend",
+                "actions": {
+                    "HeroIdle-loop": "H09_Meshy_01_Idle",
+                    "HeroWalk-loop": "H09_Meshy_02_Walk",
+                    "HeroAttack": "H09_Meshy_04_Attack",
+                },
+            },
+            {
+                "blend": r"动画\H09_Folio_Skills\H09_Meshy_Folio_Skills.blend",
+                "actions": {
+                    "HeroRaise": "H09_Meshy_01_FolioReady",
+                    "HeroHold-loop": "H09_Meshy_02_FolioHold",
+                    "HeroSkillA": "H09_Meshy_03_PairedSeal",
+                    "HeroRelease": "H09_Meshy_04_CovenantStrike",
+                    "HeroCancel": "H09_Meshy_05_FolioCancel",
+                },
+            },
+        ],
+    },
+    "H10": {
+        "name": "阮钧",
+        "output": "H10_Runtime.glb",
+        "base_blend": r"动画\动作质检修正_20261120\H10_Meshy\H10_Meshy_24_Keyframe_Actions.blend",
+        "base_actions": {
+            "HeroIdle-loop": "H10_Meshy_01_Idle",
+            "HeroWalk-loop": "H10_Meshy_23_ReadyAdvance",
+            "HeroStop": "H10_Meshy_08_WalkStop",
+            "HeroAttack": "H10_Meshy_04_Attack",
+            "HeroHit": "H10_Meshy_13_HitLight",
+            "HeroDown": "H10_Meshy_06_Down",
+        },
+        "extra_blends": [
+            {
+                "blend": r"动画\动作质检修正_20261120\H10_专属\H10_Meshy_Hammer_Actions.blend",
+                "actions": {
+                    "HeroSkillA": "H10_Meshy_01_GroundSlam",
+                    "HeroRelease": "H10_Meshy_02_StopCast",
+                    "HeroCancel": "H10_Meshy_03_HammerCancel",
+                },
+            }
+        ],
+    },
+    "H11": {
+        "name": "祁岚",
+        "output": "H11_Runtime.glb",
+        "base_blend": r"Dagger_Attack_v3\H11_Meshy\H11_Meshy_24_Keyframe_Actions.blend",
+        "base_actions": {
+            "HeroIdle-loop": "H11_Meshy_05_GuardHold",
+            "HeroWalk-loop": "H11_Meshy_02_Walk",
+            "HeroStop": "H11_Meshy_08_WalkStop",
+            "HeroAttack": "H11_Meshy_04_LowCut",
+            "HeroHit": "H11_Meshy_13_HitLight",
+            "HeroDown": "H11_Meshy_06_Down",
+            "HeroBlock": "H11_Meshy_21_BlockImpact",
+        },
+        "extra_blends": [
+            {
+                "blend": r"动画\动作质检修正_20261120\H11_Meshy\H11_Meshy_Shadow_and_Flying_Blade.blend",
+                "actions": {
+                    "HeroRaise": "H11_Meshy_01_ShadowEnter",
+                    "HeroSkillA": "H11_Meshy_02_ShadowStrike",
+                    "HeroCancel": "H11_Meshy_03_ShadowAbort",
+                    "HeroRelease": "H11_Meshy_04_FlyingBlade",
+                    "HeroHold-loop": "H11_Meshy_05_BladeWait",
+                },
+            }
+        ],
+    },
+    "H12": {
+        "name": "殷砚",
+        "output": "H12_Runtime.glb",
+        "base_blend": r"动画\棋盘视角复验_20261120\H12_Meshy\H12_Meshy_24_Keyframe_Actions.blend",
+        "base_actions": {
+            "HeroIdle-loop": "H12_Meshy_01_Idle",
+            "HeroWalk-loop": "H12_Meshy_23_ReadyAdvance",
+            "HeroStop": "H12_Meshy_08_WalkStop",
+            "HeroAttack": "H12_Meshy_04_Attack",
+            "HeroHit": "H12_Meshy_13_HitLight",
+            "HeroDown": "H12_Meshy_06_Down",
+        },
+        "extra_blends": [
+            {
+                "blend": r"动画\Staff_Cast_Transitions\H12_Meshy\H12_Meshy_Cast_Transitions.blend",
+                "actions": {
+                    "HeroRaise": "H12_Meshy_01_Prepare",
+                    "HeroHold-loop": "H12_Meshy_02_CastHold",
+                    "HeroSkillA": "H12_Meshy_03_Release",
+                    "HeroCancel": "H12_Meshy_04_Cancel",
+                },
+            },
+            {
+                "blend": r"动画\H12_Meteor_Rain\H12_Meshy_Meteor_Rain.blend",
+                "actions": {
+                    "HeroRelease": "H12_Meshy_Meteor_06_W2_Cast",
+                },
+            },
+        ],
+    },
 }
 
 
@@ -242,8 +378,9 @@ def _append_actions(blend_copy_path, action_map):
         missing = [a for a in wanted if a not in data_from.actions]
         if missing:
             raise RuntimeError(f"Missing actions in {blend_copy_path}: {missing}")
-        data_to.actions = wanted
-    return {dst: bpy.data.actions[src] for dst, src in action_map.items()}
+        data_to.actions = list(wanted)
+    loaded_by_src = dict(zip(wanted, data_to.actions))
+    return {dst: loaded_by_src[src] for dst, src in action_map.items()}
 
 
 def export_hero(hero_id, recipe, assets_root, out_dir):
