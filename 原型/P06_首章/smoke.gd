@@ -1293,59 +1293,74 @@ func _check_handbook_event() -> void:
 	await _capture("handbook-resolved")
 
 
-func _ado_route() -> void:
-	var path: String = app.data_dir.path_join(app.case_name + ".ado-route.json")
+func _play_hunt_route(route_name: String, hunt_key: String) -> Array[String]:
+	var path: String = app.data_dir.path_join(app.case_name + "." + route_name + "-route.json")
 	var route: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not route is Dictionary or not route.get("commands") is Array:
 		failure = "Missing native tactical route: " + path
-		return
+		return []
 	var victories: Array[String] = []
+	var report_button: String = "quest report %s CONFIRM" % app.view[hunt_key].id
 	for value in route.commands:
 		var key := str(value)
 		var parts := key.split(" ")
 		var command := parts[0]
 		if command in ["challenge", "depart", "pack_medical", "buy_supply", "rest"] and not await _ado_tab("expedition"):
-			return
-		if command == "recruit" or command == "squad" or (app.view.phase == "TOWN" and command in ["place", "stance", "deploy"]):
+			return []
+		if command == "recruit" or command == "squad" or (app.view.phase == "TOWN" and command in ["place", "stance", "deploy", "level_up"]):
 			if not await _ado_tab("roster"):
-				return
+				return []
 		if command in ["quest", "remember"] and app.view.hunt.get("memory", {}).is_empty() and not await _ado_tab("chapter"):
-			return
-		if command in ["place", "stance", "deploy"]:
+			return []
+		if command in ["place", "stance", "deploy", "level_up"]:
 			if app.selected_id != parts[1] or command == "place":
 				if not await _press("member-" + parts[1]):
-					return
+					return []
 			if command == "place":
 				if not await _press_cell("cell-%s-%s" % [parts[2], parts[3]]):
-					return
+					return []
 				while app.selected_facing != int(parts[4]):
 					if not await _press("facing"):
-						return
+						return []
 		if key == "run 600":
 			if not await _ado_steps(victories):
-				return
+				return []
 			continue
-		if key == "quest report MG01 CONFIRM" and app.view.hunt.reported:
+		if hunt_key == "sev_hunt" and command == "return":
+			var hunt: Dictionary = app.view[hunt_key]
+			if not hunt.report_pending_return or hunt.report_ready or hunt.reported:
+				failure = "Sev's victory did not wait for a safe return before enabling its report"
+				return []
+		if key == report_button and app.view[hunt_key].reported:
 			if app.command_buttons.has(key):
 				failure = "The first-delivery control appeared again"
-				return
+				return []
 			continue
 		if command == "fight" and measure != null and app.view.region == "RG02" and app.view.site == "G":
 			measure.begin("BATTLE-MG01")
 		if command in ["memory", "remember"] and parts.size() == 3:
 			if command == "memory" and (app.command_buttons.has("step") or app.command_buttons.has("flee CONFIRM")):
 				failure = "Battle commands displayed during a memory window"
-				return
+				return []
 			await _capture(command + "-" + parts[2])
 		if not await _command(key):
-			return
+			return []
+		if hunt_key == "sev_hunt" and command in ["depart", "next"]:
+			side_checks.get_or_add("sev_regions", []).append(app.view.region)
 		if command == "depart":
 			await _capture("hunt-departure")
 		elif command == "next":
 			await _capture("fortress-entry")
 		if app.view.region == "RG02" and command in ["next", "move", "fight"]:
 			if not await _fortress_frame():
-				return
+				return []
+	return victories
+
+
+func _ado_route() -> void:
+	var victories := await _play_hunt_route("ado", "hunt")
+	if not failure.is_empty():
+		return
 	if mode == "fortress-branches":
 		if victories.size() != 5 or app.view.phase != "BATTLE" or app.view.site != "L":
 			failure = "Fortress branches did not reach the live side-ditch battle"
@@ -1383,6 +1398,58 @@ func _ado_route() -> void:
 		await _capture("hunt-complete")
 	else:
 		failure = "Ado's first report, book, seal or awakening missing"
+
+
+func _sev_route() -> void:
+	if app.view.get("phase") != "TOWN" or not app.view.get("chapter", {}).get("archived", false) \
+			or app.view.sev_hunt.defeated:
+		failure = "The Sev route needs a town save with ST-104 and no Sev victory"
+		return
+	var old_seals := int(app.view.chapter.seals)
+	var old_books := int(app.view.sev_hunt.report_book.count)
+	var old_budget: Dictionary = app.view.budget.duplicate()
+	var completes_chapter: bool = app.view.hunt.reported
+	var victories := await _play_hunt_route("sev", "sev_hunt")
+	if not failure.is_empty():
+		return
+	if side_checks.get("sev_regions") != ["RG06", "RG03"] or victories.size() != 6 or victories[-1] != "BATTLE-MG02":
+		failure = "The Sev hunt missed its two-region path or authentic battle victory"
+		return
+	if app.view.get("phase") != "TOWN" or not app.view.sev_hunt.reported \
+			or int(app.view.chapter.seals) != old_seals + 1 or int(app.view.sev_hunt.report_book.count) != old_books + 1:
+		failure = "Sev's first report did not award exactly one seal and book"
+		return
+	var budget: Dictionary = app.view.budget
+	if completes_chapter and (budget.milestone != "CH2_COMPLETE" or int(budget.expedition) != 16 or int(budget.battle) != 12):
+		failure = "The two first reports did not grant the Chapter 3 budget"
+		return
+	if not completes_chapter and budget != old_budget:
+		failure = "Sev's report alone changed the chapter budget"
+		return
+	side_checks["sev_victories"] = victories
+	await _check_sev_report_archive()
+
+
+func _check_sev_report_archive() -> void:
+	if app.view.get("phase") != "TOWN" or not app.view.get("sev_hunt", {}).get("reported", false) \
+			or app.view.sev_hunt.report_book.id != "SB-X02":
+		failure = "The saved Sev report or its book did not restore"
+		return
+	var version := int(app.client.frame.state_version)
+	if not await _ado_tab("chapter"):
+		return
+	if app.command_buttons.has("quest report MG02 CONFIRM"):
+		failure = "The first Sev report was offered again"
+		return
+	if not await _press("chapter-history") or not await _press("archive-report-MG02"):
+		return
+	if not app._archive_page.heading.text.contains("赛芙") \
+			or not app._archive_page.body.text.contains(app.view.sev_hunt.report_book.name) \
+			or int(app.client.frame.state_version) != version:
+		failure = "Reopening the Sev report lost its receipt or changed the save"
+		return
+	side_checks["sev_report"] = app.view.sev_hunt
+	side_checks["sev_budget"] = app.view.budget
 
 
 func _fortress_frame() -> bool:
@@ -4568,7 +4635,7 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
-	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
+	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
 		await _check_receipt_boot()
@@ -4707,6 +4774,10 @@ func _run() -> void:
 				failure = "The archived rescue report must open in town"
 			else:
 				await _check_finished_report("GR02E", "VICTORY", "甲环卫", "town-report")
+		elif mode == "sev-report-route":
+			await _sev_route()
+		elif mode == "sev-report-resume":
+			await _check_sev_report_archive()
 		elif mode == "ado-sample":
 			if failure.is_empty():
 				await _ado_sample()

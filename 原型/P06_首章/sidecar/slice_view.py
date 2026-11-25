@@ -52,7 +52,7 @@ DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
                  ('MG01', 'record'), ('MG01', 'witness'), ('MG01', 'collect', 'CONFIRM'),
-                 ('report', 'MG01', 'CONFIRM')}
+                 ('report', 'MG01', 'CONFIRM'), ('report', 'MG02', 'CONFIRM')}
 SITES = {'I', 'A', 'B', 'B1', 'B2', 'B_SUPPORT', 'B_MATERIAL', 'C', 'D', 'U', 'V', 'W',
          'T', 'S', 'L', 'G', 'X'}
 STANCES = {'advance': '推进', 'hold': '固守', 'flank': '包抄', 'evade': '避险'}
@@ -61,11 +61,13 @@ UNIT_NAMES = {'S01': '盾兵', 'S02': '近战兵', 'S03': '弓兵',
 TUTORIAL_BATTLES = ('INTRO-EN01', 'TUT01-ROOT')
 TUTORIAL_PLANS = ('PL01', 'PL02', 'PL05')
 PLAN_ID = r'PL\d{2}'
-MEMORY = {('evidence', 'MG01-W1'), ('retain', 'MG01-W2'), ('skip', 'MG01-W1'), ('skip', 'MG01-W2')}
+HUNT_GENERALS = ('MG01', 'MG02')
+MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
+          for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',)},
-    'challenge': {('MG01',), ('cancel',)},
-    'next': {('RG01', 'CONFIRM'), ('RG02', 'CONFIRM'), ('RG06', 'CONFIRM'), ('RG07', 'CONFIRM'), ('RG08', 'CONFIRM')},
+    'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
+    'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG06', 'RG07', 'RG08')},
     'memory': MEMORY, 'remember': MEMORY | {('MG01',), ('close',)},
     'dialogue': {('next',), ('skip',)}, 'buy_supply': {('1',)},
     'pack_medical': {(str(n),) for n in range(4)},
@@ -631,8 +633,9 @@ def battle_view(game):
             row['bone_pending'] = {key: pending.get(key) for key in ('id', 'cells', 'origin', 'due', 'facing')}
         if actor.get('town_defense_bonus', 0) > 0:
             row['town_defense_bonus'] = actor['town_defense_bonus']
-        if actor['kind'] == 'MG01':
+        if kind in HUNT_GENERALS:
             row['boss_phase'] = actor['boss_phase']
+        if kind == 'MG01':
             row['memory_pose'] = bool(battle['boss_dialogue_queue'])
             if pending.get('move_id') in ADO_MOVES and not battle.get('result'):
                 row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing')}
@@ -649,7 +652,7 @@ def battle_view(game):
         'actors': actor_rows,
         'events': events,
         'impacts': impacts,
-        'memory_reply': ado_memory_reply(battle) if not from_history else {},
+        'memory_reply': memory_reply(game, battle) if not from_history else {},
         'move_names': move_names,
         'recent': combat_notes(battle['events'], by_id),
     }
@@ -678,84 +681,101 @@ def combat_notes(events, by_id):
             for event in (notes or ([last_hit] if last_hit is not None else []))]
 
 
-def ado_memory_cards(battle):
-    actor = next(a for a in battle['actors'] if a['kind'] == 'MG01')
-    return actor['awakening']['dialogue_windows']
+def memory_actor(battle, general):
+    return next(actor for actor in battle['actors'] if actor['kind'] == general)
 
 
-def ado_memory_lines(card):
-    if card['window_id'] == 'MG01-W1':
-        return [{'speaker': '阿铎', 'text': card['question']},
+def memory_lines(card, speaker):
+    if card['window_id'].endswith('-W1'):
+        return [{'speaker': speaker, 'text': card['question']},
                 {'speaker': '指挥官', 'text': card['evidence_reply']}]
     return [{'speaker': '指挥官', 'text': card['player_reply']},
-            {'speaker': '阿铎', 'text': card['general_reply']}]
+            {'speaker': speaker, 'text': card['general_reply']}]
 
 
-def ado_memory_reply(battle):
-    if not battle or battle['encounter_id'] != 'BATTLE-MG01':
-        return {}
+def hunt_general(game, general_id):
+    return next(row for row in game.cat.rules['generals'] if row['general_id'] == general_id)
+
+
+def memory_reply(game, battle):
     # Closing a memory window can settle the battle and append a result at the same tick.
-    event = next((entry for entry in reversed(battle['events'][-2:]) if entry['type'] != 'result'), {})
-    if event.get('type') != 'boss_memory_choice' or event['choice'] == 'skip':
+    event = next((entry for entry in reversed((battle or {}).get('events', [])[-2:])
+                  if entry['type'] != 'result'), {})
+    if event.get('type') != 'boss_memory_choice' or event['choice'] == 'skip' or event['boss'] not in HUNT_GENERALS:
         return {}
-    card = next(row for row in ado_memory_cards(battle) if row['window_id'] == event['window'])
-    return {'id': event['window'], 'line': ado_memory_lines(card)[1]}
+    actor = memory_actor(battle, event['boss'])
+    card = next(row for row in actor['awakening']['dialogue_windows'] if row['window_id'] == event['window'])
+    speaker = hunt_general(game, event['boss'])['human_name']
+    return {'id': event['window'], 'line': memory_lines(card, speaker)[1]}
 
 
-def ado_memory_records(battle):
+def ado_memory_records(game, battle):
     if battle is None:
         return []
+    actor = memory_actor(battle, 'MG01')
     progress = battle['boss_memory']['MG01']
+    speaker = hunt_general(game, 'MG01')['human_name']
     records = []
-    for card in ado_memory_cards(battle):
+    for card in actor['awakening']['dialogue_windows']:
         window = card['window_id']
         committed = window in progress['committed']
         records.append({'id': window, 'committed': committed, 'skipped': window in progress['skipped'],
-                        'lines': ado_memory_lines(card) if committed else []})
+                        'lines': memory_lines(card, speaker) if committed else []})
     return records
 
 
-def memory_view(battle):
+def memory_view(game, battle):
+    from campaign import QUESTS
     queue = (battle or {}).get('boss_dialogue_queue', [])
-    if not queue or queue[0]['boss'] != 'MG01':
+    if not queue or queue[0]['boss'] not in HUNT_GENERALS:
         return {}
-    window = queue[0]['window']
-    card = next(w for w in ado_memory_cards(battle) if w['window_id'] == window)
-    progress = battle['boss_memory']['MG01']
-    first = window == 'MG01-W1'
+    general, window = queue[0]['boss'], queue[0]['window']
+    actor = memory_actor(battle, general)
+    card = next(row for row in actor['awakening']['dialogue_windows'] if row['window_id'] == window)
+    progress = battle['boss_memory'][general]
+    first = window.endswith('-W1')
     enabled = progress['eligible'] and (first or card['requires_prior_window'] in progress['committed'])
+    speaker = hunt_general(game, general)['human_name']
     return {'id': window, 'number': 1 if first else 2, 'choice': 'evidence' if first else 'retain',
-            'lead': ado_memory_lines(card)[0] if enabled else {}, 'enabled': enabled}
+            'lead': memory_lines(card, speaker)[0] if enabled else {}, 'enabled': enabled,
+            'general': speaker, 'item': QUESTS[general]['item']}
 
 
-def hunt_view(game):
+def hunt_view(game, general_id):
     from book_catalog import BOOKS
     from book_rewards import BOSS_BOOKS
     state = game.s
     campaign = state['campaign']
     facts = campaign['facts']
-    book = BOSS_BOOKS['ST-201']
-    victory = facts.get('MG01_DEFEATED')
-    last_battle = campaign['victories'].get('MG01', {}).get('battle')
-    returned = campaign['returned_reports'].get('MG01')
-    delivered = facts.get('ST-201')
+    general = hunt_general(game, general_id)
+    route = next(row for row in game.cat.config['routes'] if row['route_id'] == 'HUNT-' + general_id)
+    delivery_id = general['defeat_fact']
+    book = BOSS_BOOKS[delivery_id]
+    victory = facts.get(general_id + '_DEFEATED')
+    returned = campaign['returned_reports'].get(general_id)
+    delivered = facts.get(delivery_id)
     settlement = state.get('summary') or {}
-    has_whistle = 'OBS-MG01' in campaign['task_items']
-    has_testimony = 'MG01' in campaign['testimonies']
-    return {'selected': campaign['challenge'] == 'MG01',
-            'defeated': 'MG01' in campaign['victories'], 'report_ready': returned is not None,
-            'victory_day': victory['day'] if victory else None,
-            'report_return_day': returned['day'] if returned else None,
-            'report_delivery_day': delivered['day'] if delivered else None,
-            'report_this_return': bool(returned and settlement.get('settlement_id') == returned['settlement_id']),
-            'report_pending_return': bool(victory and not returned and not state['debug_tainted']),
-            'reported': delivered is not None, 'awakened': 'MG01_AWAKENED' in facts,
-            'report_book': {'id': book, 'name': BOOKS[book]['name'], 'count': state['book_stock'].get(book, 0)},
-            'report_seals': game.cat.rules['recruitment']['milestone_seals'].get('ST-201', 0),
-            'evidence': has_whistle and has_testimony, 'has_whistle': has_whistle, 'has_testimony': has_testimony,
-            'memory_records': ado_memory_records(last_battle) if state['phase'] == 'TOWN' else [],
-            'memory_reply': ado_memory_reply(last_battle) if state['phase'] == 'TOWN' else {},
-            'memory': memory_view((campaign['remembrance'] or {}).get('battle'))}
+    row = {'id': general_id, 'name': general['human_name'], 'region': general['region_id'],
+           'route': [game.cat.regions[region]['name'] for region in route['selected_path']],
+           'selected': campaign['challenge'] == general_id,
+           'defeated': general_id in campaign['victories'], 'report_ready': returned is not None,
+           'victory_day': victory['day'] if victory else None,
+           'report_return_day': returned['day'] if returned else None,
+           'report_delivery_day': delivered['day'] if delivered else None,
+           'report_this_return': bool(returned and settlement.get('settlement_id') == returned['settlement_id']),
+           'report_pending_return': bool(victory and not returned and not state['debug_tainted']),
+           'reported': delivered is not None, 'awakened': general_id + '_AWAKENED' in facts,
+           'report_book': {'id': book, 'name': BOOKS[book]['name'], 'count': state['book_stock'].get(book, 0)},
+           'report_seals': game.cat.rules['recruitment']['milestone_seals'].get(delivery_id, 0)}
+    if general_id == 'MG01':
+        last_battle = campaign['victories'].get(general_id, {}).get('battle')
+        has_whistle = 'OBS-MG01' in campaign['task_items']
+        has_testimony = general_id in campaign['testimonies']
+        row.update(evidence=has_whistle and has_testimony, has_whistle=has_whistle, has_testimony=has_testimony,
+                   memory_records=ado_memory_records(game, last_battle) if state['phase'] == 'TOWN' else [],
+                   memory_reply=memory_reply(game, last_battle) if state['phase'] == 'TOWN' else {},
+                   memory=memory_view(game, (campaign['remembrance'] or {}).get('battle')))
+    return row
 
 
 def whistle_cue(state):
@@ -1339,14 +1359,15 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'commissioned': 'ST-101' in facts, 'commission_receipt': commission, 'complete': 'ST-102' in facts,
             'tutorial_area': active and state['mission'] == 'TUTORIAL',
             'tutorial_return': state['mission'] == 'TUTORIAL',
-            'hunt': hunt_view(game) if 'ST-104' in facts else {},
+            'hunt': hunt_view(game, 'MG01') if 'ST-104' in facts else {},
+            'sev_hunt': hunt_view(game, 'MG02') if 'ST-104' in facts else {},
             'rescue': rescue_view(game) if state['capture_batches'] else {},
             'rescue_board': rescue_board,
             'preparation': prepare, 'construction': construction_view(game) if town else {},
             'town_services': town_services_view(game) if town else {},
             'consumables': consumables_view(game, town) if town or state['phase'] == 'EXPLORE' else {},
             'material_goal': material_goal_view(game, town) if town or state['phase'] == 'EXPLORE' else {},
-            'battle_memory': memory_view(battle),
+            'battle_memory': memory_view(game, battle),
             'whistle_cue': whistle_cue(state) if 'ST-104' in facts else '',
             'party': party, 'budget': state['budget'], 'route': route,
             'town_roster': {'copper': state['bank']['copper'],
