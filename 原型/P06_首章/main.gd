@@ -3,6 +3,7 @@ extends Control
 const Pipe = preload("res://pipe_client.gd")
 const Board = preload("res://hex_board.gd")
 const ArchivePage = preload("res://archive_page.gd")
+const MemoryPauseCard = preload("res://memory_pause_card.gd")
 const OpeningArt = preload("res://opening_art.gd")
 const SearchChart = preload("res://search_chart.gd")
 const CombatTile = preload("res://combat_tile.gd")
@@ -1110,7 +1111,9 @@ func _render() -> void:
 			_explore_actions()
 		elif phase == "BATTLE":
 			var memory: Dictionary = view.get("battle_memory", {})
-			if not memory.is_empty():
+			if memory.get("general_id") == "MG01":
+				_ado_memory_actions(memory)
+			elif not memory.is_empty():
 				_memory_actions(memory, "memory")
 		elif phase == "MISSING_SEARCH":
 			_search_actions()
@@ -2522,6 +2525,23 @@ func _plan_actions() -> void:
 		command_buttons["plan " + " ".join(next)].tooltip_text = plan.rule
 	if equipped.size() > 1:
 		_input_action("撤下战前方案", "plan", ["clear"])
+
+
+func _ado_memory_actions(memory: Dictionary) -> void:
+	var card := MemoryPauseCard.new()
+	card.name = &"AdoMemoryPause"
+	actions.add_child(card)
+	card.present(memory, view.get("actors", []), ADO_HUD_PORTRAIT)
+	var primary_text := "出示%s与证词" % memory.item if memory.choice == "evidence" else "保留这段记忆"
+	var primary := _input_action(primary_text, "memory", [memory.choice, memory.id], "", memory.enabled, card.choices)
+	if memory.enabled:
+		primary.theme_type_variation = &"FieldPrimary"
+	else:
+		primary.focus_mode = Control.FOCUS_NONE
+	var skip := _input_action("跳过这段记忆", "memory", ["skip", memory.id], "", true, card.choices)
+	for button: Button in [primary, skip]:
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size.y = 46
 
 
 func _memory_actions(memory: Dictionary, command: String) -> void:
@@ -4127,11 +4147,16 @@ func _input(event: InputEvent) -> void:
 		_archive_page.scroll.scroll_vertical += direction * int(_archive_page.scroll.size.y * 0.85)
 		get_viewport().set_input_as_handled()
 		return
-	if event is InputEventKey and event.pressed and event.keycode == KEY_SPACE and _can_toggle_playback():
-		if not event.is_echo():
-			_toggle_playback()
-		get_viewport().set_input_as_handled()
-		return
+	if event is InputEventKey and event.keycode == KEY_SPACE:
+		# The battle playback key must not choose a focused memory response.
+		if actions != null and actions.is_visible_in_tree() and actions.has_node(^"AdoMemoryPause"):
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and _can_toggle_playback():
+			if not event.is_echo():
+				_toggle_playback()
+			get_viewport().set_input_as_handled()
+			return
 	if event is InputEventKey and event.is_echo() and (event.is_action("ui_accept") or event.is_action("ui_cancel")):
 		get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
