@@ -124,6 +124,7 @@ var books_open := false
 var _previewed_book: Dictionary = {}
 var whistle_open := false
 var scarf_open := false
+var _general_evidence_open := ""
 var caption_index := 0
 var _opening_art: OpeningArt
 var _search_chart: SearchChart
@@ -594,6 +595,7 @@ func _refresh(row: Dictionary) -> void:
 	var previous_whistle: String = view.get("whistle", {}).get("stage", "")
 	var previous_chapter: Dictionary = view.get("chapter", {})
 	var previous_scarf: String = view.get("scarf", {}).get("stage", "")
+	var previous_evidence: String = view.get("later_evidence", {}).get(_general_evidence_open, {}).get("stage", "")
 	var prior_recall: Dictionary = view.get("town_memory", {})
 	var returned_report := _pending_hunt_report(view, true)
 	var previous_battle_memory: Dictionary = view.get("battle_memory", {})
@@ -708,6 +710,14 @@ func _refresh(row: Dictionary) -> void:
 				"done":
 					var sev: Dictionary = view.sev_hunt
 					focus_key = "remember MG02" if sev.defeated and sev.evidence and not sev.awakened else "scarf-section"
+		var original: Dictionary = view.get("later_evidence", {}).get(_general_evidence_open, {})
+		if not original.is_empty() and previous_evidence != original.stage:
+			match original.stage:
+				"witness": focus_key = "quest " + original.id + " witness"
+				"collect": focus_key = "quest " + original.id + " collect CONFIRM" if original.short.is_empty() else "general-materials"
+				"done":
+					var hunt := _hunt_by_id(original.id)
+					focus_key = "remember " + original.id if hunt.get("defeated", false) and not hunt.awakened else "general-evidence-" + original.id
 		var recall: Dictionary = view.get("town_memory", {})
 		if recall.get("id") != prior_recall.get("id"):
 			town_tab = "chapter"
@@ -1533,6 +1543,8 @@ func _chapter_actions() -> void:
 				_scarf_section(view.scarf)
 	else:
 		_whistle_section()
+	for original: Dictionary in view.get("later_evidence", {}).values():
+		_general_evidence_section(original)
 	_ev07_report(view.get("ev07", {}))
 
 
@@ -1731,6 +1743,44 @@ func _toggle_scarf() -> void:
 	_render()
 
 
+func _general_evidence_section(original: Dictionary) -> void:
+	var opened_here: bool = _general_evidence_open == original.id
+	var title := "%s · %s" % [original.general, original.item]
+	_button("收起" + title if opened_here else title, "general-evidence-" + original.id,
+		_toggle_general_evidence.bind(original.id))
+	if not opened_here:
+		return
+	for receipt: String in [original.record, original.witness]:
+		if not receipt.is_empty():
+			_label(actions, receipt, MUTED, 16)
+	match original.stage:
+		"record":
+			_input_action("查阅医舍寄存记录" if original.id == "MG03" else "查阅工具归还单",
+				"quest", [original.id, "record"])
+		"witness":
+			_input_action("当面核实证词", "quest", [original.id, "witness"])
+		"collect":
+			var fee := _service_cost(original.cost)
+			if not original.short.is_empty():
+				_label(actions, "仓库还缺%s。可登记材料委托，安全归城后入库。" % _service_cost(original.short), MUTED, 16)
+				_button("查看材料委托", "general-materials", _town_tab.bind("items"))
+			_input_action("取回%s · %s" % [original.item, fee], "quest", [original.id, "collect", "CONFIRM"],
+				"支付%s，从原保管人处取回%s，记入任务物品。" % [fee, original.item], original.short.is_empty())
+		"done":
+			_label(actions, "%s已入任务物品" % original.item, MUTED, 16)
+			var receipt: Dictionary = original.collection
+			if not receipt.get("paid", {}).is_empty():
+				_label(actions, "第 %d 日取回 · 支付 %s" % [int(receipt.day), _service_cost(receipt.paid)], MUTED, 16)
+		"field":
+			_label(actions, original.field_location + " 已登记为现场自取。", MUTED, 16)
+
+
+func _toggle_general_evidence(general_id: String) -> void:
+	_general_evidence_open = "" if _general_evidence_open == general_id else general_id
+	focus_key = "general-evidence-" + general_id
+	_render()
+
+
 func _hunt_reward(hunt: Dictionary) -> String:
 	return "「%s」×1 · 应召印 ×%d" % [hunt.report_book.name, int(hunt.report_seals)]
 
@@ -1785,9 +1835,10 @@ func _hunt_archive(hunt: Dictionary) -> void:
 	var records: Array = hunt.memory_records
 	if hunt.awakened:
 		_label(actions, "%s已保留记忆" % hunt.name, INK, 16)
-	elif hunt.evidence:
+	elif hunt.evidence and not records.is_empty():
 		var first: Dictionary = records[0]
-		var caption := "凭铜哨和证词开始追忆" if hunt.id == "MG01" else "凭红围巾和证词开始追忆"
+		var item: String = {"MG01": "铜哨", "MG02": "红围巾"}.get(hunt.id, hunt.item)
+		var caption := "凭%s和证词开始追忆" % item
 		if first.committed:
 			caption = "继续追忆 · 第 2 段"
 		elif first.skipped:
@@ -1798,7 +1849,9 @@ func _hunt_archive(hunt: Dictionary) -> void:
 		if not hunt.has_item:
 			missing.append(hunt.item)
 		if not hunt.has_testimony:
-			missing.append("秦姨核实的证词" if hunt.id == "MG01" else "镇民核实的证词")
+			var testimony := {"MG01": "秦姨核实的证词", "MG02": "镇民核实的证词",
+				"MG03": "医舍核实的证词", "MG04": "工具保管人核实的证词"}
+			missing.append(testimony[hunt.id])
 		_label(actions, "追忆尚缺" + "、".join(missing) + "。", MUTED, 16)
 	if records.any(func(record: Dictionary) -> bool: return record.committed):
 		_button("回看已提交的追忆对白", _remembrance_key(hunt.id), _toggle_remembrance_history.bind(hunt.id))
