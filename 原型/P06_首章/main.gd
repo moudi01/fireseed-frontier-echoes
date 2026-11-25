@@ -88,6 +88,7 @@ var captions_open := false
 var _asked_about_old_company := false
 var town_tab := "chapter"
 var construction_project := ""
+var finale_preview_open := false
 var research_member_id := ""
 var outfit_selection: Array[String] = []
 var outfit_editing := false
@@ -841,6 +842,11 @@ func _busy(value: bool) -> void:
 
 func _display_location() -> String:
 	var phase: String = view.get("phase", "TOWN")
+	var finale: Dictionary = view.get("finale", {})
+	if phase == "BATTLE" and not finale.is_empty():
+		return "%s   /   连续战斗第 %d 拍" % [_finale_battle_title(finale.stage), int(view.battle_view.tick)]
+	if phase in ["FINAL_CHOICE", "FINAL_REGROUP", "FINISHED"]:
+		return {"FINAL_CHOICE": "终战入口 · 身份选择", "FINAL_REGROUP": "终战 · 幸存者重整", "FINISHED": "本轮结束"}[phase]
 	if phase in ["TOWN", "RETURNED", "FAILED", "FIN_C"]:
 		return "暮汀   /   行动日 %d   /   补给 %d" % [int(view.get("day", 0)), int(view.get("supply", 0))]
 	if phase == "MISSING_SEARCH":
@@ -910,6 +916,8 @@ func _render() -> void:
 	var region := str(view.get("region_name", ""))
 	if showing_opening or phase in ["TOWN", "RETURNED", "FAILED", "FIN_C"]:
 		region = "暮汀"
+	elif phase in ["FINAL_CHOICE", "FINAL_REGROUP", "FINISHED"] or not view.get("finale", {}).is_empty():
+		region = "终战"
 	elif phase == "MISSING_SEARCH":
 		region = str(view.rescue.active.get("origin_region", ""))
 		if region.is_empty():
@@ -942,7 +950,7 @@ func _render() -> void:
 	if not (opened and phase == "TOWN" and (chapter_history_open or books_open) and not showing_opening and not settings_open
 			and not client.blocked and (confirmation.is_empty() or books_open) and view.get("hunt", {}).get("memory", {}).is_empty()):
 		_archive_page.dismiss()
-	board.deployment_open = _can_edit_deployment()
+	board.deployment_open = _can_edit_deployment() and phase != "FINAL_REGROUP"
 	var actions_started := Time.get_ticks_usec() if profile_panels else 0
 	if show_combat:
 		_update_combat_actions(snapshot)
@@ -997,9 +1005,18 @@ func _render() -> void:
 				_memory_actions(memory, "memory")
 		elif phase == "MISSING_SEARCH":
 			_search_actions()
+		elif phase == "FINAL_CHOICE":
+			_finale_identity(view.finale)
+		elif phase == "FINAL_REGROUP":
+			_finale_regroup(view.finale)
+		elif phase == "FINISHED":
+			_finale_ending(view.finale)
 		elif phase == "FIN_C":
-			_label(actions, "本轮结束 · 名册已无可救回人员", ALERT, 23)
-			_rescue_office(false)
+			if view.get("finale", {}).get("ending", {}).get("cause") not in [null, "HUMANITY_EXTINCT"]:
+				_finale_ending(view.finale)
+			else:
+				_label(actions, "本轮结束 · 名册已无可救回人员", ALERT, 23)
+				_rescue_office(false)
 		if opened and not captions_open and not view.get("opening_lines", []).is_empty():
 			_button("回看开场字幕", "opening-replay", _replay_opening)
 	if not show_combat and not show_confirmation:
@@ -1183,6 +1200,9 @@ func _town_actions() -> void:
 	var research: Dictionary = view.get("research", {})
 	if not research.is_empty():
 		_button("遗迹研究", "town-research", _town_tab.bind("research"), town_tab != "research")
+	var finale: Dictionary = view.get("finale", {})
+	if not finale.is_empty():
+		_button("终战整备", "town-finale", _town_tab.bind("finale"), town_tab != "finale")
 	_button("队伍与装备" if complete else "出发前整备", "town-roster", _town_tab.bind("roster"), town_tab != "roster")
 	if has_books:
 		_button("技能书", "town-skills", _town_tab.bind("skills"), town_tab != "skills")
@@ -1206,6 +1226,9 @@ func _town_actions() -> void:
 		return
 	if town_tab == "research" and not research.is_empty():
 		_research_actions(research)
+		return
+	if town_tab == "finale" and not finale.is_empty():
+		_finale_preparation(finale)
 		return
 	if town_tab == "items":
 		_consumables_actions(true)
@@ -1280,6 +1303,7 @@ func _town_tab(tab: String, project := "") -> void:
 	chapter_history_open = false
 	remembrance_history_open = false
 	construction_project = project
+	finale_preview_open = false
 	research_member_id = ""
 	outfit_selection.clear()
 	outfit_editing = false
@@ -1672,6 +1696,93 @@ func _research_actions(research: Dictionary) -> void:
 		"deliver":
 			_input_action("交付研究结果", "research", ["deliver", "CONFIRM"],
 				"将隔离验证结果与四将讨伐报告交存，完成第三章。")
+
+
+func _toggle_finale_preview() -> void:
+	finale_preview_open = not finale_preview_open
+	focus_key = "finale-preview"
+	_render()
+
+
+func _finale_preparation(finale: Dictionary) -> void:
+	_label(actions, "终战整备", GOLD, 24)
+	_label(actions, "路线 %s · %s" % [finale.route, "携带 Agla" if finale.agla_carried else "Agla 未携带"], INK, 17)
+	var budget: Dictionary = finale.budget
+	_label(actions, "整备后出征预算 %d Cost · 战斗预算 %d Cost" % [int(budget.expedition), int(budget.battle)], MUTED, 16)
+	_button("查看随队成员与装备", "finale-roster", _town_tab.bind("roster"))
+	var worn: Dictionary = view.get("equipment", {}).get("worn", {})
+	for member: Dictionary in view.party:
+		if member.deployed:
+			var items: Array = worn.get(member.instance_id, [])
+			var loadout := " · " + "、".join(items.map(func(item: Dictionary): return item.name)) if not items.is_empty() else ""
+			_label(actions, "%s · %d/%d HP%s" % [_name(member), int(member.hp), int(member.max_hp), loadout], MUTED, 16)
+	_button("收起敌阵预览" if finale_preview_open else "查看两战敌阵", "finale-preview", _toggle_finale_preview)
+	if finale_preview_open:
+		for fight: Dictionary in finale.previews:
+			_label(actions, fight.title, GOLD, 17)
+			for unit: Dictionary in fight.units:
+				var skills: PackedStringArray = []
+				for move: Dictionary in unit.moves:
+					var description := "%s · 蓄势 %d 拍" % [move.name, int(move.windup)]
+					if int(move.range) > 0 and int(move.range) < 99:
+						description += " · 射程 %d" % int(move.range)
+					skills.append(description)
+				_label(actions, "%s · %d HP
+%s" % [unit.name, int(unit.hp), "、".join(skills)], MUTED, 16)
+		_label(actions, "管理员生命降至 25% 时启动格式化倒计时。", MUTED, 16)
+	if not finale.blocker.is_empty():
+		_label(actions, finale.blocker, ALERT, 16)
+	if finale.prepared:
+		_input_action("单向进入终战", "finale", ["enter", "CONFIRM"], finale.risk, finale.blocker.is_empty())
+	else:
+		_input_action("确认终战整备", "finale", ["prepare", "CONFIRM"], finale.risk, finale.blocker.is_empty())
+
+
+func _finale_battle_title(stage: String) -> String:
+	return "初生魔王" if stage == "DEMON" else "管理员"
+
+
+func _finale_identity(finale: Dictionary) -> void:
+	_label(actions, "决定是否保留独立人格", GOLD, 24)
+	for line: String in finale.identity:
+		_label(actions, line, INK, 17)
+	_input_action("保留独立人格", "finale", ["choice", "KEEP_SELF"], "独立人格仍由你掌握。确认后迎战初生魔王。")
+
+
+func _finale_regroup(finale: Dictionary) -> void:
+	_label(actions, "重整幸存者", GOLD, 24)
+	_label(actions, "连续战斗第 %d 拍 · 生命、技能次数和时钟延续" % int(finale.reports[0].tick), INK, 17)
+	for member: Dictionary in view.party:
+		var id: String = member.instance_id
+		var available: bool = member.deployable and int(member.injury_days) == 0
+		var status := ("上阵" if member.deployed else "预备") if available else "失能"
+		_button("%s · %s · %d/%d HP" % [_name(member), status, int(member.hp), int(member.max_hp)],
+			"member-" + id, _choose_member.bind(id), available)
+		if finale.fatigue.has(id):
+			var receipt: Dictionary = finale.fatigue[id]
+			_label(actions, "后备损耗 · %d → %d HP" % [int(receipt.before), int(receipt.after)], MUTED, 16)
+		if id == selected_id and available:
+			_input_action("撤下部署" if member.deployed else "加入部署", "finale",
+				["deploy", id, "off" if member.deployed else "on"])
+			_deployment_cells(id, view.town_deploy_cells)
+	if not finale.blocker.is_empty():
+		_label(actions, finale.blocker, ALERT, 16)
+	_input_action("迎战管理员", "finale", ["fight", "CONFIRM"], "沿用当前幸存者与阵位，连续进入第二场终战。",
+		finale.blocker.is_empty())
+
+
+func _finale_ending(finale: Dictionary) -> void:
+	var ending: Dictionary = finale.get("ending", {})
+	if ending.is_empty():
+		return
+	_label(actions, ending.title, GOLD, 24)
+	_label(actions, ending.text, INK, 17)
+	if not finale.reports.is_empty():
+		_label(actions, "终战记录", GOLD, 17)
+		for report: Dictionary in finale.reports:
+			var stage := "DEMON" if report.encounter_id == "BATTLE-DEMON" else "ADMIN"
+			_label(actions, "%s · %s · 第 %d 拍" % [
+				_finale_battle_title(stage), REASONS.get(report.result, report.result), int(report.tick)], MUTED, 16)
 
 
 func _construction_status(project: Dictionary) -> String:
@@ -2461,7 +2572,11 @@ func _sync_battle_rows(roster: Array) -> void:
 
 func _update_combat_actions(snapshot: Dictionary) -> void:
 	var target: Dictionary = view.get("rescue", {}).get("target", {})
+	var finale: Dictionary = view.get("finale", {})
 	_battle_heading.text = "战报" if _battle_log_open else ("转运点救援" if not target.is_empty() else "")
+	if not _battle_log_open and not finale.is_empty():
+		_battle_heading.text = _finale_battle_title(finale.stage)
+	command_buttons["flee CONFIRM"].visible = finale.is_empty()
 	_battle_heading.visible = not _battle_heading.text.is_empty()
 	var plans: Array = snapshot.get("plan_names", [])
 	_battle_plans.visible = not plans.is_empty()
@@ -2474,6 +2589,12 @@ func _update_combat_actions(snapshot: Dictionary) -> void:
 		var px := 21 if settings["大字"] else 16
 		if _battle_rescue.get_theme_font_size("font_size") != px:
 			_battle_rescue.add_theme_font_size_override("font_size", px)
+	if finale.get("stage") == "ADMIN":
+		_battle_rescue.visible = true
+		var countdown: Variant = finale.get("countdown")
+		_battle_rescue.text = "格式化未启动" if countdown == null else "格式化倒计时 · %d 拍" % int(countdown)
+		if finale.get("route") == "B":
+			_battle_rescue.text += " · 接入 %d/%d" % [int(finale.interface_progress), int(finale.interface_required)]
 	_live_battle_log.visible = _battle_log_open
 	_battle_roster.visible = not _battle_log_open
 	command_buttons["battle-log"].text = "关闭战报" if _battle_log_open else "战报"
@@ -3160,8 +3281,11 @@ func _deployment_cells(id: String, cells: Array) -> void:
 		caption += " · %d,%d" % [selected_cell.x, selected_cell.y]
 	_button(caption, "deployment-cells", _toggle_deployment_cells)
 	if selected:
-		_button("旋转朝向 · %d" % selected_facing, "facing", _rotate_facing)
-		_input_action("确认阵位", "place", [id, str(selected_cell.x), str(selected_cell.y), str(selected_facing)])
+		if view.get("phase") == "FINAL_REGROUP":
+			_input_action("确认阵位", "finale", ["place", id, str(selected_cell.x), str(selected_cell.y)])
+		else:
+			_button("旋转朝向 · %d" % selected_facing, "facing", _rotate_facing)
+			_input_action("确认阵位", "place", [id, str(selected_cell.x), str(selected_cell.y), str(selected_facing)])
 	if not deployment_cells_open:
 		return
 	var grid := GridContainer.new()
@@ -3275,7 +3399,7 @@ func _board_cell(cell: Vector2i) -> void:
 		return
 	selected_cell = cell
 	deployment_cells_open = false
-	focus_key = "facing"
+	focus_key = "finale place %s %d %d" % [selected_id, cell.x, cell.y] if view.get("phase") == "FINAL_REGROUP" else "facing"
 	_render()
 
 
@@ -3301,6 +3425,8 @@ func _can_edit_deployment() -> bool:
 func _show_deployment() -> bool:
 	if not opened or captions_open:
 		return false
+	if view.get("phase") == "FINAL_REGROUP":
+		return true
 	if view.get("phase") == "TOWN":
 		return view.get("commissioned", false) and town_tab not in ["skills", "construction", "logistics", "items"] \
 			and (not view.get("complete", false) or town_tab == "roster") \

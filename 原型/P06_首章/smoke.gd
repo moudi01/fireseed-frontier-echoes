@@ -444,13 +444,13 @@ func _keyboard_deploy() -> bool:
 	return false
 
 
-func _press_cell(key: String) -> bool:
+func _press_cell(key: String, next_focus := "facing") -> bool:
 	if not app.command_buttons.has(key) and not await _press("deployment-cells"):
 		return false
 	if not await _press(key):
 		return false
-	if app.command_buttons.has(key) or not await _wait_focus("facing"):
-		failure = "Selecting a slot did not collapse the grid and focus rotation"
+	if app.command_buttons.has(key) or not await _wait_focus(next_focus):
+		failure = "Selecting a slot did not collapse the grid and focus its next control"
 		return false
 	return true
 
@@ -1566,6 +1566,124 @@ func _check_campaign_research() -> void:
 		return
 	side_checks["research"] = research
 	side_checks["research_budget"] = budget
+
+
+func _finale_steps() -> bool:
+	var snapshot: Dictionary = app.view.battle_view
+	var encounter: String = snapshot.encounter
+	if app.board.coordinate_map.is_empty() or app.command_buttons["flee CONFIRM"].visible:
+		failure = "The finale battle did not open its board or still offered retreat"
+		return false
+	if encounter == "BATTLE-ADMIN" and int(snapshot.tick) != int(app.view.finale.reports[0].tick):
+		failure = "The second battle reset the first battle's clock"
+		return false
+	for i in range(320):
+		if app.view.phase != "BATTLE":
+			var report: Dictionary = app.view.finale.reports[-1]
+			if report.encounter_id != encounter:
+				failure = "The finale was missing its completed battle report"
+				return false
+			return true
+		if not await _command("step"):
+			return false
+	failure = "Finale fight exceeded the smoke step limit: " + encounter
+	return false
+
+
+func _campaign_finale_route() -> void:
+	var path: String = app.data_dir.path_join(app.case_name + ".finale-commands.json")
+	var route: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not route is Dictionary or not route.get("commands") is Array:
+		failure = "Missing native finale route: " + path
+		return
+	var victories: Array[String] = []
+	for value in route.commands:
+		var key := str(value)
+		var args := key.split(" ")
+		match args[0]:
+			"maintain", "rest", "depart", "buy_supply", "pack_medical":
+				if not await _ado_tab("expedition"):
+					return
+			"summon":
+				if not await _ado_tab("chapter"):
+					return
+			"recruit", "squad", "level_up":
+				if not await _ado_tab("roster"):
+					return
+				if args[0] == "level_up" and not await _route_member_action(args):
+					return
+				if args[0] == "squad" and args[2] == "off" and app.selected_id != args[1] \
+						and not await _press("member-" + args[1]):
+					return
+			"book":
+				if args[1] == "choice":
+					if not await _ado_tab("research"):
+						return
+				else:
+					if not await _ado_tab("skills"):
+						return
+					if app.selected_id != args[2] and not await _press("book-member-" + args[2]):
+						return
+			"place", "stance", "deploy":
+				if app.view.phase == "TOWN" and not await _ado_tab("roster"):
+					return
+				if not await _route_member_action(args):
+					return
+			"finale":
+				if args[1] in ["prepare", "enter"] and not await _ado_tab("finale"):
+					return
+				if args[1] == "prepare" and not app.finale_preview_open:
+					if not await _press("finale-preview") or not _panel_has("管理员生命降至 25%") \
+							or not _panel_has("初生魔王") or not await _press("finale-preview"):
+						failure = "The finale preview omitted actual opponents or the formatting warning"
+						return
+				if args[1] in ["deploy", "place"] and not await _press("member-" + args[2]):
+					return
+				if args[1] == "place" and not await _press_cell("cell-%s-%s" % [args[3], args[4]], key):
+					return
+			"run":
+				if app.view.get("finale", {}).get("stage") in ["DEMON", "ADMIN"]:
+					if not await _finale_steps():
+						return
+				elif not await _ado_steps(victories):
+					return
+				continue
+		if not await _command(key):
+			return
+		if key == "finale prepare CONFIRM":
+			var budget: Dictionary = app.view.budget
+			if budget.milestone != "FINALE_READY" or int(budget.expedition) != 24 or int(budget.battle) != 20:
+				failure = "Finale preparation did not grant the authoritative budget"
+				return
+		if key == "finale enter CONFIRM" and (app.view.phase != "FINAL_CHOICE" or app.command_buttons.has("step") \
+				or not app.command_buttons.has("finale choice KEEP_SELF")):
+			failure = "Entry bypassed the player's identity choice"
+			return
+	side_checks["training_victories"] = victories
+	if mode == "finale-training":
+		if app.view.get("phase") != "TOWN" or not app.view.finale.get("prepared", false):
+			failure = "Finale training did not leave a prepared town save"
+		return
+	await _check_campaign_ending("FIN-C" if mode == "finale-defeat" else "FIN-A")
+
+
+func _check_campaign_ending(id: String) -> void:
+	var ending: Dictionary = app.view.get("finale", {}).get("ending", {})
+	if ending.get("id") != id or not _panel_has(ending.get("title", "")) \
+			or app.command_buttons.has("step") or app.command_buttons.has("finale enter CONFIRM"):
+		failure = "The sealed finale ending did not reopen as a result"
+		return
+	var reports: Array = app.view.finale.reports
+	if id == "FIN-A" and (reports.size() != 2 or reports[0].encounter_id != "BATTLE-DEMON" \
+			or reports[1].encounter_id != "BATTLE-ADMIN" or not reports.all(func(row: Dictionary): return row.result == "VICTORY")):
+		failure = "The A ending lacks both actual victories"
+		return
+	if id == "FIN-C" and (reports.is_empty() or reports[-1].result != "DEFEAT"):
+		failure = "The C result lacks its actual defeat"
+		return
+	side_checks["finale_ending"] = ending
+	side_checks["finale_reports"] = reports
+	await _capture("ending")
 
 
 func _fortress_frame() -> bool:
@@ -4751,7 +4869,7 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
-	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "research-route", "research-resume", "research-early", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
+	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "research-route", "research-resume", "research-early", "finale-route", "finale-defeat", "finale-training", "finale-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
 		await _check_receipt_boot()
@@ -4906,6 +5024,10 @@ func _run() -> void:
 			await _campaign_research_route()
 		elif mode == "research-resume":
 			await _check_campaign_research()
+		elif mode in ["finale-route", "finale-defeat", "finale-training"]:
+			await _campaign_finale_route()
+		elif mode == "finale-resume":
+			await _check_campaign_ending(app.view.get("finale", {}).get("ending", {}).get("id", "FIN-A"))
 		elif mode == "ado-sample":
 			if failure.is_empty():
 				await _ado_sample()

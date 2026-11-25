@@ -10,7 +10,7 @@ COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'd
             'town', 'book', 'summon', 'equip', 'unequip', 'dialogue', 'challenge', 'depart',
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
-            'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research'}
+            'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research', 'finale'}
 MEMBER_ID = r'[A-Za-z0-9_-]{1,80}'
 CONSUMABLE_TARGETS = rf'{MEMBER_ID}(?:,{MEMBER_ID}){{0,5}}'
 CONSUMABLE_CODES = tuple(f'CO{number:02}' for number in range(1, 13))
@@ -106,6 +106,15 @@ def valid_command(command, args):
             return args[0] in PARTY_CONSUMABLES
         return (len(args) == 2 and args[0] in CONSUMABLE_CODES[:-2]
                 and len(args[1]) <= 256 and bool(re.fullmatch(CONSUMABLE_TARGETS, args[1])))
+    if command == 'finale':
+        if tuple(args) in {('prepare', 'CONFIRM'), ('enter', 'CONFIRM'),
+                          ('choice', 'KEEP_SELF'), ('fight', 'CONFIRM')}:
+            return True
+        if len(args) < 3 or not re.fullmatch(MEMBER_ID, args[1]):
+            return False
+        if args[0] == 'deploy':
+            return len(args) == 3 and args[2] in ('on', 'off')
+        return len(args) == 4 and args[0] == 'place' and all(re.fullmatch(r'-?[0-9]{1,2}', value) for value in args[2:])
     if command == 'research':
         return (tuple(args) in {('analyze', 'CONFIRM'), ('test', 'CONFIRM'), ('deliver', 'CONFIRM')}
                 or (len(args) == 3 and args[0] == 'correlate'
@@ -1383,6 +1392,75 @@ def scouting_view(state):
             'ready': not missing and observed and not state['debug_tainted'], 'delivered_here': delivered_here}
 
 
+def finale_enemy_preview(game, encounter):
+    units = []
+    for unit in encounter['units']:
+        kind = unit['enemy_id']
+        name = game.cat.enemy_templates.get(kind, {}).get('name', kind)
+        moves = [{key: move.get(key) for key in ('name', 'windup', 'range')} for move in unit.get('moves', [])]
+        units.append({'id': kind, 'name': name, 'hp': unit['stats']['hp'], 'moves': moves})
+    return units
+
+
+def finale_view(game):
+    import finale
+
+    state = game.s
+    final = state['finale']
+    end = final['ending']
+    run = final['run']
+    is_town = state['phase'] == 'TOWN'
+    facts = state['campaign']['facts']
+    if not end and not run and not (is_town and 'CH3_COMPLETE' in facts):
+        return {}
+    result = {'route': run['route'] if run else ('B' if finale.carried(game) else 'A'),
+              'agla_carried': run['agla_carried'] if run else finale.carried(game),
+              'risk': finale.RISK, 'stage': run['stage'] if run else 'PREPARATION',
+              'reports': [{key: report[key] for key in ('encounter_id', 'battle_id', 'result', 'tick')}
+                          for report in run['reports']] if run else []}
+    if end:
+        result['ending'] = {'id': end['ending_id'], 'title': finale.ENDINGS[end['ending_id']][0],
+                            'text': finale.ending_text(game).split('\n', 1)[-1], 'cause': end['cause'],
+                            'member_losses': len(end['grade']['lost']), 'held': len(end['grade']['captives'])}
+        return result
+    if run and run['stage'] == 'IDENTITY':
+        result['identity'] = [
+            '你是魔王建立的独立分身，一直借用旧指挥官的脑体。',
+            '上代最后一次回头来自档案。现在由你决定是否保留独立人格。',
+        ]
+    if run and run['stage'] == 'REGROUP':
+        result['fatigue'] = run['reserve_fatigue']
+    if state['battle'] and state['battle'].get('finale'):
+        battle = state['battle']['finale']
+        result['countdown'] = battle['remaining']
+        result['countdown_limit'] = battle['duration']
+        if battle['route'] == 'B':
+            result['interface_progress'] = battle['channel']['progress']
+            result['interface_required'] = battle['channel_ticks']
+    if is_town or (run and run['stage'] == 'REGROUP'):
+        blocker = ''
+        try:
+            finale.legal_party(game)
+        except ValueError as error:
+            blocker = str(error)
+        if state['debug_tainted']:
+            blocker = '调试存档无法进入正式终战。'
+        if is_town:
+            if result['agla_carried']:
+                blocker = '当前携带 Agla。此处开放普通继任路线整备。'
+            result['budget'] = next(row for row in game.cat.rules['command_budgets'] if row['milestone'] == 'FINALE_READY')
+            result['prepared'] = bool(final['preparation'])
+            result['previews'] = [
+                {'title': title, 'units': finale_enemy_preview(game, encounter)}
+                for title, encounter in (
+                    ('初生魔王', finale.lock_demon(game)),
+                    ('管理员', game.cat.encounter_for_board('BATTLE-ADMIN', finale.BOARD)),
+                )
+            ]
+        result['blocker'] = blocker
+    return result
+
+
 def make_view(game, ledger, primary, committed_save_version=None):
     import region_space as space
     state = game.s
@@ -1392,7 +1470,10 @@ def make_view(game, ledger, primary, committed_save_version=None):
     battle = state.get('battle')
     active = space.active(game)
     route = route_view(game) if active else {}
-    board_id = 'OPEN'
+    if state['phase'] == 'FINAL_REGROUP':
+        from finale import BOARD as board_id
+    else:
+        board_id = 'OPEN'
     summary = settlement_view(game)
     cap = (state.get('manifest') or {}).get('caps', {}).get('gear_claims', 0)
     offers = trip.get('gear_offers', []) if 'G' in route.get('cleared', []) else []
@@ -1409,6 +1490,9 @@ def make_view(game, ledger, primary, committed_save_version=None):
     can_plan = state['phase'] in ('TOWN', 'EXPLORE')
     tutorial_explore = state['phase'] == 'EXPLORE' and state['mission'] == 'TUTORIAL'
     hunts = {general: hunt_view(game, general) for general in HUNT_GENERALS}
+    finale = finale_view(game)
+    if finale.get('reports'):
+        reports = finale['reports']
     return {'phase': state['phase'], 'site': state['site'], 'day': state['day'],
             'region': state['region'], 'region_name': game.cat.regions[state['region']]['name'] if active else '',
             'supply': state['bank']['supply'], 'medical': state['medical'],
@@ -1418,7 +1502,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'tutorial_area': active and state['mission'] == 'TUTORIAL',
             'tutorial_return': state['mission'] == 'TUTORIAL',
             'hunts': [hunt for hunt in hunts.values() if hunt],
-            'hunt': hunts['MG01'], 'sev_hunt': hunts['MG02'],
+            'hunt': hunts['MG01'], 'sev_hunt': hunts['MG02'], 'finale': finale,
             'rescue': rescue_view(game) if state['capture_batches'] else {},
             'rescue_board': rescue_board,
             'preparation': prepare, 'construction': construction_view(game) if town else {},
@@ -1503,7 +1587,9 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
         line = {'speaker': speaker, 'text': record['text']}
     board = None
     battle = game.s.get('battle')
-    if game.s['phase'] == 'BATTLE':
+    if game.s['phase'] == 'BATTLE' and battle and battle.get('finale'):
+        board = {'battle_cells': battle['board_cells']}
+    elif game.s['phase'] == 'BATTLE':
         # Live and terminal battle views use this geometry. Exploration is
         # projected again when the battle ends, with the current fog and contacts.
         space = region_space.current(game)
