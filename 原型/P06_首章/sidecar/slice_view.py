@@ -11,7 +11,7 @@ COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'd
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
             'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research', 'finale',
-            'event', 'case', 'water', 'medicine', 'agla'}
+            'event', 'case', 'water', 'medicine', 'agla', 'thread'}
 MEMBER_ID = r'[A-Za-z0-9_-]{1,80}'
 CONSUMABLE_TARGETS = rf'{MEMBER_ID}(?:,{MEMBER_ID}){{0,5}}'
 CONSUMABLE_CODES = tuple(f'CO{number:02}' for number in range(1, 13))
@@ -67,6 +67,10 @@ PROTECTION_CASES = {
     'EV28': ('event', 'escort'),
 }
 EVENT_ESCORT_CASES = ('EV07', 'EV28')
+THREAD_FIXED_ACTIONS = {(action, 'CONFIRM') for action in ('inquire', 'follow', 'answer', 'deliver')}
+THREAD_MODES = ('SUPPLY', 'TRACE')
+THREAD_SOURCES = '(?:' + '|'.join(PROTECTION_CASES) + ')'
+THREAD_ASSEMBLY = rf'{THREAD_SOURCES}(?:,{THREAD_SOURCES}){{2}}'
 LOCAL_PROTECTION_ACTIONS = {('EV12', 'destroy', 'CONFIRM'), ('EV16', 'receive', 'CONFIRM'),
                             ('EV22', 'release', 'CONFIRM'), ('EV25', 'receive', 'CONFIRM')}
 
@@ -150,6 +154,12 @@ def valid_command(command, args):
             return args[0] in PARTY_CONSUMABLES
         return (len(args) == 2 and args[0] in CONSUMABLE_CODES[:-2]
                 and len(args[1]) <= 256 and bool(re.fullmatch(CONSUMABLE_TARGETS, args[1])))
+    if command == 'thread':
+        return (tuple(args) in THREAD_FIXED_ACTIONS
+                or (len(args) == 3 and args[0] == 'assemble' and args[2] == 'CONFIRM'
+                    and bool(re.fullmatch(THREAD_ASSEMBLY, args[1])))
+                or (len(args) == 4 and args[0] == 'commission' and args[1] in THREAD_MODES
+                    and args[2] in PROTECTION_CASES and args[3] == 'CONFIRM'))
     if command == 'finale':
         if tuple(args) in FINALE_FIXED_ACTIONS:
             return True
@@ -631,6 +641,59 @@ def protection_visit_route(game):
     neighbors = [b if here == a else a for a, b in layout['edges'] if here in (a, b)]
     return {'neighbors': neighbors, 'safe_return': here == 'I',
             'site_names': {node['id']: node['name'] for node in layout['nodes']}}
+
+
+def letter_thread_view(game):
+    import cases
+    import hidden_thread
+
+    result = hidden_thread.public(game)
+    if not result['discovered']:
+        return {}
+    state = game.s
+    data = hidden_thread.state(game)
+    attempts = result.pop('attempts')
+    result['history'] = [{'id': 'discovery', 'text': data['discovery']['text']}]
+    result['history'].extend({'id': action, 'text': data['steps'][action]['text']}
+                             for action in hidden_thread.ORDER if action in data['steps'])
+    if result['commission_targets']:
+        result['modes'] = [dict(spec, id=mode) for mode, spec in hidden_thread.ERRAND_MODES.items()]
+    plan = result['commission']
+    if not plan:
+        return result
+
+    spec = hidden_thread.ERRAND_MODES[plan['mode']]
+    region = plan['target_region']
+    result.update(target=game.cat.regions[region]['name'], site=spec['site'], mode=spec['name'],
+                  current_status='', previous_status=attempts[-1]['status'] if attempts else '')
+    if result['errand_complete']:
+        return result
+    if state['phase'] == 'TOWN' and state['mission'] == 'ORDINARY':
+        # Preview the same manifest as departure, including any due natural case.
+        for candidate in [*cases.guarantee_candidates(game), None]:
+            try:
+                manifest, _ = game.build_manifest(candidate)
+            except ValueError:
+                continue
+            result['departure_matches'] = region in manifest['regions']
+            if result['departure_matches']:
+                result['departure_extra'] = plan['supply']
+            break
+    elif state['phase'] == 'EXPLORE' and state['mission'] == 'ORDINARY':
+        attempt = next((row for row in attempts if row['expedition'] == state['expedition_no']
+                        and row['manifest_sha256'] == state['manifest']['manifest_sha256']), None)
+        if attempt:
+            result['current_status'] = attempt['status']
+            if (attempt['status'] == 'ACTIVE' and state['region'] == region
+                    and state['site'] == spec['site'] and not state['debug_tainted']):
+                if plan['mode'] == 'TRACE':
+                    try:
+                        hidden_thread._gate_report(state, region)
+                    except ValueError as exc:
+                        result['delivery_blocker'] = str(exc)
+                        return result
+                result['can_deliver'] = True
+    return result
 
 
 def deployment_error(game, board=None):
@@ -1928,6 +1991,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'field_book_rewards': field_book_rewards(game),
             'handbook_event': handbook_event_view(game),
             'protection_cases': protection_cases_view(game), 'fixed_protection_case': fixed_case,
+            'letter_thread': letter_thread_view(game),
             'chapter': chapter_view(game, commission) if town and 'ST-102' in facts else {},
             'whistle': whistle_view(game) if state['phase'] == 'TOWN' else {},
             'scarf': scarf_view(game) if town else {},

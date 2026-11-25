@@ -23,6 +23,16 @@ class DeploymentGame(Game):
             case = self.s.get('cases', {}).get(args[0])
             # The frozen client describes an old receipt as a successful command.
             require(not case or case['state'] != 'PROTECTED', '原案件已完成，沿用原回执。')
+        if command == 'thread':
+            action = args[0]
+            thread = self.s['hidden_thread']
+            require(action not in thread['steps'], '这一封回信已完成，请在回信记录回看。')
+            if action == 'commission':
+                require(thread['commission'] is None, '后续接应已经登记，不能重新登记。')
+            if action == 'deliver':
+                signed = any(row['expedition'] == self.s['expedition_no'] and row['delivery']
+                             for row in thread['attempts'])
+                require(not signed, '本趟凭据已签收，请安全归城。')
         if command == 'finale':
             phase = self.s['phase']
             final = self.s['finale']

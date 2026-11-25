@@ -207,6 +207,14 @@ def stage(source, output, release_id=None):
         {'prefixItems': [{'enum': list(view['EVENT_ESCORT_CASES'])}, {'const': 'escort'}, member, {'const': 'CONFIRM'}],
          'minItems': 4, 'maxItems': 4},
     ]}
+    constraints['thread'] = {'anyOf': [
+        {'enum': sorted(view['THREAD_FIXED_ACTIONS'])},
+        {'prefixItems': [{'const': 'assemble'}, {'pattern': '^' + view['THREAD_ASSEMBLY'] + '$'},
+                         {'const': 'CONFIRM'}], 'minItems': 3, 'maxItems': 3},
+        {'prefixItems': [{'const': 'commission'}, {'enum': list(view['THREAD_MODES'])},
+                         {'enum': sorted(view['PROTECTION_CASES'])}, {'const': 'CONFIRM'}],
+         'minItems': 4, 'maxItems': 4},
+    ]}
     constraints['case'] = {'anyOf': [
         {'enum': sorted(view['FIXED_ACTIONS']['case'])},
         {'prefixItems': [{'const': 'escort'}, member, {'const': 'CONFIRM'}], 'minItems': 3, 'maxItems': 3},

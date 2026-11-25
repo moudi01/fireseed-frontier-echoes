@@ -116,6 +116,10 @@ var field_books_open := false
 var field_items_open := false
 var _protection_panel := ""
 var _protection_archive_open := false
+var _letter_open := false
+var _letter_history_open := false
+var _letter_sources: Array[String] = []
+var _letter_target := ""
 var pouch_item := ""
 var pouch_targets: Array[String] = []
 var bookstore_open := false
@@ -618,6 +622,12 @@ func _refresh(row: Dictionary) -> void:
 		_protection_panel = ""
 	if view.get("phase") != "TOWN":
 		_protection_archive_open = false
+		_letter_open = false
+	var letter: Dictionary = view.get("letter_thread", {})
+	if "assemble" not in letter.get("actions", []):
+		_letter_sources.clear()
+	if letter.get("commission_targets", []).is_empty():
+		_letter_target = ""
 	if _navigation_committed:
 		_show_navigation_receipt(previous_map)
 		_navigation_committed = false
@@ -1476,6 +1486,10 @@ func _town_tab(tab: String, project := "") -> void:
 	remembrance_history_open = false
 	construction_project = project
 	_protection_archive_open = false
+	_letter_open = false
+	_letter_history_open = false
+	_letter_sources.clear()
+	_letter_target = ""
 	finale_preview_open = false
 	finale_executor_open = false
 	research_member_id = ""
@@ -1509,6 +1523,9 @@ func _town_tab(tab: String, project := "") -> void:
 
 
 func _chapter_actions() -> void:
+	if _letter_open:
+		_letter_actions(view.letter_thread)
+		return
 	if _protection_archive_open:
 		_protection_archive()
 		return
@@ -1547,6 +1564,8 @@ func _chapter_actions() -> void:
 	var cases: Dictionary = view.get("protection_cases", {})
 	if not cases.get("reports", []).is_empty() or not cases.get("followups", []).is_empty():
 		_button("查看庇护案件", "protection-archive", _toggle_protection_archive)
+	if not view.get("letter_thread", {}).is_empty():
+		_button("查看未署名的回信", "letter-open", _toggle_letter)
 	if chapter.archived:
 		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
 		var whistle: Dictionary = view.whistle
@@ -2155,6 +2174,9 @@ func _finale_ending(finale: Dictionary) -> void:
 		return
 	_label(actions, ending.title, GOLD, 24)
 	_label(actions, ending.text, INK, 17)
+	var letters: Dictionary = view.get("letter_thread", {})
+	if letters.get("complete", false):
+		_letter_history(letters)
 	if not finale.reports.is_empty():
 		_label(actions, "终战记录", GOLD, 17)
 		for report: Dictionary in finale.reports:
@@ -2534,7 +2556,9 @@ func _expedition_actions() -> void:
 			selected = hunt
 			break
 	var prep: Dictionary = view.preparation
-	var cost := int(view.departure_cost)
+	var letters: Dictionary = view.get("letter_thread", {})
+	var extra := int(letters.get("departure_extra", 0))
+	var cost := int(view.departure_cost) + extra
 	var supply := int(view.supply)
 	var copper := int(view.town_roster.copper)
 	_label(actions, "远征与补给", GOLD, 24)
@@ -2561,6 +2585,14 @@ func _expedition_actions() -> void:
 		_label(actions, blocker + "。可回队伍与装备调整。", ALERT, 16)
 	var route := ordinary_title if selected.is_empty() else "%s讨伐" % selected.name
 	var departure := "前往%s，消耗 %d 份仓库补给。" % [route, cost]
+	if letters.has("departure_matches"):
+		if letters.departure_matches:
+			departure += "\n本趟登记回信委托，接应点在%s。" % letters.target
+			if extra > 0:
+				departure += " 含委托补给 %d 份，提前归城或败退不退回。" % extra
+			_label(actions, "回信委托 · %s · 随出发扣 %d 补给" % [letters.target, extra], MUTED, 16)
+		else:
+			_label(actions, "本路线不到委托地区%s，本趟不会登记委托。" % letters.target, MUTED, 16)
 	if selected.is_empty() and not ordinary.is_empty():
 		var via := _ordinary_route_via(ordinary)
 		if not via.is_empty():
@@ -2820,6 +2852,8 @@ func _explore_actions() -> void:
 			_label(actions, choices[choice_key], MUTED, 16)
 		else:
 			_site_actions(site)
+	var letters: Dictionary = view.get("letter_thread", {})
+	_letter_field_actions(letters)
 	for case: Dictionary in view.get("protection_cases", {}).get("field", []):
 		_protection_field_actions(case)
 	_field_book_spoils()
@@ -2845,6 +2879,10 @@ func _explore_actions() -> void:
 		_input_action("跨区前往 " + entry.name, "next", [entry.id, "CONFIRM"], "离开本区，前往%s。" % entry.name)
 	if route.get("safe_return", false):
 		var consequence := _return_consequence(scouting)
+		if letters.get("current_status") == "SIGNED":
+			consequence += "\n本趟签收的回信委托凭据将随队安全带回。"
+		elif letters.get("current_status") == "ACTIVE":
+			consequence += "\n回信委托尚未实际交接，本趟提前归城不会完成委托。"
 		for case: Dictionary in view.get("protection_cases", {}).get("field", []):
 			if case.has("transit") or case.get("loaded", false):
 				consequence += "\n安全归城时由%s接收%s。" % [case.receiver, case.subject]
@@ -2866,6 +2904,116 @@ func _explore_actions() -> void:
 				continue
 			var pos: Array = node["position"]
 			_input_action("沿已知道路返回入口", "walkto", [str(int(pos[0])), str(int(pos[1]))])
+
+
+func _toggle_letter() -> void:
+	_letter_open = not _letter_open
+	_letter_history_open = false
+	focus_key = "letter-open"
+	_render()
+
+
+func _toggle_letter_history() -> void:
+	_letter_history_open = not _letter_history_open
+	focus_key = "letter-history"
+	_render()
+
+
+func _letter_history(letters: Dictionary) -> void:
+	_button("收起回信记录" if _letter_history_open else "回看已收到的回信", "letter-history", _toggle_letter_history)
+	if _letter_history_open:
+		for row: Dictionary in letters.history:
+			_label(actions, row.text, INK, 16)
+
+
+func _letter_actions(letters: Dictionary) -> void:
+	_label(actions, "暮汀 · 未署名的回信", GOLD, 24)
+	_button("返回旧档案", "letter-open", _toggle_letter)
+	_letter_history(letters)
+	if _letter_history_open:
+		return
+	_label(actions, letters.text, INK, 17)
+	var available: Array = letters.actions
+	if "inquire" in available:
+		_input_action("询问当班收信员", "thread", ["inquire", "CONFIRM"], "与当班收信员核对已收到的来信。")
+	elif "assemble" in available:
+		_letter_assemble(letters.letters)
+	elif not letters.commission_targets.is_empty():
+		_letter_commission(letters)
+	elif letters.commission is Dictionary:
+		var progress := "凭据已安全带回" if letters.errand_complete else "待交接并安全归城"
+		_label(actions, "%s · %s · %s" % [letters.mode, letters.target, progress], MUTED, 16)
+		if not letters.errand_complete and letters.previous_status in ["FAILED", "INCOMPLETE"]:
+			_label(actions, "上趟没有安全带回凭据。可再走能到达接应地区的路线。", ALERT, 16)
+	if "follow" in available:
+		_input_action("跟进后续回信", "thread", ["follow", "CONFIRM"], "提交已安全带回的凭据，与现有回信一并核对。")
+	if "answer" in available:
+		_input_action("收取最后一封回信", "thread", ["answer", "CONFIRM"], "用研究交档与十处接收人的回执完成最后一封回信。")
+
+
+func _select_letter_source(id: String) -> void:
+	if id in _letter_sources:
+		_letter_sources.erase(id)
+	elif _letter_sources.size() < 3:
+		_letter_sources.append(id)
+	focus_key = "letter-source-" + id
+	_render()
+
+
+func _letter_assemble(letters: Array) -> void:
+	_label(actions, "选中 %d/3 封 · 至少两种交接方式" % _letter_sources.size(), MUTED, 16)
+	var kinds := {}
+	for row: Dictionary in letters:
+		var selected: bool = row.id in _letter_sources
+		if selected:
+			kinds[row.kind] = true
+		_button("%s%s · %s" % ["已选 · " if selected else "", row.name, row.kind], "letter-source-" + row.id,
+			_select_letter_source.bind(row.id), selected or _letter_sources.size() < 3)
+	var ids := _letter_sources.duplicate()
+	ids.sort()
+	_input_action("核对三封回信", "thread", ["assemble", ",".join(ids), "CONFIRM"],
+		"提交选定的三份真实回执。核对完成后，后续接应只能从这三处选择。", ids.size() == 3 and kinds.size() >= 2)
+
+
+func _select_letter_target(id: String) -> void:
+	_letter_target = "" if _letter_target == id else id
+	focus_key = "letter-target-" + id
+	_render()
+
+
+func _letter_commission(letters: Dictionary) -> void:
+	_label(actions, "从已对证的三处接应中选一处。登记后只办理一种方式。", MUTED, 16)
+	for target: Dictionary in letters.commission_targets:
+		var letter: Dictionary = {}
+		for row: Dictionary in letters.letters:
+			if row.id == target.event:
+				letter = row
+				break
+		var picked: bool = _letter_target == target.event
+		_button("%s%s · %s" % ["已选 · " if picked else "", letter.name, target.region_name],
+			"letter-target-" + target.event, _select_letter_target.bind(target.event))
+		if picked:
+			for mode: Dictionary in letters.modes:
+				var detail := "走可达%s的路线，在补给接应点交接。出发时加扣 %d 补给，早返、改走别支或败退不退。" % [target.region_name, int(mode.supply)]
+				if mode.id == "TRACE":
+					detail = "打赢%s本趟的门战，再到该区出口领取现场凭据。不额外扣补给。" % target.region_name
+				_input_action("登记 · " + mode.name, "thread", ["commission", mode.id, target.event, "CONFIRM"],
+					detail + " 凭据须同趟安全带回。登记后不能改选。")
+
+
+func _letter_field_actions(letters: Dictionary) -> void:
+	match letters.get("current_status", ""):
+		"ACTIVE":
+			var site := "出口" if letters.site == "X" else "补给接应点"
+			_label(actions, "回信委托 · %s · %s" % [letters.target, site], GOLD, 18)
+			var blocker: String = letters.get("delivery_blocker", "")
+			if not blocker.is_empty():
+				_label(actions, blocker, ALERT, 16)
+			if letters.get("can_deliver", false):
+				_input_action("完成委托交接", "thread", ["deliver", "CONFIRM"],
+					"在当前接应点完成交接。实际凭据须同趟安全归城，才可跟进回信。")
+		"SIGNED":
+			_label(actions, "已签收回信委托凭据 · 同趟安全归城后完成", MUTED, 16)
 
 
 func _toggle_protection_panel(key: String) -> void:
@@ -4315,6 +4463,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_protection_panel(_protection_panel)
 	elif _protection_archive_open and command_buttons.has("protection-archive"):
 		_toggle_protection_archive()
+	elif _letter_history_open and command_buttons.has("letter-history"):
+		_toggle_letter_history()
+	elif _letter_open and command_buttons.has("letter-open"):
+		_toggle_letter()
 	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):
 		_set_ordinary_route_profile("")
 	elif not _book_swap_key.is_empty() and command_buttons.has("book-swap-cancel"):
