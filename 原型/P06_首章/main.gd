@@ -111,6 +111,7 @@ var remembrance_history_general := "MG01"
 var field_gear_open := false
 var field_books_open := false
 var field_items_open := false
+var _ev07_panel := ""
 var pouch_item := ""
 var pouch_targets: Array[String] = []
 var bookstore_open := false
@@ -602,6 +603,9 @@ func _refresh(row: Dictionary) -> void:
 	var previous_map: Variant = model.get("map")
 	model = row.get("presentation", {})
 	view = model.get("slice", {})
+	var ev07: Dictionary = view.get("ev07", {})
+	if not ev07.get("at_scene", false) or ev07.has("receipt") or ev07.has("transit"):
+		_ev07_panel = ""
 	if _navigation_committed:
 		_show_navigation_receipt(previous_map)
 		_navigation_committed = false
@@ -1529,6 +1533,7 @@ func _chapter_actions() -> void:
 				_scarf_section(view.scarf)
 	else:
 		_whistle_section()
+	_ev07_report(view.get("ev07", {}))
 
 
 func _chapter_history(chapter: Dictionary) -> void:
@@ -2463,6 +2468,7 @@ func _settlement_actions() -> void:
 	var scouting_delivered: bool = view.get("scouting", {}).get("delivered_here", false)
 	_label(actions, "侦路调查已交付" if scouting_delivered else "远征结算", GOLD, 24)
 	_summary()
+	_ev07_report(view.get("ev07", {}))
 	var hunt := _pending_hunt_report(view, true)
 	if view.get("phase") == "RETURNED" and not hunt.is_empty():
 		_label(actions, "%s讨伐报告可在暮汀旧档案交存。" % hunt.name, INK, 17)
@@ -2621,6 +2627,7 @@ func _explore_actions() -> void:
 			_label(actions, choices[choice_key], MUTED, 16)
 		else:
 			_site_actions(site)
+	_ev07_actions()
 	_field_book_spoils()
 	_field_handbook_event()
 	for task in view.get("book_research", []):
@@ -2644,6 +2651,9 @@ func _explore_actions() -> void:
 		_input_action("跨区前往 " + entry.name, "next", [entry.id, "CONFIRM"], "离开本区，前往%s。" % entry.name)
 	if route.get("safe_return", false):
 		var consequence := _return_consequence(scouting)
+		var ev07: Dictionary = view.get("ev07", {})
+		if ev07.has("transit"):
+			consequence += "\n安全归城将结算在途的%s，由%s接收。" % [ev07.subject, ev07.receiver]
 		if return_to_overlook:
 			consequence += "\n如要本趟交付，可取消归城并经根口返回远眺点。"
 		var carried := _cargo_amounts(view.get("field_book_rewards", {}).get("carried", {}))
@@ -2662,6 +2672,93 @@ func _explore_actions() -> void:
 				continue
 			var pos: Array = node["position"]
 			_input_action("沿已知道路返回入口", "walkto", [str(int(pos[0])), str(int(pos[1]))])
+
+
+func _toggle_ev07_panel(panel: String) -> void:
+	_ev07_panel = "" if _ev07_panel == panel else panel
+	focus_key = "ev07-" + panel
+	_render()
+
+
+func _ev07_report(case: Dictionary) -> void:
+	if not case.has("receipt"):
+		return
+	_label(actions, case.name, GOLD, 18)
+	_label(actions, case.custody, INK, 16)
+	if not str(case.reward).is_empty():
+		_label(actions, case.reward, MUTED, 16)
+	var credit: Dictionary = case.get("credit", {})
+	if not credit.is_empty():
+		var status := "已兑现" if credit.redeemed else "待城镇结算兑现"
+		_label(actions, "%s · %s" % [status, credit.reward], MUTED, 16)
+		if not str(credit.waiting_reason).is_empty():
+			_label(actions, credit.waiting_reason, ALERT, 16)
+
+
+func _ev07_actions() -> void:
+	var case: Dictionary = view.get("ev07", {})
+	if case.is_empty():
+		return
+	if case.has("receipt"):
+		_ev07_report(case)
+		return
+	_label(actions, case.name, GOLD, 19)
+	var path: Array = case.get("path_names", [])
+	var path_text := "交接路线  " + " → ".join(path) if not path.is_empty() else ""
+	var blocker: String = case.get("blocker", "")
+	if not blocker.is_empty():
+		_label(actions, blocker, ALERT, 16)
+	var leaders: Array = case.get("leaders", [])
+	var deployed: Array = case.get("deployed", [])
+	var can_dispatch := blocker.is_empty() and (not leaders.is_empty() or not deployed.is_empty())
+	if case.has("transit"):
+		var transit: Dictionary = case.transit
+		_label(actions, "%s在护送途中，%s尚未接收。%d Cost 仍计入本趟。" %
+			[transit.leader, case.receiver, int(transit.cost)], INK, 16)
+		_input_action("完成接收站交接", "event", ["EV07", "receive", "CONFIRM"],
+			"沿已清道路把%s交给%s，完成后余队可以继续远征。\n%s" %
+			[case.subject, case.receiver, path_text], blocker.is_empty())
+	else:
+		_label(actions, case.get("description", ""), INK, 16)
+		if can_dispatch:
+			_button("收起护送名单" if _ev07_panel == "escort" else "选择护送队员",
+				"ev07-escort", _toggle_ev07_panel.bind("escort"))
+		elif blocker.is_empty():
+			_label(actions, "派出后余队需至少留一名可行动人类，可选择全队提前归城。", MUTED, 16)
+	if case.at_scene and case.has("return_day"):
+		var detail := "结束本趟远征，将%s交给%s，第 %d 日结算。\n%s" % [
+			case.subject, case.receiver, int(case.return_day), path_text]
+		_input_action("全队提前归城交接", "event", ["EV07", "return", "CONFIRM"],
+			_day_consequence(detail), blocker.is_empty())
+	var trade: Dictionary = case.get("trade", {})
+	if not trade.is_empty():
+		_button("收起管事报价" if _ev07_panel == "trade" else "查看管事报价",
+			"ev07-trade", _toggle_ev07_panel.bind("trade"))
+	if _ev07_panel == "escort" and can_dispatch:
+		_ev07_leader_actions(case, leaders, deployed, path_text)
+	elif _ev07_panel == "trade" and not trade.is_empty():
+		_ev07_trade_actions(trade)
+
+
+func _ev07_leader_actions(case: Dictionary, leaders: Array, deployed: Array, path_text: String) -> void:
+	for member: Dictionary in leaders:
+		_input_action("派出护送 · %s（%d Cost）" % [_name(member), int(member.cost)], "event",
+			["EV07", "escort", member.instance_id, "CONFIRM"],
+			"%s离队护送%s，%d Cost 仍计入本趟。\n抵达%s后确认交接，远征结算时护送者回留城名册。\n%s" %
+			[_name(member), case.subject, int(member.cost), case.receiver, path_text])
+	if not deployed.is_empty():
+		_label(actions, "也可从已部署队员中撤下一人，再指派护送。", MUTED, 16)
+	for member: Dictionary in deployed:
+		_input_action("转为预备 · " + _name(member), "deploy", [member.instance_id, "off"])
+
+
+func _ev07_trade_actions(trade: Dictionary) -> void:
+	_label(actions, trade.warning, ALERT, 16)
+	for quote: Dictionary in trade.quotes:
+		var caption := "选择 %s · %s" % [quote.name, quote.selection]
+		var control := _input_action(caption, "event", ["EV07", "trade", quote.selection, "CONFIRM"],
+			trade.warning + "\n本次所选装备\n" + quote.description)
+		control.tooltip_text = quote.description
 
 
 func _hunt_pending_return(region: String) -> Dictionary:
@@ -3969,6 +4066,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_close_settings()
 	elif not confirmation.is_empty():
 		_cancel_confirmation()
+	elif not _ev07_panel.is_empty() and command_buttons.has("ev07-" + _ev07_panel):
+		_toggle_ev07_panel(_ev07_panel)
 	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):
 		_set_ordinary_route_profile("")
 	elif not _book_swap_key.is_empty() and command_buttons.has("book-swap-cancel"):

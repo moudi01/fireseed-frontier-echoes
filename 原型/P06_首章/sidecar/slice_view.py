@@ -10,7 +10,8 @@ COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'd
             'town', 'book', 'summon', 'equip', 'unequip', 'dialogue', 'challenge', 'depart',
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
-            'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research', 'finale'}
+            'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research', 'finale',
+            'event'}
 MEMBER_ID = r'[A-Za-z0-9_-]{1,80}'
 CONSUMABLE_TARGETS = rf'{MEMBER_ID}(?:,{MEMBER_ID}){{0,5}}'
 CONSUMABLE_CODES = tuple(f'CO{number:02}' for number in range(1, 13))
@@ -76,6 +77,8 @@ MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
           for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',)},
+    'event': {('EV07', 'receive', 'CONFIRM'), ('EV07', 'return', 'CONFIRM'),
+              *(('EV07', 'trade', f'EF{number:02}', 'CONFIRM') for number in range(1, 9))},
     'route': {(route,) for route in ORDINARY_ROUTES},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
     'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG05', 'RG06', 'RG07', 'RG08')},
@@ -149,6 +152,8 @@ def valid_command(command, args):
             return True
         return (len(args) in (2, 4) and args[-1] == 'CONFIRM' and bool(re.fullmatch(BATCH_ID, args[-2]))
                 and args[:-2] in ([], ['investigate', 'start']))
+    if command == 'event' and args[:2] == ['EV07', 'escort']:
+        return len(args) == 4 and bool(re.fullmatch(MEMBER_ID, args[2])) and args[3] == 'CONFIRM'
     if command in FIXED_ACTIONS:
         return tuple(args) in FIXED_ACTIONS[command]
     if command == 'book':
@@ -461,6 +466,83 @@ def handbook_event_view(game):
     result['choices'] = choices
     if offer:
         result.update(book=book_info(offer['book_id']), can_claim=offer['can_claim'], remaining_books=offer['remaining_cap'])
+    return result
+
+
+def ev07_view(game):
+    import cases
+    import equipment_rolls
+    import escort
+    import refugee
+
+    eid = 'EV07'
+    state = game.s
+    case = state.get('cases', {}).get(eid)
+    if not case or not case['enabled'] or not case['encountered']:
+        return {}
+    phase = state['phase']
+    site = state['site']
+    field = phase == 'EXPLORE'
+    binding = game.manifest_region['events'].get(site, {}) if field else {}
+    at_scene = binding.get('event_id') == eid
+    pending = case.get('pending')
+    receipt = case.get('receipt') or {}
+    terminal = case['state'] in cases.TERMINAL
+    current_settlement = (phase in ('RETURNED', 'FAILED') and
+                          receipt.get('expedition_no') == state['expedition_no'])
+    report = terminal and (phase == 'TOWN' or current_settlement)
+    if not (at_scene or (field and pending) or report):
+        return {}
+
+    event = game.cat.events[eid]
+    config = cases.CONFIG[eid]
+    result = {'name': event['name'], 'subject': config['subject'], 'receiver': config['receiver'],
+              'state': case['state'], 'at_scene': at_scene}
+    if terminal:
+        credit = case.get('trade_credit')
+        result.update(receipt=receipt, custody=case['custody'], reward=case.get('reward_text', ''))
+        if credit:
+            result['credit'] = {'reward': event['story_trade']['reward_text'], 'redeemed': credit['redeemed'],
+                                'waiting_reason': credit.get('waiting_reason', '')}
+        return result
+
+    if at_scene and not pending and game.current['events'][site]['state'] == 'DECLINED':
+        return dict(result, blocker='本趟已明确放弃接手。')
+    anchor = case['active_scene'] if pending else {'region': state['region'], 'site': site}
+    try:
+        path = refugee.clear_path(game, anchor)
+    except ValueError as exc:
+        result['blocker'] = str(exc)
+    else:
+        region = state['manifest']['regions'][anchor['region']]
+        nodes = {node['id']: node['name'] for node in game.cat.layouts[region['template_id']]['nodes']}
+        result['path'] = path
+        result['path_names'] = [nodes[point] for point in path]
+
+    preview = escort.preview(game)
+    result['return_day'] = preview['settles_on']
+    if pending:
+        dispatch = next(row for row in state['escort_receipts'] if row['id'] == pending['escort_id'])
+        leader = next(m for m in state['escorted'] if m['instance_id'] == dispatch['leader'])
+        return dict(result, transit={'leader': member_view(leader)['display_name'], 'cost': dispatch['reserved_cost']})
+
+    result['description'] = cases.scene_text(game, eid)
+    humans = [m for m in state['party'] if not m['unit_id'].startswith('PET') and m['hp'] > 0
+              and m['erosion'] < 100 and m['injury_days'] == 0]
+    if len(humans) > 1:
+        result['leaders'] = [member_view(m) for m in humans if m['instance_id'] in preview['leaders']]
+        result['deployed'] = [member_view(m) for m in humans if m['deployed']]
+
+    if case['state'] == 'OPEN' and 'EXPLOIT' in binding['enabled_options']:
+        terms = event['story_trade']
+        slots = equipment_rolls.public_quotes(game, eid)
+        if len(slots) == 1:
+            quality = terms['reward']['equipment']['quality']
+            quotes = [dict(quote, name=gear_name(game.cat, quote['selection'] + '-' + quality))
+                      for quote in slots[0] if (eid, 'trade', quote['selection'], 'CONFIRM') in FIXED_ACTIONS['event']]
+            if quotes:
+                result['trade'] = {'quotes': quotes,
+                                   'warning': refugee.source_options(game, eid)['EXPLOIT']['confirmation_text']}
     return result
 
 
@@ -1665,6 +1747,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'book_research': book_research_view(game) if 'ST-104' in facts and state['phase'] in ('TOWN', 'EXPLORE') else [],
             'field_book_rewards': field_book_rewards(game),
             'handbook_event': handbook_event_view(game),
+            'ev07': ev07_view(game),
             'chapter': chapter_view(game, commission) if town and 'ST-102' in facts else {},
             'whistle': whistle_view(game) if state['phase'] == 'TOWN' else {},
             'scarf': scarf_view(game) if town else {},

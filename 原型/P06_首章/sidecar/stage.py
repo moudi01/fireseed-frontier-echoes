@@ -194,6 +194,11 @@ def stage(source, output, release_id=None):
     coordinate = {'pattern': r'^-?\d{1,3}$'}
     member = {'pattern': '^' + view['MEMBER_ID'] + '$'}
     batch = {'pattern': '^' + view['BATCH_ID'] + '$'}
+    constraints['event'] = {'anyOf': [
+        {'enum': sorted(view['FIXED_ACTIONS']['event'])},
+        {'prefixItems': [{'const': 'EV07'}, {'const': 'escort'}, member, {'const': 'CONFIRM'}],
+         'minItems': 4, 'maxItems': 4},
+    ]}
     for action, arguments in [('move', [{'enum': sorted(sites)}]), ('interact', [{'enum': sorted(sites)}]),
                               ('walkto', [coordinate, coordinate]), ('place', [{}, coordinate, coordinate, coordinate]),
                               ('deploy', [{}, {'enum': ['on', 'off']}]),
