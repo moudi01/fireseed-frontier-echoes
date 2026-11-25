@@ -97,6 +97,7 @@ var _archive_list_scroll := 0
 var _archive_record_id := ""
 var _archive_page: ArchivePage
 var remembrance_history_open := false
+var remembrance_history_general := "MG01"
 var field_gear_open := false
 var field_books_open := false
 var field_items_open := false
@@ -111,6 +112,7 @@ var _book_swap_key := ""
 var books_open := false
 var _previewed_book: Dictionary = {}
 var whistle_open := false
+var scarf_open := false
 var caption_index := 0
 var _opening_art: OpeningArt
 var _search_chart: SearchChart
@@ -545,7 +547,8 @@ func _refresh(row: Dictionary) -> void:
 	var previous_battle: Variant = view.get("battle_view")
 	var previous_whistle: String = view.get("whistle", {}).get("stage", "")
 	var previous_chapter: Dictionary = view.get("chapter", {})
-	var previous_hunt: Dictionary = view.get("hunt", {})
+	var previous_scarf: String = view.get("scarf", {}).get("stage", "")
+	var prior_recall: Dictionary = view.get("town_memory", {})
 	var returned_report := _pending_hunt_report(view, true)
 	var previous_battle_memory: Dictionary = view.get("battle_memory", {})
 	var was_commissioned: bool = view.get("commissioned", false)
@@ -561,7 +564,7 @@ func _refresh(row: Dictionary) -> void:
 	var phase: String = view.get("phase", "")
 	_memory_reply = ""
 	if not _committed_memory_window.is_empty():
-		var receipt: Dictionary = view.get("hunt", {}).get("memory_reply", {}) if phase == "TOWN" else (
+		var receipt: Dictionary = _hunt_by_id(_committed_memory_window.get_slice("-", 0)).get("memory_reply", {}) if phase == "TOWN" else (
 			battle.get("memory_reply", {}) if battle is Dictionary else {})
 		if receipt.get("id") == _committed_memory_window:
 			var line: Dictionary = receipt.line
@@ -645,12 +648,21 @@ func _refresh(row: Dictionary) -> void:
 					else:
 						focus_key = "town-expedition" if view.get("chapter", {}).get("archived", false) else "whistle-section"
 	if phase == "TOWN":
-		var hunt: Dictionary = view.get("hunt", {})
-		var recall: Dictionary = hunt.get("memory", {})
-		var prior_recall: Dictionary = previous_hunt.get("memory", {})
+		var scarf: Dictionary = view.get("scarf", {})
+		if scarf_open and not previous_scarf.is_empty() and scarf.get("stage") != previous_scarf and row.get("status") == "COMMITTED":
+			notice.text = ""
+			match scarf.get("stage"):
+				"witness": focus_key = "quest MG02 witness"
+				"collect": focus_key = "quest MG02 collect CONFIRM" if scarf.short == 0 else "scarf-materials"
+				"done":
+					var sev: Dictionary = view.sev_hunt
+					focus_key = "remember MG02" if sev.defeated and sev.evidence and not sev.awakened else "scarf-section"
+		var recall: Dictionary = view.get("town_memory", {})
 		if recall.get("id") != prior_recall.get("id"):
+			town_tab = "chapter"
 			if recall.is_empty():
-				focus_key = "remembrance-history" if hunt.awakened else "remember MG01"
+				var general_id: String = prior_recall.general_id
+				focus_key = _remembrance_key(general_id) if _hunt_by_id(general_id).awakened else "remember " + general_id
 			else:
 				focus_key = "remember %s %s" % [recall.choice, recall.id] if recall.enabled else "remember close"
 	elif phase == "BATTLE":
@@ -948,7 +960,7 @@ func _render() -> void:
 	_overlook_picture.texture = board._overlook_art if _overlook_mat.visible else null
 	_opening_art.present(str(opening_lines[caption_index].get("id", "TD001")) if showing_opening else "")
 	if not (opened and phase == "TOWN" and (chapter_history_open or books_open) and not showing_opening and not settings_open
-			and not client.blocked and (confirmation.is_empty() or books_open) and view.get("hunt", {}).get("memory", {}).is_empty()):
+			and not client.blocked and (confirmation.is_empty() or books_open) and view.get("town_memory", {}).is_empty()):
 		_archive_page.dismiss()
 	board.deployment_open = _can_edit_deployment() and phase != "FINAL_REGROUP"
 	var actions_started := Time.get_ticks_usec() if profile_panels else 0
@@ -989,7 +1001,7 @@ func _render() -> void:
 		if opened and not captions_open and phase in ["EXPLORE", "RETURNED", "FAILED", "TOWN"] and snapshot is Dictionary:
 			if snapshot.get("finished", false) and not _show_deployment() \
 					and not chapter_history_open and not remembrance_history_open and not books_open and not _overlook_open \
-					and view.get("hunt", {}).get("memory", {}).is_empty():
+					and view.get("town_memory", {}).is_empty():
 				_finished_battle(snapshot)
 		if (not opened or captions_open) and not view.is_empty():
 			_opening_actions()
@@ -1122,7 +1134,7 @@ func _render_subtitle() -> void:
 				notice.text = ""
 	var can_read: bool = opened and not captions_open and active is Dictionary and not settings_open \
 		and confirmation.is_empty() and not client.blocked \
-		and view.get("battle_memory", {}).is_empty() and view.get("hunt", {}).get("memory", {}).is_empty()
+		and view.get("battle_memory", {}).is_empty() and view.get("town_memory", {}).is_empty()
 	var show_memory_reply: bool = not _memory_reply.is_empty() and not captions_open and not settings_open \
 		and confirmation.is_empty() and not client.blocked and not remembrance_history_open
 	if show_memory_reply:
@@ -1182,9 +1194,9 @@ func _town_actions() -> void:
 		_input_action("接受委任", "quest", ["commission", "CONFIRM"],
 			"接受灰栎边道侦路委任\n登记 3 名盾兵、3 名近战兵和 2 名弓兵。\n配发 60 铜、12 结晶和 6 补给。")
 		return
-	var hunt: Dictionary = view.get("hunt", {})
-	if not hunt.get("memory", {}).is_empty():
-		_memory_actions(hunt.memory, "remember")
+	var recall: Dictionary = view.get("town_memory", {})
+	if not recall.is_empty():
+		_memory_actions(recall, "remember")
 		return
 	if books_open:
 		_chapter_book_choices()
@@ -1321,9 +1333,10 @@ func _town_tab(tab: String, project := "") -> void:
 
 func _chapter_actions() -> void:
 	if remembrance_history_open:
-		_label(actions, "阿铎 · 已提交的追忆对白", GOLD, 24)
-		_button("返回旧档案", "remembrance-history", _toggle_remembrance_history)
-		var records: Array = view.hunt.memory_records
+		var hunt := _hunt_by_id(remembrance_history_general)
+		_label(actions, "%s · 已提交的追忆对白" % hunt.name, GOLD, 24)
+		_button("返回旧档案", _remembrance_key(hunt.id), _toggle_remembrance_history.bind(hunt.id))
+		var records: Array = hunt.memory_records
 		for index in records.size():
 			var record: Dictionary = records[index]
 			if record.committed:
@@ -1361,10 +1374,14 @@ func _chapter_actions() -> void:
 		if int(chapter.seals) > 0:
 			_input_action("应召一名英雄 · 1 枚应召印", "summon", [chapter.summon_id, "CONFIRM"],
 				"使用一枚应召印，应召一名尚未获得的英雄。")
-		_hunt_archive()
 		for hunt: Dictionary in view.get("hunts", []):
-			if hunt.id != "MG01" and hunt.defeated:
-				_hunt_report(hunt)
+			if hunt.defeated:
+				if hunt.has("memory_records"):
+					_hunt_archive(hunt)
+				else:
+					_hunt_report(hunt)
+			if hunt.id == "MG02":
+				_scarf_section(view.scarf)
 		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
 		var whistle: Dictionary = view.whistle
 		if whistle.get("stage") == "record":
@@ -1535,6 +1552,40 @@ func _whistle_receipt_text(collection: Dictionary) -> String:
 	return "裂口铜哨 · 第 %d 日修缮取回 · 支付 %d 铜" % [int(collection.day), int(collection.copper)]
 
 
+func _scarf_section(scarf: Dictionary) -> void:
+	_button("收起围巾委托" if scarf_open else view.sev_hunt.name + " · " + str(scarf.name), "scarf-section", _toggle_scarf)
+	if not scarf_open:
+		return
+	for text: String in [scarf.record, scarf.witness]:
+		if not text.is_empty():
+			_label(actions, text, MUTED, 16)
+	match scarf.stage:
+		"record":
+			_input_action("向秦姨查阅红围巾认领单", "quest", ["MG02", "record"])
+		"witness":
+			_input_action("请受援镇民核对针脚与证词", "quest", ["MG02", "witness"])
+		"collect":
+			var price := int(scarf.price)
+			if int(scarf.short) > 0:
+				_label(actions, "仓库还缺 %d 木纤。可登记材料委托，安全归城后入库。" % int(scarf.short), MUTED, 16)
+				_button("查看材料委托", "scarf-materials", _town_tab.bind("items"))
+			_input_action("取回红围巾 · %d 木纤" % price, "quest", ["MG02", "collect", "CONFIRM"],
+				"支付 %d 木纤，取回同一件%s。" % [price, scarf.name], int(scarf.short) == 0)
+		"done":
+			_label(actions, "%s已入任务物品" % scarf.name, MUTED, 16)
+			var receipt: Dictionary = scarf.collection
+			if receipt.get("paid", {}).has("fiber"):
+				_label(actions, "第 %d 日取回 · 支付 %d 木纤" % [int(receipt.day), int(receipt.paid.fiber)], MUTED, 16)
+		"field":
+			_label(actions, "这件围巾已登记为现场自取。", MUTED, 16)
+
+
+func _toggle_scarf() -> void:
+	scarf_open = not scarf_open
+	focus_key = "scarf-section"
+	_render()
+
+
 func _hunt_reward(hunt: Dictionary) -> String:
 	return "「%s」×1 · 应召印 ×%d" % [hunt.report_book.name, int(hunt.report_seals)]
 
@@ -1572,38 +1623,47 @@ func _hunt_report(hunt: Dictionary) -> void:
 		_label(actions, "已记录胜利，报告等待安全归城。", MUTED, 16)
 
 
-func _hunt_archive() -> void:
-	var hunt: Dictionary = view.get("hunt", {})
-	if not hunt.get("defeated", false):
-		return
+func _hunt_by_id(general_id: String) -> Dictionary:
+	for hunt: Dictionary in view.get("hunts", []):
+		if hunt.id == general_id:
+			return hunt
+	return {}
+
+
+func _remembrance_key(general_id: String) -> String:
+	return "remembrance-history" if general_id == "MG01" else "remembrance-history-" + general_id
+
+
+func _hunt_archive(hunt: Dictionary) -> void:
 	_hunt_report(hunt)
-	_label(actions, "阿铎 · 追忆", GOLD, 17)
+	_label(actions, "%s · 追忆" % hunt.name, GOLD, 17)
 	var records: Array = hunt.memory_records
 	if hunt.awakened:
-		_label(actions, "阿铎已保留记忆", INK, 16)
+		_label(actions, "%s已保留记忆" % hunt.name, INK, 16)
 	elif hunt.evidence:
 		var first: Dictionary = records[0]
-		var caption := "凭铜哨和证词开始追忆"
+		var caption := "凭铜哨和证词开始追忆" if hunt.id == "MG01" else "凭红围巾和证词开始追忆"
 		if first.committed:
 			caption = "继续追忆 · 第 2 段"
 		elif first.skipped:
 			caption = "继续追忆 · 补做第 1 段"
-		_input_action(caption, "remember", ["MG01"])
+		_input_action(caption, "remember", [hunt.id])
 	else:
 		var missing: PackedStringArray = []
-		if not hunt.has_whistle:
-			missing.append("裂口铜哨")
+		if not hunt.has_item:
+			missing.append(hunt.item)
 		if not hunt.has_testimony:
-			missing.append("秦姨核实的证词")
+			missing.append("秦姨核实的证词" if hunt.id == "MG01" else "镇民核实的证词")
 		_label(actions, "追忆尚缺" + "、".join(missing) + "。", MUTED, 16)
 	if records.any(func(record: Dictionary) -> bool: return record.committed):
-		_button("回看已提交的追忆对白", "remembrance-history", _toggle_remembrance_history)
+		_button("回看已提交的追忆对白", _remembrance_key(hunt.id), _toggle_remembrance_history.bind(hunt.id))
 
 
-func _toggle_remembrance_history() -> void:
+func _toggle_remembrance_history(general_id: String) -> void:
 	remembrance_history_open = not remembrance_history_open
+	remembrance_history_general = general_id
 	_memory_reply = ""
-	focus_key = "remembrance-history"
+	focus_key = _remembrance_key(general_id)
 	_render()
 	if remembrance_history_open:
 		_action_scroll.set_deferred("scroll_vertical", 0)
@@ -2101,8 +2161,9 @@ func _expedition_actions() -> void:
 		_label(actions, "当前路线 · 常规短途", MUTED, 17)
 	else:
 		_label(actions, "讨伐%s · %s" % [selected.name, " → ".join(selected.route)], INK, 18)
-		if selected.id == "MG01" and not selected.evidence:
-			_label(actions, "可出征。带上旧档案的铜哨与证词，可在战中出示。", MUTED, 16)
+		if selected.has("evidence") and not selected.evidence:
+			var item := "铜哨" if selected.id == "MG01" else "红围巾"
+			_label(actions, "可出征。带上旧档案的%s与证词，可在战中出示。" % item, MUTED, 16)
 		_input_action("取消讨伐安排", "challenge", ["cancel"])
 	var blocker := str(prep.deployment_error)
 	if supply < cost:
@@ -3430,7 +3491,7 @@ func _show_deployment() -> bool:
 	if view.get("phase") == "TOWN":
 		return view.get("commissioned", false) and town_tab not in ["skills", "construction", "logistics", "items"] \
 			and (not view.get("complete", false) or town_tab == "roster") \
-			and view.get("hunt", {}).get("memory", {}).is_empty()
+			and view.get("town_memory", {}).is_empty()
 	return view.get("phase") == "EXPLORE" and view.get("route", {}).get("contact_pending", false)
 
 

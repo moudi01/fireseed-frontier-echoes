@@ -51,8 +51,10 @@ BONE_GUARD = 'EN21-A'
 DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
 HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
+EVIDENCE_GENERALS = ('MG01', 'MG02')
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
-                 ('MG01', 'record'), ('MG01', 'witness'), ('MG01', 'collect', 'CONFIRM'),
+                 *((general, *step) for general in EVIDENCE_GENERALS
+                   for step in (('record',), ('witness',), ('collect', 'CONFIRM'))),
                  *(('report', general, 'CONFIRM') for general in HUNT_GENERALS)}
 SITES = {'I', 'A', 'B', 'B1', 'B2', 'B_SUPPORT', 'B_MATERIAL', 'C', 'D', 'U', 'V', 'W',
          'T', 'S', 'L', 'G', 'X'}
@@ -68,7 +70,7 @@ FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',)},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
     'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG05', 'RG06', 'RG07', 'RG08')},
-    'memory': MEMORY, 'remember': MEMORY | {('MG01',), ('close',)},
+    'memory': MEMORY, 'remember': MEMORY | {(general,) for general in EVIDENCE_GENERALS} | {('close',)},
     'dialogue': {('next',), ('skip',)}, 'buy_supply': {('1',)},
     'pack_medical': {(str(n),) for n in range(4)},
     'recruit': {(unit,) for unit in ('M01', 'M02', 'M03', 'M04')},
@@ -722,12 +724,12 @@ def memory_reply(game, battle):
     return {'id': event['window'], 'line': memory_lines(card, speaker)[1]}
 
 
-def ado_memory_records(game, battle):
+def memory_records(game, battle, general_id):
     if battle is None:
         return []
-    actor = memory_actor(battle, 'MG01')
-    progress = battle['boss_memory']['MG01']
-    speaker = hunt_general(game, 'MG01')['human_name']
+    actor = memory_actor(battle, general_id)
+    progress = battle['boss_memory'][general_id]
+    speaker = hunt_general(game, general_id)['human_name']
     records = []
     for card in actor['awakening']['dialogue_windows']:
         window = card['window_id']
@@ -751,10 +753,11 @@ def memory_view(game, battle):
     speaker = hunt_general(game, general)['human_name']
     return {'id': window, 'number': 1 if first else 2, 'choice': 'evidence' if first else 'retain',
             'lead': memory_lines(card, speaker)[0] if enabled else {}, 'enabled': enabled,
-            'general': speaker, 'item': QUESTS[general]['item']}
+            'general_id': general, 'general': speaker, 'item': QUESTS[general]['item']}
 
 
-def hunt_view(game, general_id):
+def hunt_view(game, general_id, town_memory):
+    from campaign import QUESTS
     from book_catalog import BOOKS
     from book_rewards import BOSS_BOOKS
     state = game.s
@@ -782,14 +785,18 @@ def hunt_view(game, general_id):
            'reported': delivered is not None, 'awakened': general_id + '_AWAKENED' in facts,
            'report_book': {'id': book, 'name': BOOKS[book]['name'], 'count': state['book_stock'].get(book, 0)},
            'report_seals': game.cat.rules['recruitment']['milestone_seals'].get(delivery_id, 0)}
-    if general_id == 'MG01':
+    if general_id in EVIDENCE_GENERALS:
         last_battle = campaign['victories'].get(general_id, {}).get('battle')
-        has_whistle = 'OBS-MG01' in campaign['task_items']
+        has_item = 'OBS-' + general_id in campaign['task_items']
         has_testimony = general_id in campaign['testimonies']
-        row.update(evidence=has_whistle and has_testimony, has_whistle=has_whistle, has_testimony=has_testimony,
-                   memory_records=ado_memory_records(game, last_battle) if state['phase'] == 'TOWN' else [],
-                   memory_reply=memory_reply(game, last_battle) if state['phase'] == 'TOWN' else {},
-                   memory=memory_view(game, (campaign['remembrance'] or {}).get('battle')))
+        in_town = state['phase'] == 'TOWN'
+        row.update(item=QUESTS[general_id]['item'], has_item=has_item, has_testimony=has_testimony,
+                   evidence=has_item and has_testimony,
+                   memory_records=memory_records(game, last_battle, general_id) if in_town else [],
+                   memory_reply=memory_reply(game, last_battle) if in_town else {},
+                   memory=town_memory if town_memory.get('general_id') == general_id else {})
+        if general_id == 'MG01':
+            row['has_whistle'] = has_item
     return row
 
 
@@ -1376,6 +1383,31 @@ def whistle_view(game):
             'witness': receipts.get('witness', {}).get('text', ''), 'collection': collected}
 
 
+def scarf_view(game):
+    from campaign import QUESTS
+
+    state = game.s
+    campaign = state['campaign']
+    quest = QUESTS['MG02']
+    if quest['gate'] not in campaign['facts']:
+        return {}
+    receipts = campaign['quests'].get('MG02', {})
+    if 'OBS-MG02' in campaign['task_items']:
+        stage = 'done'
+    elif 'MG02' in state['original_recovery']['targets']:
+        stage = 'field'
+    elif 'witness' in receipts:
+        stage = 'collect'
+    else:
+        stage = 'witness' if 'record' in receipts else 'record'
+    price = quest['cost']['fiber']
+    return {'stage': stage, 'name': quest['item'], 'price': price,
+            'short': max(0, price - state['warehouse'].get('fiber', 0)),
+            'record': receipts.get('record', {}).get('text', ''),
+            'witness': receipts.get('witness', {}).get('text', ''),
+            'collection': receipts.get('collect', {})}
+
+
 def scouting_view(state):
     trip = state.get('tutorial_trip')
     if not trip or state['mission'] != 'TUTORIAL' or state['phase'] not in ('EXPLORE', 'RETURNED', 'FAILED'):
@@ -1489,7 +1521,9 @@ def make_view(game, ledger, primary, committed_save_version=None):
     rescue_board = battle['board_cells'] if battle and state['mission'] == 'RESCUE' else []
     can_plan = state['phase'] in ('TOWN', 'EXPLORE')
     tutorial_explore = state['phase'] == 'EXPLORE' and state['mission'] == 'TUTORIAL'
-    hunts = {general: hunt_view(game, general) for general in HUNT_GENERALS}
+    session = state['campaign']['remembrance']
+    town_memory = memory_view(game, session['battle']) if town and session else {}
+    hunts = {general: hunt_view(game, general, town_memory) for general in HUNT_GENERALS}
     finale = finale_view(game)
     if finale.get('reports'):
         reports = finale['reports']
@@ -1510,7 +1544,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'town_services': town_services_view(game) if town else {},
             'consumables': consumables_view(game, town) if town or state['phase'] == 'EXPLORE' else {},
             'material_goal': material_goal_view(game, town) if town or state['phase'] == 'EXPLORE' else {},
-            'battle_memory': memory_view(game, battle),
+            'battle_memory': memory_view(game, battle), 'town_memory': town_memory,
             'whistle_cue': whistle_cue(state) if 'ST-104' in facts else '',
             'party': party, 'budget': state['budget'], 'route': route,
             'town_roster': {'copper': state['bank']['copper'],
@@ -1524,6 +1558,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'handbook_event': handbook_event_view(game),
             'chapter': chapter_view(game, commission) if town and 'ST-102' in facts else {},
             'whistle': whistle_view(game) if state['phase'] == 'TOWN' else {},
+            'scarf': scarf_view(game) if town else {},
             'opening_lines': opening.get('lines', []),
             'town_deploy_cells': game.cat.boards[board_id]['player_deploy_cells'],
             'town_board_cells': game.cat.boards[board_id]['cells'],

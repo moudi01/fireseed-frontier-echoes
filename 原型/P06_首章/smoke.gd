@@ -1322,6 +1322,7 @@ func _play_hunt_route(route_name: String, general_id: String) -> Array[String]:
 		return []
 	var victories: Array[String] = []
 	var report_button := "quest report %s CONFIRM" % general_id
+	var on_hunt := false
 	for value in route.commands:
 		var key := str(value)
 		var parts := key.split(" ")
@@ -1331,18 +1332,28 @@ func _play_hunt_route(route_name: String, general_id: String) -> Array[String]:
 		if command == "recruit" or command == "squad" or (app.view.phase == "TOWN" and command in ["place", "stance", "deploy", "level_up"]):
 			if not await _ado_tab("roster"):
 				return []
-		if command in ["quest", "remember"] and app.view.hunt.get("memory", {}).is_empty() and not await _ado_tab("chapter"):
+		if command in ["quest", "remember"] and app.view.get("town_memory", {}).is_empty() and not await _ado_tab("chapter"):
 			return []
-		if command in ["place", "stance", "deploy", "level_up"] and not await _route_member_action(parts):
+		if command == "supply" and not await _ado_tab("items"):
+			return []
+		if command == "quest" and parts[1] == "MG02" and not app.scarf_open and not await _press("scarf-section"):
+			return []
+		if command == "depart":
+			on_hunt = _route_hunt(general_id).get("selected", false)
+		var member_control := command in ["place", "stance", "deploy", "level_up"]
+		if (member_control or (command == "squad" and parts[2] == "off")) and not await _route_member_action(parts):
 			return []
 		if key == "run 600":
 			if not await _ado_steps(victories):
 				return []
 			continue
-		if general_id != "MG01" and command == "return":
+		if general_id != "MG01" and command == "return" and on_hunt:
 			var hunt := _route_hunt(general_id)
 			if not hunt.report_pending_return or hunt.report_ready or hunt.reported:
 				failure = "%s victory did not wait for a safe return before enabling its report" % general_id
+				return []
+			if mode == "sev-awakening" and not hunt.awakened:
+				failure = "Sev's live awakening was missing from the victory before the safe return"
 				return []
 		if key == report_button and _route_hunt(general_id).reported:
 			if app.command_buttons.has(key):
@@ -1355,10 +1366,30 @@ func _play_hunt_route(route_name: String, general_id: String) -> Array[String]:
 			if command == "memory" and (app.command_buttons.has("step") or app.command_buttons.has("flee CONFIRM")):
 				failure = "Battle commands displayed during a memory window"
 				return []
+			if parts[2].begins_with("MG02-") and not _check_sev_window(command, parts[2]):
+				return []
 			await _capture(command + "-" + parts[2])
 		if not await _command(key):
 			return []
-		if general_id != "MG01" and command in ["depart", "next"]:
+		if key == "quest MG02 witness" and int(app.view.scarf.short) > 0:
+			var collect: Button = app.command_buttons.get("quest MG02 collect CONFIRM")
+			if collect == null or not collect.disabled or not app.command_buttons.has("scarf-materials"):
+				failure = "The scarf offered an unfunded collection or hid the material commission"
+				return []
+		if key == "remember skip MG02-W1":
+			var second: Dictionary = app.view.town_memory
+			if second.get("id") != "MG02-W2" or second.enabled or app.command_buttons.has("remember retain MG02-W2"):
+				failure = "Skipping the scarf choice did not lock the second remembrance choice"
+				return []
+		if command == "memory" and app.view.phase != "BATTLE":
+			var result: Dictionary = app.view.battle_results[-1]
+			if result.result != "VICTORY" or result.encounter_id != "BATTLE-" + general_id:
+				failure = "The memory window closed without an authentic battle victory"
+				return []
+			victories.append(result.encounter_id)
+			if general_id == "MG01" and measure != null:
+				measure.finish()
+		if general_id != "MG01" and on_hunt and command in ["depart", "next"]:
 			side_checks.get_or_add(route_name + "_regions", []).append(app.view.region)
 		if command == "depart":
 			await _capture("hunt-departure")
@@ -1440,7 +1471,100 @@ func _sev_route() -> void:
 		failure = "Sev's report alone changed the chapter budget"
 		return
 	side_checks["sev_victories"] = victories
+	if mode == "sev-awakening":
+		if side_checks.get("sev_windows") != ["MG02-W1", "MG02-W2"]:
+			failure = "Both live Sev memory windows were not reached"
+			return
+		if not await _check_sev_awakened():
+			return
 	await _check_hunt_report_archive("MG02", "SB-X02", "sev")
+
+
+func _check_sev_window(command: String, id: String) -> bool:
+	var memory: Dictionary = app.view.town_memory if command == "remember" else app.view.battle_memory
+	var heading: String = app.view.sev_hunt.name + " · " + ("追忆" if command == "remember" else "战斗暂停")
+	if memory.get("id") != id or memory.get("general_id") != "MG02" or not _panel_has(heading):
+		failure = "The projected memory did not belong to Sev"
+		return false
+	if command == "remember" and not app.view.hunt.memory.is_empty():
+		failure = "Sev's active remembrance also appeared in Ado's record"
+		return false
+	side_checks.get_or_add("sev_windows", []).append(id)
+	return true
+
+
+func _check_sev_awakened() -> bool:
+	var hunt: Dictionary = app.view.sev_hunt
+	var records: Array = hunt.memory_records
+	var version := int(app.client.frame.state_version)
+	if not hunt.awakened or not hunt.reported or records.size() != 2 or not await _ado_tab("chapter"):
+		failure = "Sev's awakening, separate first report or two records were missing"
+		return false
+	if app.command_buttons.has("remember MG02") or not _panel_has(hunt.name + "已保留记忆") \
+			or not await _press("remembrance-history-MG02"):
+		failure = "Sev offered another choice or lost her committed transcript"
+		return false
+	if not _panel_has(hunt.name + " · 已提交的追忆对白") or app.command_buttons.has("town-roster"):
+		failure = "The transcript did not open in Sev's archive"
+		return false
+	for record: Dictionary in records:
+		if not record.committed or record.lines.size() != 2:
+			failure = "An uncommitted or incomplete memory appeared in the transcript"
+			return false
+		for line: Dictionary in record.lines:
+			if not _panel_has(line.text):
+				failure = "A committed line was missing from Sev's transcript"
+				return false
+	await _capture("sev-remembrance-transcript")
+	if not await _press("remembrance-history-MG02") or int(app.client.frame.state_version) != version:
+		failure = "Reading Sev's transcript changed the save"
+		return false
+	side_checks["sev_memory_records"] = records
+	return true
+
+
+func _sev_remembrance() -> void:
+	var hunt: Dictionary = app.view.sev_hunt
+	if app.view.phase != "TOWN" or not hunt.reported or hunt.awakened or hunt.evidence or not await _ado_tab("chapter"):
+		failure = "The remembrance needs a reported but unawakened Sev save without the evidence"
+		return
+	if not _panel_has("追忆尚缺缝补红围巾、镇民核实的证词") or app.command_buttons.has("remember MG02"):
+		failure = "The archive offered Sev's remembrance without the prerequisites"
+		return
+	var old_seals := int(app.view.chapter.seals)
+	var old_books := int(hunt.report_book.count)
+	var old_day := int(app.view.day)
+	var report_day := int(hunt.report_delivery_day)
+	await _play_hunt_route("sev-recall", "MG02")
+	if not failure.is_empty():
+		return
+	if not _check_sev_window("remember", "MG02-W2") or not app.view.town_memory.enabled \
+			or app.view.sev_hunt.awakened or int(app.view.day) != old_day + 1 \
+			or int(app.view.chapter.seals) != old_seals or int(app.view.sev_hunt.report_book.count) != old_books \
+			or int(app.view.sev_hunt.report_delivery_day) != report_day:
+		failure = "Preparing the second remembrance changed a report or advanced time beyond the material trip"
+		return
+	side_checks["sev_remembrance_pending"] = app.view.town_memory
+
+
+func _sev_remembrance_resume() -> void:
+	if not _check_sev_window("remember", "MG02-W2") or not app.view.town_memory.enabled:
+		return
+	var day := int(app.view.day)
+	var seals := int(app.view.chapter.seals)
+	var book := int(app.view.sev_hunt.report_book.count)
+	var report_day := int(app.view.sev_hunt.report_delivery_day)
+	if not await _command("remember retain MG02-W2"):
+		return
+	var hunt: Dictionary = app.view.sev_hunt
+	var reply: String = hunt.memory_records[1].lines[1].text if hunt.awakened else ""
+	if reply.is_empty() or not app.subtitles.text.contains(reply) or not app.view.town_memory.is_empty() \
+			or int(app.view.day) != day or int(app.view.chapter.seals) != seals \
+			or int(hunt.report_book.count) != book or int(hunt.report_delivery_day) != report_day:
+		failure = "Sev's retained reply was missing or the remembrance changed the original report"
+		return
+	if await _check_sev_awakened():
+		await _check_hunt_report_archive("MG02", "SB-X02", "sev")
 
 
 func _chapter_three_hunt(general_id: String, goal_region: String, book_id: String, seals: int) -> void:
@@ -1750,7 +1874,7 @@ func _ado_steps(victories: Array[String]) -> bool:
 	for i in range(160):
 		if app.view.phase != "BATTLE":
 			var result: Dictionary = app.view.battle_results[-1]
-			if result.result != "VICTORY":
+			if result.result != "VICTORY" or result.encounter_id != encounter:
 				failure = "Natural battle was lost: " + encounter
 				return false
 			victories.append(encounter)
@@ -4869,7 +4993,7 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
-	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "research-route", "research-resume", "research-early", "finale-route", "finale-defeat", "finale-training", "finale-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
+	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "sev-awakening", "sev-remembrance", "sev-remembrance-resume", "sev-awakened-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "research-route", "research-resume", "research-early", "finale-route", "finale-defeat", "finale-training", "finale-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
 		await _check_receipt_boot()
@@ -5008,8 +5132,14 @@ func _run() -> void:
 				failure = "The archived rescue report must open in town"
 			else:
 				await _check_finished_report("GR02E", "VICTORY", "甲环卫", "town-report")
-		elif mode == "sev-report-route":
+		elif mode in ["sev-report-route", "sev-awakening"]:
 			await _sev_route()
+		elif mode == "sev-remembrance":
+			await _sev_remembrance()
+		elif mode == "sev-remembrance-resume":
+			await _sev_remembrance_resume()
+		elif mode == "sev-awakened-resume":
+			await _check_sev_awakened()
 		elif mode == "sev-report-resume":
 			await _check_hunt_report_archive("MG02", "SB-X02", "sev")
 		elif mode == "mg03-report-route":
