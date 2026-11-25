@@ -9,6 +9,7 @@ const Aid = preload("res://aid_actor.gd")
 const Crossbow = preload("res://crossbow_actor.gd")
 const Mist = preload("res://mist_actor.gd")
 const Spear = preload("res://spear_actor.gd")
+const Hero = preload("res://hero_actor.gd")
 const Mimic = preload("res://mimic_actor.gd")
 const DualSac = preload("res://dual_sac_actor.gd")
 const Echo = preload("res://echo_actor.gd")
@@ -38,7 +39,17 @@ const ENEMIES := "res://assets/enemies/"
 const FORTRESS := "res://assets/fortress/"
 const ADO_ASSET := "MG01_Board.glb"
 const ADO_PATH := FORTRESS + ADO_ASSET
-const CONCURRENT_MODEL_LOADS := 2
+const HEROES := "res://assets/heroes/"
+const HERO_MODEL_PATHS := {
+	"H01": HEROES + "H01_Runtime.glb",
+	"H02": HEROES + "H02_Runtime.glb",
+	"H03": HEROES + "H03_Runtime.glb",
+	"H04": HEROES + "H04_Runtime.glb",
+	"H05": HEROES + "H05_Runtime.glb",
+	"H06": HEROES + "H06_Runtime.glb",
+	"H08": HEROES + "H08_Runtime.glb",
+}
+const CONCURRENT_MODEL_LOADS := 4
 const CONTACT_MODEL_PATHS := {
 	"MG01": ADO_PATH, "EN04": ENEMIES + RING_GUARD_ASSET, "EN17": ENEMIES + ENEMY_SPEAR_ASSET,
 	"S02": MELEE_PATH, "S03": BOW_PATH, "M01": SPEAR_PATH,
@@ -75,7 +86,8 @@ var audit := {"clips": {}, "contacts": 0, "absorptions": 0, "events": 0, "peak_m
 	"ado_seen": false, "ado_phases": [], "ado_releases": 0, "ado_downs": 0,
 	"ado_windups": {}, "ado_moves": {}, "ado_shields": 0, "ado_cues": [], "field_props": {},
 	"ado_prepared_before_battle": false, "viewport_resizes_in_battle": 0, "scenery_updates": 0,
-	"bone_arrows": {}, "bone_arrow_flights": 0}
+	"bone_arrows": {}, "bone_arrow_flights": 0,
+	"hero_peak": 0, "hero_kinds": {}, "hero_skills": {}}
 var marks: Dictionary = {}
 var ado_traces: Dictionary = {}
 var cells: Dictionary = {}
@@ -104,6 +116,9 @@ var flying_projectiles: Array[MeshInstance3D] = []
 var spare_projectiles: Array[MeshInstance3D] = []
 var projectile_tweens: Dictionary = {}
 var spear_model: PackedScene
+var hero_models: Dictionary = {}
+var hero_travels: Dictionary = {}
+var _hero_supported_cache: Dictionary = {}
 var spear_warmed := false
 var skeletons_warmed := false
 var gray_oak_warmed := false
@@ -467,8 +482,26 @@ func prefetch_contact_models(kinds: Array) -> void:
 	if not is_ready or DisplayServer.get_name() == "headless":
 		return
 	for kind in kinds:
-		if kind is String and (kind != "M01" or show_spear) and CONTACT_MODEL_PATHS.has(kind):
+		if not (kind is String):
+			continue
+		if (kind != "M01" or show_spear) and CONTACT_MODEL_PATHS.has(kind):
 			_load_scene(CONTACT_MODEL_PATHS[kind], true)
+		elif _hero_model_supported(kind):
+			_load_scene(HERO_MODEL_PATHS[kind], true)
+
+
+func _hero_model_supported(kind: String) -> bool:
+	if not HERO_MODEL_PATHS.has(kind):
+		return false
+	if not _hero_supported_cache.has(kind):
+		_hero_supported_cache[kind] = ResourceLoader.exists(HERO_MODEL_PATHS[kind])
+	return _hero_supported_cache[kind]
+
+
+func is_model_pending(kind: String, enemy := false) -> bool:
+	if not enabled or not is_ready:
+		return false
+	return _supports_enemy(kind) if enemy else _supports_deployment(kind)
 
 
 func _ado_visual_pending() -> bool:
@@ -766,6 +799,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 	var aid_count := 0
 	var crossbow_count := 0
 	var mist_count := 0
+	var hero_count := 0
 	var echoes := 0
 	var wasps := 0
 	for row in snapshot.actors:
@@ -784,6 +818,9 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 				crossbow_count += 1
 			elif row.kind == "M04" and actors.has(row.id):
 				mist_count += 1
+			elif HERO_MODEL_PATHS.has(row.kind) and actors.has(row.id):
+				hero_count += 1
+				audit.hero_kinds[row.kind] = int(audit.hero_kinds.get(row.kind, 0)) + 1
 		elif _supports_enemy(row.kind) and row.side == "enemy" and row.pos is Array:
 			_update_actor(row, restore, false, relocated)
 			if row.kind == "EN01" and actors.has(row.id):
@@ -805,6 +842,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 	audit.aid_peak = maxi(int(audit.aid_peak), aid_count)
 	audit.crossbow_peak = maxi(int(audit.crossbow_peak), crossbow_count)
 	audit.mist_peak = maxi(int(audit.mist_peak), mist_count)
+	audit.hero_peak = maxi(int(audit.hero_peak), hero_count)
 	audit.spear_peak = maxi(int(audit.spear_peak), spears)
 	audit.enemy_spear_peak = maxi(int(audit.enemy_spear_peak), enemy_spears)
 	audit.mimic_peak = maxi(int(audit.mimic_peak), mimics)
@@ -839,12 +877,15 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 			var pending: Dictionary = row.get("aid_pending" if pawn is Aid else "mist_pending", {})
 			if pawn.cast_id != pending.get("id", ""):
 				pawn.cancel_cast(reduced)
+		if pawn is Hero and not pawn.cast_id.is_empty() and float(row.hp) > 0 \
+				and pawn.cast_id != row.get("hero_pending", {}).get("id", ""):
+			pawn.cancel_skill(reduced)
 	if focused_pause and (restore or not events.is_empty() or not relocated.is_empty()):
 		_schedule_board_draw()
 
 
 func _supports_deployment(kind: String) -> bool:
-	return kind in ["S01", "S02", "S03", "M02", "M03", "M04"] or (kind == "M01" and show_spear)
+	return kind in ["S01", "S02", "S03", "M02", "M03", "M04"] or (kind == "M01" and show_spear) or _hero_model_supported(kind)
 
 
 func _supports_enemy(kind: String) -> bool:
@@ -1027,6 +1068,14 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			enemy_model = _load_scene(CONTACT_MODEL_PATHS[row.kind], true)
 			if enemy_model == null:
 				return
+		var hero_model: PackedScene
+		if _hero_model_supported(row.kind):
+			hero_model = hero_models.get(row.kind)
+			if hero_model == null:
+				hero_model = _load_scene(HERO_MODEL_PATHS[row.kind], true)
+				if hero_model == null:
+					return
+				hero_models[row.kind] = hero_model
 		var assembling := Time.get_ticks_usec() if profile_attachment else 0
 		var pawn: Node3D
 		if row.kind == "EN01":
@@ -1055,6 +1104,8 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			pawn = Crossbow.new()
 		elif row.kind == "M04":
 			pawn = Mist.new()
+		elif hero_model != null:
+			pawn = Hero.new()
 		else:
 			pawn = Actor.new()
 		viewport_3d.add_child(pawn)
@@ -1097,6 +1148,10 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			assembled = pawn.assemble_aid(aid_model, aid_travel)
 		elif pawn is Mist:
 			assembled = pawn.assemble_mist(mist_model, mist_travel)
+		elif pawn is Hero:
+			assembled = pawn.assemble_hero(hero_model, hero_travels.get(row.kind), row.kind)
+			if assembled and not hero_travels.has(row.kind):
+				hero_travels[row.kind] = pawn.player.get_animation_library("board")
 		else:
 			assembled = pawn.assemble(model, travel_library)
 		if not assembled:
@@ -1138,6 +1193,8 @@ func _sync_pose(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 		_prepare_targeted(pawn, row.aid_pending, true)
 	if restore and pawn is Mist and row.get("mist_pending") is Dictionary:
 		_prepare_targeted(pawn, row.mist_pending, true)
+	if restore and pawn is Hero and row.get("hero_pending") is Dictionary:
+		_prepare_hero_skill(pawn, row, true)
 	if restore and pawn is Spear and row.get("spear_pending") is Dictionary:
 		var pending: Dictionary = row.spear_pending
 		_lock_spear(pawn, row, str(pending.id), pending.get("cells", []), pending.get("origin"), true)
@@ -1194,6 +1251,14 @@ func _prepare_targeted(pawn: Node3D, pending: Dictionary, restore: bool) -> void
 	var locked: Array = pending.get("cells", [])
 	var point: Vector3 = pawn.destination if locked.is_empty() else _world(_at(locked[0]))
 	pawn.prepare_cast(str(pending.id), point, reduced, restore)
+
+
+func _prepare_hero_skill(pawn: Node3D, row: Dictionary, restore: bool) -> void:
+	var pending: Dictionary = row.hero_pending
+	var locked: Array = pending.get("cells", [])
+	var vector: Vector3 = Vector3.ZERO if locked.is_empty() else _world(_at(locked[0])) - pawn.destination
+	var yaw := _intent_facing(pending.get("facing"), int(row.facing)) if vector.length_squared() < 0.0001 else _yaw(vector)
+	pawn.prepare_skill(str(pending.get("id", "")), str(pending.get("move_id", "")), yaw, reduced, restore)
 
 
 func _intent_facing(value: Variant, fallback: int) -> float:
@@ -1323,6 +1388,13 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		var piercing: bool = event.get("move") in ["S03-A", "M03-A"]
 		var medical: bool = event.get("move") == "M02-A"
 		var mist: bool = event.get("move") == "M04-A"
+		var hero_actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
+		var hero_skill: bool = hero_actor_node is Hero and str(event.get("move", "")).begins_with("H")
+		if hero_skill:
+			if event.type == "windup" and by_id[event.actor].get("hero_pending", {}).get("id") == event.action_id:
+				_prepare_hero_skill(hero_actor_node, by_id[event.actor], false)
+			elif event.type == "skill_miss":
+				_mark(event.actor, by_id[event.actor].pos, "放空", false)
 		if skill and actors.has(event.actor):
 			if event.type == "windup" and by_id[event.actor].get("melee_pending", {}).get("id") == event.action_id:
 				_prepare_gap(actors[event.actor].node, by_id[event.actor], false)
@@ -1344,7 +1416,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				_prepare_targeted(actors[event.actor].node, by_id[event.actor].mist_pending, false)
 			elif event.type == "skill_miss":
 				_mark(event.actor, by_id[event.actor].pos, "放空", false)
-		var attack: bool = event.type == "basic_start" or ((skill or piercing or medical or mist) and event.type == "release")
+		var attack: bool = event.type == "basic_start" or ((skill or piercing or medical or mist or hero_skill) and event.type == "release")
 		if attack and actors.has(event.actor) and actors[event.actor].node is Actor:
 			var attacker = actors[event.actor].node
 			var key := _attack_key(event)
@@ -1360,6 +1432,19 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				mist_contacts[str(event.actor) + "/" + hit] = contacts[key]
 				continue
 			if downs.has(event.actor):
+				continue
+			if attacker is Hero and hero_skill and event.type == "release":
+				var hmove := str(event.get("move", ""))
+				var htarget: Dictionary = by_id.get(event.get("target"), {})
+				var hcells: Array = event.get("cells", [])
+				var hvec := Vector3.ZERO
+				if not htarget.is_empty():
+					hvec = _world(_at(htarget.pos)) - attacker.destination
+				elif not hcells.is_empty():
+					hvec = _world(_at(hcells[0])) - attacker.destination
+				var hyaw: float = _intent_facing(event.get("facing"), int(by_id[event.actor].facing)) if hvec.length_squared() < 0.0001 else _yaw(hvec)
+				contacts[key] = attacker.release_skill(str(event.get("action_id", "")), hmove, hyaw, _emit_attack_contact, reduced)
+				audit.hero_skills[str(event.get("action_id", key))] = {"actor": event.actor, "kind": attacker.hero_kind, "move": hmove}
 				continue
 			var target: Dictionary = by_id.get(melee_impacts.get(key, event.get("target")), {})
 			var direction: Vector3 = Vector3.ZERO if target.is_empty() else _world(_at(target.pos)) - attacker.destination

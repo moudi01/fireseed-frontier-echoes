@@ -1285,13 +1285,15 @@ func _sync_unit_markers() -> void:
 		retained[id] = true
 		var health := clampf(float(actor.hp) / maxf(1.0, float(actor.max_hp)), 0.0, 1.0) if not down and actor.has("max_hp") else -1.0
 		var enemy: bool = actor.get("side") == "enemy"
-		var appearance := {"modelled": modelled, "down": down, "enemy": enemy, "sideways": _sideways,
+		var kind: String = str(actor.get("kind", actor.get("unit_id", "")))
+		var loading_model: bool = not modelled and not down and stage.is_model_pending(kind, enemy)
+		var appearance := {"modelled": modelled, "loading": loading_model, "down": down, "enemy": enemy, "sideways": _sideways,
 			"focused": id == focus, "barrier": not down and int(actor.get("private_shield", actor.get("boss_barrier", 0))) > 0,
 			"shared_shield": not down and actor.has("shared_protection"), "radius": radius}
-		var label_style := {"enemy": enemy, "modelled": modelled, "down": down, "sideways": _sideways,
+		var label_style := {"enemy": enemy, "modelled": modelled or loading_model, "down": down, "sideways": _sideways,
 			"co_located": down and living_cells.has(cell), "radius": radius,
 			"badge": "" if _show_deployment and enemy else actor.get("badge", str(int(entry.index) + 1)),
-			"health": health, "badge_font_size": impact_font_size if modelled else 14}
+			"health": health, "badge_font_size": impact_font_size if (modelled or loading_model) else 14}
 		if marker.appearance != appearance:
 			marker.appearance = appearance
 			item.queue_redraw()
@@ -1340,20 +1342,23 @@ func _draw_unit_marker(id: String) -> void:
 	var rx := radius * 1.05 if sideways else radius
 	var ink := DANGER if style.enemy else Color("95dbca")
 	var rim := Color(0.54, 0.56, 0.55, 0.42) if style.down else ink
-	if style.modelled:
+	if style.modelled or style.get("loading", false):
+		var loading_only: bool = not style.modelled and style.get("loading", false)
 		if sideways:
 			var shadow_center := Vector2(0.5, 2.0)
+			var shadow_alpha := 0.12 if loading_only else (0.10 if style.down else 0.18)
 			item.draw_colored_polygon(_ellipse_points(shadow_center, rx * 1.48, ry * 1.45, 20),
-				Color(0.05, 0.04, 0.03, 0.10 if style.down else 0.18))
-			item.draw_colored_polygon(_ellipse_points(shadow_center, rx * 1.15, ry * 1.15, 20),
-				Color(0.04, 0.03, 0.02, 0.15 if style.down else 0.30))
-		var base := Color(0.14, 0.15, 0.15, 0.28) if style.down else Color(0.08, 0.12, 0.12, 0.68)
+				Color(0.05, 0.04, 0.03, shadow_alpha))
+			if not loading_only:
+				item.draw_colored_polygon(_ellipse_points(shadow_center, rx * 1.15, ry * 1.15, 20),
+					Color(0.04, 0.03, 0.02, 0.15 if style.down else 0.30))
+		var base := Color(0.10, 0.14, 0.14, 0.42) if loading_only else (Color(0.14, 0.15, 0.15, 0.28) if style.down else Color(0.08, 0.12, 0.12, 0.68))
 		var poly := _enemy_diamond(Vector2.ZERO, rx, ry) if style.enemy else _ellipse_points(Vector2.ZERO, rx, ry, 24)
 		item.draw_colored_polygon(poly, base)
 		poly.append(poly[0])
-		if not style.down:
+		if not style.down and not loading_only:
 			item.draw_polyline(poly, Color(0.06, 0.06, 0.05, 0.72), 3.2, true)
-		item.draw_polyline(poly, rim, 1.1 if style.down else 1.7, true)
+		item.draw_polyline(poly, Color(rim, 0.55) if loading_only else rim, 1.1 if (style.down or loading_only) else 1.7, true)
 	elif style.enemy:
 		item.draw_colored_polygon(_enemy_diamond(Vector2.ZERO, rx, ry), ink)
 	else:

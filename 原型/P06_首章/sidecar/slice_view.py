@@ -43,6 +43,11 @@ SEARCH_ACTIONS = {('investigate', 'inspect', 'tracks'), ('investigate', 'inspect
                   ('investigate', 'return', 'CONFIRM')}
 ADO_MOVES = {'MG01-A', 'MG01-B', 'MG01-C'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
+HERO_MOVES = {
+    'H01-A', 'H01-B', 'H02-A', 'H02-B', 'H03-A', 'H03-B',
+    'H04-A', 'H04-B', 'H05-A', 'H05-B', 'H06-A', 'H06-B',
+    'H08-A', 'H08-B',
+}
 ECHO_MOVE = 'EN06-A'
 STING_MOVE = 'EN03-A'
 ENEMY_SPEAR = 'EN17-A'
@@ -551,7 +556,7 @@ def battle_view(game):
               'ward', 'attacker', 'members', 'amount', 'expires')
     for event in ([] if from_history else battle['events']):
         if event['type'] == 'windup' and (event.get('move') in ADO_MOVES or event.get('move') in INFANTRY_MOVES
-                                           or event.get('move') in ENEMY_MOVES):
+                                           or event.get('move') in ENEMY_MOVES or event.get('move') in HERO_MOVES):
             locks[event['action_id']] = event
         if event.get('tick') != battle['tick']:
             continue
@@ -566,23 +571,26 @@ def battle_view(game):
         en01_event = (by_id.get(event.get('actor'), {}).get('kind') == 'EN01'
                       and event.get('move') == 'EN01-A' and name == 'release')
         infantry_event = event.get('move') in INFANTRY_MOVES and name in ('windup', 'release', 'skill_miss')
+        hero_event = event.get('move') in HERO_MOVES and name in ('windup', 'release', 'skill_miss')
         aid_heal = name == 'heal' and event.get('move') == 'M02-A'
         mist_delay = name == 'cast_delayed' and by_id.get(event.get('actor'), {}).get('kind') == 'M04'
         enemy_event = event.get('move') in ENEMY_MOVES and name in ('windup', 'release', 'skill_miss')
         ado_event = (by_id.get(event.get('actor'), {}).get('kind') == 'MG01'
                      and name in ('boss_phase', 'windup', 'release', 'skill_miss', 'boss_private_shield'))
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
-                spear_event or en01_event or infantry_event or ado_event or aid_heal or mist_delay or enemy_event or bone_guard):
+                spear_event or en01_event or infantry_event or hero_event or ado_event or aid_heal or mist_delay or enemy_event or bone_guard):
             continue
         row = {key: event[key] for key in fields if key in event}
         if ado_event and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['cells'] = windup.get('cells', [])
             row['facing'] = windup.get('facing')
-        if (infantry_event or enemy_event) and name == 'release':
+        if (infantry_event or enemy_event or hero_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['target'] = windup.get('target')
             row['cells'] = windup.get('cells', [])
+            if hero_event:
+                row['facing'] = windup.get('facing')
             if event.get('move') == BONE_ARROW:
                 row.update(bone_arrow_path(game, battle, by_id[event['actor']], row['cells']))
             if event.get('move') == DUAL_SAC_ROOT:
@@ -624,6 +632,8 @@ def battle_view(game):
             row['aid_pending'] = {key: pending.get(key) for key in ('id', 'target', 'cells', 'facing')}
         if pending.get('move_id') == 'M04-A' and not battle.get('result'):
             row['mist_pending'] = {key: pending.get(key) for key in ('id', 'target', 'cells', 'facing')}
+        if pending.get('move_id') in HERO_MOVES and not battle.get('result'):
+            row['hero_pending'] = {key: pending.get(key) for key in ('id', 'move_id', 'target', 'cells', 'facing')}
         if pending.get('move_id') in ('M01-A', ENEMY_SPEAR) and not battle.get('result'):
             row['spear_pending'] = {key: pending.get(key) for key in ('id', 'cells', 'origin', 'due')}
         if pending.get('move_id') == 'EN01-A' and not battle.get('result'):
