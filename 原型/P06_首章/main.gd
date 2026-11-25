@@ -1329,9 +1329,9 @@ func _chapter_actions() -> void:
 			_input_action("应召一名英雄 · 1 枚应召印", "summon", [chapter.summon_id, "CONFIRM"],
 				"使用一枚应召印，应召一名尚未获得的英雄。")
 		_hunt_archive()
-		var sev: Dictionary = view.sev_hunt
-		if sev.defeated:
-			_hunt_report(sev)
+		for hunt: Dictionary in view.get("hunts", []):
+			if hunt.id != "MG01" and hunt.defeated:
+				_hunt_report(hunt)
 		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
 		var whistle: Dictionary = view.whistle
 		if whistle.get("stage") == "record":
@@ -1362,14 +1362,11 @@ func _chapter_history(chapter: Dictionary) -> void:
 		return
 	if _archive_record_id.is_empty():
 		_archive_record_id = records.back().id
-	var hunt: Dictionary = view.get("hunt", {})
-	if hunt.get("reported", false):
-		records.append({"id": "report", "title": "阿铎讨伐报告", "day": hunt.report_delivery_day,
-			"text": "\n".join(_hunt_report_lines(hunt))})
-	var sev: Dictionary = view.get("sev_hunt", {})
-	if sev.get("reported", false):
-		records.append({"id": "report-MG02", "title": "%s讨伐报告" % sev.name, "day": sev.report_delivery_day,
-			"text": "\n".join(_hunt_report_lines(sev))})
+	for hunt: Dictionary in view.get("hunts", []):
+		if hunt.reported:
+			var id := "report" if hunt.id == "MG01" else "report-" + str(hunt.id)
+			records.append({"id": id, "title": "%s讨伐报告" % hunt.name, "day": hunt.report_delivery_day,
+				"text": "\n".join(_hunt_report_lines(hunt))})
 	var collection: Dictionary = view.get("whistle", {}).get("collection", {})
 	if not collection.is_empty():
 		records.append({"id": "whistle", "title": "裂口铜哨", "day": collection.day,
@@ -1521,9 +1518,8 @@ func _hunt_report_lines(hunt: Dictionary) -> PackedStringArray:
 
 
 func _pending_hunt_report(slice: Dictionary, this_return := false) -> Dictionary:
-	for key in ["hunt", "sev_hunt"]:
-		var hunt: Dictionary = slice.get(key, {})
-		if hunt.get("report_ready", false) and not hunt.reported \
+	for hunt: Dictionary in slice.get("hunts", []):
+		if hunt.report_ready and not hunt.reported \
 				and (not this_return or hunt.report_this_return):
 			return hunt
 	return {}
@@ -1909,7 +1905,7 @@ func _toggle_outfit_target(id: String) -> void:
 
 
 func _expedition_actions() -> void:
-	var hunts: Array[Dictionary] = [view.hunt, view.sev_hunt]
+	var hunts: Array = view.get("hunts", [])
 	var selected: Dictionary = {}
 	for hunt in hunts:
 		if hunt.selected:
@@ -2161,10 +2157,11 @@ func _explore_actions() -> void:
 		_member_actions(map_data.get("deploy_cells", []))
 		return
 	if "G" in route.get("cleared", []):
-		if view.get("region") == "RG02" and view.get("hunt", {}).get("report_pending_return", false):
-			_label(actions, "主堡战已结束。可经北堡出口归城，也可沿原路返回入口。安全归城后可交存报告。", INK, 16)
-		elif _sev_report_pending_return():
-			_label(actions, "赛芙战已结束。可经北林海出口归城，也可沿原路返回入口。安全归城后可交存报告。", INK, 16)
+		var hunt := _hunt_pending_return(view.region)
+		if not hunt.is_empty():
+			var battle_name := "主堡" if hunt.id == "MG01" else str(hunt.name)
+			_label(actions, "%s战已结束。可经%s归城，也可沿原路返回入口。安全归城后可交存报告。" % [
+				battle_name, route.site_names.get("X", "本区出口")], INK, 16)
 	if view.get("tutorial_area", false):
 		var choices: Dictionary = view.get("choice_notes", {})
 		var choice_key := {"A": "plan", "B_SUPPORT": "support", "B_MATERIAL": "materials", "G": "cache"}.get(site, "") as String
@@ -2215,17 +2212,20 @@ func _explore_actions() -> void:
 			_input_action("沿已知道路返回入口", "walkto", [str(int(pos[0])), str(int(pos[1]))])
 
 
-func _sev_report_pending_return() -> bool:
-	var sev: Dictionary = view.get("sev_hunt", {})
-	return sev.get("report_pending_return", false) and view.get("region") == sev.region
+func _hunt_pending_return(region: String) -> Dictionary:
+	for hunt: Dictionary in view.get("hunts", []):
+		if hunt.report_pending_return and (region.is_empty() or hunt.region == region):
+			return hunt
+	return {}
 
 
 func _return_consequence(scouting: Dictionary) -> String:
 	if scouting.is_empty():
-		if _sev_report_pending_return():
-			return "安全归城后，可在暮汀旧档案交存赛芙讨伐报告。"
-		if view.get("hunt", {}).get("report_pending_return", false):
-			return "安全归城后，可在暮汀旧档案交存阿铎讨伐报告。"
+		var hunt := _hunt_pending_return(view.region)
+		if hunt.is_empty():
+			hunt = _hunt_pending_return("")
+		if not hunt.is_empty():
+			return "安全归城后，可在暮汀旧档案交存%s讨伐报告。" % hunt.name
 		return "结束本趟远征并按实际结果归城。"
 	if scouting.ready:
 		return "安全归城将交付本趟侦路调查。"

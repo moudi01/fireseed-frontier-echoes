@@ -50,9 +50,10 @@ BONE_ARROW = 'EN22-A'
 BONE_GUARD = 'EN21-A'
 DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
+HUNT_GENERALS = ('MG01', 'MG02', 'MG03')
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
                  ('MG01', 'record'), ('MG01', 'witness'), ('MG01', 'collect', 'CONFIRM'),
-                 ('report', 'MG01', 'CONFIRM'), ('report', 'MG02', 'CONFIRM')}
+                 *(('report', general, 'CONFIRM') for general in HUNT_GENERALS)}
 SITES = {'I', 'A', 'B', 'B1', 'B2', 'B_SUPPORT', 'B_MATERIAL', 'C', 'D', 'U', 'V', 'W',
          'T', 'S', 'L', 'G', 'X'}
 STANCES = {'advance': '推进', 'hold': '固守', 'flank': '包抄', 'evade': '避险'}
@@ -61,13 +62,12 @@ UNIT_NAMES = {'S01': '盾兵', 'S02': '近战兵', 'S03': '弓兵',
 TUTORIAL_BATTLES = ('INTRO-EN01', 'TUT01-ROOT')
 TUTORIAL_PLANS = ('PL01', 'PL02', 'PL05')
 PLAN_ID = r'PL\d{2}'
-HUNT_GENERALS = ('MG01', 'MG02')
 MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
           for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',)},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
-    'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG06', 'RG07', 'RG08')},
+    'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG06', 'RG07', 'RG08')},
     'memory': MEMORY, 'remember': MEMORY | {('MG01',), ('close',)},
     'dialogue': {('next',), ('skip',)}, 'buy_supply': {('1',)},
     'pack_medical': {(str(n),) for n in range(4)},
@@ -749,6 +749,8 @@ def hunt_view(game, general_id):
     facts = campaign['facts']
     general = hunt_general(game, general_id)
     route = next(row for row in game.cat.config['routes'] if row['route_id'] == 'HUNT-' + general_id)
+    if route['gate'] not in facts:
+        return {}
     delivery_id = general['defeat_fact']
     book = BOSS_BOOKS[delivery_id]
     victory = facts.get(general_id + '_DEFEATED')
@@ -1351,6 +1353,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
     rescue_board = battle['board_cells'] if battle and state['mission'] == 'RESCUE' else []
     can_plan = state['phase'] in ('TOWN', 'EXPLORE')
     tutorial_explore = state['phase'] == 'EXPLORE' and state['mission'] == 'TUTORIAL'
+    hunts = {general: hunt_view(game, general) for general in HUNT_GENERALS}
     return {'phase': state['phase'], 'site': state['site'], 'day': state['day'],
             'region': state['region'], 'region_name': game.cat.regions[state['region']]['name'] if active else '',
             'supply': state['bank']['supply'], 'medical': state['medical'],
@@ -1359,8 +1362,8 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'commissioned': 'ST-101' in facts, 'commission_receipt': commission, 'complete': 'ST-102' in facts,
             'tutorial_area': active and state['mission'] == 'TUTORIAL',
             'tutorial_return': state['mission'] == 'TUTORIAL',
-            'hunt': hunt_view(game, 'MG01') if 'ST-104' in facts else {},
-            'sev_hunt': hunt_view(game, 'MG02') if 'ST-104' in facts else {},
+            'hunts': [hunt for hunt in hunts.values() if hunt],
+            'hunt': hunts['MG01'], 'sev_hunt': hunts['MG02'],
             'rescue': rescue_view(game) if state['capture_batches'] else {},
             'rescue_board': rescue_board,
             'preparation': prepare, 'construction': construction_view(game) if town else {},

@@ -1293,14 +1293,21 @@ func _check_handbook_event() -> void:
 	await _capture("handbook-resolved")
 
 
-func _play_hunt_route(route_name: String, hunt_key: String) -> Array[String]:
+func _route_hunt(general_id: String) -> Dictionary:
+	for hunt: Dictionary in app.view.get("hunts", []):
+		if hunt.id == general_id:
+			return hunt
+	return {}
+
+
+func _play_hunt_route(route_name: String, general_id: String) -> Array[String]:
 	var path: String = app.data_dir.path_join(app.case_name + "." + route_name + "-route.json")
 	var route: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not route is Dictionary or not route.get("commands") is Array:
 		failure = "Missing native tactical route: " + path
 		return []
 	var victories: Array[String] = []
-	var report_button: String = "quest report %s CONFIRM" % app.view[hunt_key].id
+	var report_button := "quest report %s CONFIRM" % general_id
 	for value in route.commands:
 		var key := str(value)
 		var parts := key.split(" ")
@@ -1326,12 +1333,12 @@ func _play_hunt_route(route_name: String, hunt_key: String) -> Array[String]:
 			if not await _ado_steps(victories):
 				return []
 			continue
-		if hunt_key == "sev_hunt" and command == "return":
-			var hunt: Dictionary = app.view[hunt_key]
+		if general_id != "MG01" and command == "return":
+			var hunt := _route_hunt(general_id)
 			if not hunt.report_pending_return or hunt.report_ready or hunt.reported:
-				failure = "Sev's victory did not wait for a safe return before enabling its report"
+				failure = "%s victory did not wait for a safe return before enabling its report" % general_id
 				return []
-		if key == report_button and app.view[hunt_key].reported:
+		if key == report_button and _route_hunt(general_id).reported:
 			if app.command_buttons.has(key):
 				failure = "The first-delivery control appeared again"
 				return []
@@ -1345,8 +1352,8 @@ func _play_hunt_route(route_name: String, hunt_key: String) -> Array[String]:
 			await _capture(command + "-" + parts[2])
 		if not await _command(key):
 			return []
-		if hunt_key == "sev_hunt" and command in ["depart", "next"]:
-			side_checks.get_or_add("sev_regions", []).append(app.view.region)
+		if general_id != "MG01" and command in ["depart", "next"]:
+			side_checks.get_or_add(route_name + "_regions", []).append(app.view.region)
 		if command == "depart":
 			await _capture("hunt-departure")
 		elif command == "next":
@@ -1358,7 +1365,7 @@ func _play_hunt_route(route_name: String, hunt_key: String) -> Array[String]:
 
 
 func _ado_route() -> void:
-	var victories := await _play_hunt_route("ado", "hunt")
+	var victories := await _play_hunt_route("ado", "MG01")
 	if not failure.is_empty():
 		return
 	if mode == "fortress-branches":
@@ -1409,7 +1416,7 @@ func _sev_route() -> void:
 	var old_books := int(app.view.sev_hunt.report_book.count)
 	var old_budget: Dictionary = app.view.budget.duplicate()
 	var completes_chapter: bool = app.view.hunt.reported
-	var victories := await _play_hunt_route("sev", "sev_hunt")
+	var victories := await _play_hunt_route("sev", "MG02")
 	if not failure.is_empty():
 		return
 	if side_checks.get("sev_regions") != ["RG06", "RG03"] or victories.size() != 6 or victories[-1] != "BATTLE-MG02":
@@ -1427,29 +1434,53 @@ func _sev_route() -> void:
 		failure = "Sev's report alone changed the chapter budget"
 		return
 	side_checks["sev_victories"] = victories
-	await _check_sev_report_archive()
+	await _check_hunt_report_archive("MG02", "SB-X02", "sev")
 
 
-func _check_sev_report_archive() -> void:
-	if app.view.get("phase") != "TOWN" or not app.view.get("sev_hunt", {}).get("reported", false) \
-			or app.view.sev_hunt.report_book.id != "SB-X02":
-		failure = "The saved Sev report or its book did not restore"
+func _mg03_route() -> void:
+	var hunt := _route_hunt("MG03")
+	if app.view.get("phase") != "TOWN" or app.view.budget.milestone != "CH2_COMPLETE" \
+			or hunt.is_empty() or hunt.defeated:
+		failure = "The MG03 route needs a town save with both Chapter 2 reports and no MG03 victory"
+		return
+	var old_seals := int(app.view.chapter.seals)
+	var old_books := int(hunt.report_book.count)
+	var old_budget: Dictionary = app.view.budget.duplicate()
+	var victories := await _play_hunt_route("mg03", "MG03")
+	if not failure.is_empty():
+		return
+	if side_checks.get("mg03_regions") != ["RG07", "RG04"] or victories.size() != 6 or victories[-1] != "BATTLE-MG03":
+		failure = "The MG03 hunt missed its two-region path or authentic battle victory"
+		return
+	hunt = _route_hunt("MG03")
+	if app.view.get("phase") != "TOWN" or not hunt.reported or int(app.view.chapter.seals) != old_seals + 1 \
+			or int(hunt.report_book.count) != old_books + 1 or app.view.budget != old_budget:
+		failure = "The MG03 report did not award exactly one seal and book at the current budget"
+		return
+	side_checks["mg03_victories"] = victories
+	await _check_hunt_report_archive("MG03", "SB-X03", "mg03")
+
+
+func _check_hunt_report_archive(general_id: String, book_id: String, evidence_key: String) -> void:
+	var hunt := _route_hunt(general_id)
+	if app.view.get("phase") != "TOWN" or not hunt.get("reported", false) or hunt.report_book.id != book_id:
+		failure = "The saved %s report or its book did not restore" % general_id
 		return
 	var version := int(app.client.frame.state_version)
 	if not await _ado_tab("chapter"):
 		return
-	if app.command_buttons.has("quest report MG02 CONFIRM"):
-		failure = "The first Sev report was offered again"
+	if app.command_buttons.has("quest report %s CONFIRM" % general_id):
+		failure = "The first %s report was offered again" % general_id
 		return
-	if not await _press("chapter-history") or not await _press("archive-report-MG02"):
+	if not await _press("chapter-history") or not await _press("archive-report-" + general_id):
 		return
-	if not app._archive_page.heading.text.contains("赛芙") \
-			or not app._archive_page.body.text.contains(app.view.sev_hunt.report_book.name) \
+	if not app._archive_page.heading.text.contains(hunt.name) \
+			or not app._archive_page.body.text.contains(hunt.report_book.name) \
 			or int(app.client.frame.state_version) != version:
-		failure = "Reopening the Sev report lost its receipt or changed the save"
+		failure = "Reopening the %s report lost its receipt or changed the save" % general_id
 		return
-	side_checks["sev_report"] = app.view.sev_hunt
-	side_checks["sev_budget"] = app.view.budget
+	side_checks[evidence_key + "_report"] = hunt
+	side_checks[evidence_key + "_budget"] = app.view.budget
 
 
 func _fortress_frame() -> bool:
@@ -4635,7 +4666,7 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
-	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
+	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
 		await _check_receipt_boot()
@@ -4777,7 +4808,11 @@ func _run() -> void:
 		elif mode == "sev-report-route":
 			await _sev_route()
 		elif mode == "sev-report-resume":
-			await _check_sev_report_archive()
+			await _check_hunt_report_archive("MG02", "SB-X02", "sev")
+		elif mode == "mg03-report-route":
+			await _mg03_route()
+		elif mode == "mg03-report-resume":
+			await _check_hunt_report_archive("MG03", "SB-X03", "mg03")
 		elif mode == "ado-sample":
 			if failure.is_empty():
 				await _ado_sample()
