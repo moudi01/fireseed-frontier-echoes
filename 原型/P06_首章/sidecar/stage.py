@@ -248,10 +248,12 @@ def stage(source, output, release_id=None):
         {'prefixItems': [{'const': 'investigate'}, {'const': 'start'}, batch, {'const': 'CONFIRM'}],
          'minItems': 4, 'maxItems': 4},
     ]}
+    build_order = {'pattern': '^' + view['BUILD_ORDER_ID'] + '$'}
     constraints['facility'] = {'anyOf': [
         {'prefixItems': [{'const': 'build'}, {'enum': list(view['BUILDING_EFFECTS'])}, {'const': '1'},
-                         {'pattern': '^' + view['BUILD_ORDER_ID'] + '$'}, {'const': 'CONFIRM'}],
-         'minItems': 5, 'maxItems': 5},
+                         build_order, {'const': 'CONFIRM'}], 'minItems': 5, 'maxItems': 5},
+        {'prefixItems': [{'const': 'build'}, {'enum': list(view['MULTILEVEL_BUILDINGS'])}, {'enum': ['2', '3']},
+                         build_order, {'const': 'CONFIRM'}], 'minItems': 5, 'maxItems': 5},
         {'prefixItems': [{'enum': list(view['CONSTRUCTION_ACTIONS'])}, {'minLength': 1, 'maxLength': 64},
                          {'const': 'CONFIRM'}], 'minItems': 3, 'maxItems': 3},
     ]}

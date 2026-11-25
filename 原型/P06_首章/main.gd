@@ -604,6 +604,7 @@ func _refresh(row: Dictionary) -> void:
 	var was_commissioned: bool = view.get("commissioned", false)
 	var previous_phase: String = view.get("phase", "")
 	var was_merger_pending: bool = view.get("finale", {}).get("merger", {}).get("pending", false)
+	var was_seal_pending: bool = view.get("finale", {}).get("agla", {}).get("seal_pending", false)
 	var returned_scouting: bool = view.get("scouting", {}).get("delivered_here", false)
 	var previous_map: Variant = model.get("map")
 	model = row.get("presentation", {})
@@ -667,6 +668,10 @@ func _refresh(row: Dictionary) -> void:
 		_battle_log_open = false
 		board.focus_battle_actor("")
 	if phase == "TOWN":
+		var seal_pending: bool = view.get("finale", {}).get("agla", {}).get("seal_pending", false)
+		if seal_pending and not was_seal_pending:
+			town_tab = "finale"
+			focus_key = "finale cancel"
 		var chapter: Dictionary = view.get("chapter", {})
 		var report := _pending_hunt_report(view) if initial_snapshot else returned_report
 		if previous is Dictionary and previous.get("result") in ["DEFEAT", "RESCUE_SUCCESS", "SEARCH_RETURN", "LOCATION_CONFIRMED", "SEARCH_EXPIRED"] and not view.get("rescue", {}).is_empty():
@@ -1942,6 +1947,7 @@ func _research_actions(research: Dictionary) -> void:
 	if research.delivered:
 		_label(actions, "ST-303 已交付 · 第三章完成", INK, 17)
 		_label(actions, "出征预算 %d Cost · 战斗预算 %d Cost" % [int(view.budget.expedition), int(view.budget.battle)], MUTED, 16)
+		_agla_research_actions(research.agla)
 		_research_rewards(research.reward)
 		return
 	if not research.blocker.is_empty():
@@ -1970,6 +1976,32 @@ func _research_actions(research: Dictionary) -> void:
 				"将隔离验证结果与四将讨伐报告交存，完成第三章。")
 
 
+func _agla_research_actions(agla: Dictionary) -> void:
+	_label(actions, agla.name, GOLD, 19)
+	var assembly: Dictionary = agla.assembly
+	if not assembly.is_empty():
+		_label(actions, "第 %d 日已合成 · 三枚片段的来源已登记" % int(assembly.day), INK, 16)
+		_label(actions, "合成已支付 " + _service_cost(assembly.paid.materials) + "、%d 铜" % int(assembly.paid.copper), MUTED, 16)
+		_button("查看 Agla 携带状态", "agla-finale", _town_tab.bind("finale"))
+		return
+	var cost: String = _service_cost(agla.cost)
+	_label(actions, "合成费用 " + cost + " · 0 行动日", INK, 16)
+	var available := _service_cost(agla.funds)
+	if not available.is_empty():
+		_label(actions, "现有 " + available, MUTED, 16)
+	if not agla.missing.is_empty():
+		_label(actions, "尚缺 " + "、".join(agla.missing), ALERT, 16)
+	if agla.needs_workshop:
+		_button("查看工坊升级", "agla-workshop", _town_tab.bind("construction", "armory"))
+	if agla.needs_materials:
+		_button("查看材料委托", "agla-materials", _town_tab.bind("items"))
+	if agla.needs_memories:
+		_button("查看原物与追忆", "agla-memories", _town_tab.bind("chapter"))
+	_input_action("合成 Agla", "agla", ["craft", "CONFIRM"],
+		"支付%s，合成唯一的 Agla，默认随队携带。保留片段来源和觉醒记录，不消耗行动日。" % cost,
+		agla.missing.is_empty())
+
+
 func _toggle_finale_preview() -> void:
 	finale_preview_open = not finale_preview_open
 	focus_key = "finale-preview"
@@ -1978,9 +2010,26 @@ func _toggle_finale_preview() -> void:
 
 func _finale_preparation(finale: Dictionary) -> void:
 	_label(actions, "终战整备", GOLD, 24)
-	_label(actions, "路线 %s · %s" % [finale.route, "携带 Agla" if finale.agla_carried else "Agla 未携带"], INK, 17)
+	var agla: Dictionary = finale.agla
+	var carrier := ("携带 Agla" if finale.agla_carried else "Agla 已封存") if agla.assembled else "Agla 未合成"
+	_label(actions, "路线 %s · %s" % [finale.route, carrier], INK, 17)
+	if finale.agla_carried:
+		_label(actions, "携带 Agla 时，管理员战需要完成接入。", MUTED, 16)
 	var budget: Dictionary = finale.budget
 	_label(actions, "整备后出征预算 %d Cost · 战斗预算 %d Cost" % [int(budget.expedition), int(budget.battle)], MUTED, 16)
+	if agla.seal_pending:
+		_label(actions, "封存提议待确认。封存后预选路线 A，只接管虚拟世界，肉身继续沉睡。随后需重新确认终战整备。", ALERT, 16)
+		_input_action("取消封存提议", "finale", ["cancel"])
+		_input_action("确认封存 Agla", "finale", ["seal", "CONFIRM"])
+		return
+	if agla.assembled:
+		if agla.sealed:
+			_input_action("恢复携带 Agla", "finale", ["carry", "CONFIRM"],
+				"恢复携带并预选路线 B，随后重新确认终战整备。")
+		else:
+			_input_action("查看 Agla 封存后果", "finale", ["seal"])
+	else:
+		_button("查看 Agla 合成条件", "finale-agla-research", _town_tab.bind("research"))
 	_button("查看随队成员与装备", "finale-roster", _town_tab.bind("roster"))
 	var worn: Dictionary = view.get("equipment", {}).get("worn", {})
 	for member: Dictionary in view.party:
@@ -2002,6 +2051,8 @@ func _finale_preparation(finale: Dictionary) -> void:
 				_label(actions, "%s · %d HP
 %s" % [unit.name, int(unit.hp), "、".join(skills)], MUTED, 16)
 		_label(actions, "管理员生命降至 25% 时启动格式化倒计时。", MUTED, 16)
+	if finale.preparation_stale:
+		_label(actions, "携带状态已改变，请重新确认整备。", MUTED, 16)
 	if not finale.blocker.is_empty():
 		_label(actions, finale.blocker, ALERT, 16)
 	if finale.prepared:
@@ -2081,6 +2132,8 @@ func _construction_status(project: Dictionary) -> String:
 	if project.has("legacy_remaining"):
 		return "Lv1 在建 · 还需 %d 次结算" % int(project.legacy_remaining)
 	if int(project.level) > 0:
+		if project.has("quote"):
+			return "Lv%d · 查看 Lv%d 报价" % [int(project.level), int(project.quote.target)]
 		return "Lv%d 已竣工" % int(project.level)
 	var quote: Dictionary = project.quote
 	return "%d 铜 · %d 公共结晶" % [int(quote.paid.copper), int(quote.paid.crystal)] if quote.blocker.is_empty() else quote.blocker
@@ -2129,10 +2182,12 @@ func _construction_detail(project: Dictionary, next_id: String) -> void:
 		_input_action("开工 · %d 铜 · %d 公共结晶" % [copper, crystal], "facility", ["build", project.key, str(target), next_id, "CONFIRM"],
 			"建设%s Lv%d。支付 %d 铜和 %d 公共结晶。\n开工不耗日，%d 次后续行动结算后竣工。" % [project.name, target, copper, crystal, required],
 			quote.blocker.is_empty())
-	elif int(project.level) > 0 and project.key in ["barracks", "armory"]:
+	if int(project.level) > 0 and project.key in ["barracks", "armory"]:
 		_button("办理后勤服务", "construction-logistics", _town_tab.bind("logistics"))
 		if project.key == "armory":
 			_button("制作随身道具", "construction-items", _town_tab.bind("items"))
+			if view.get("research", {}).get("delivered", false):
+				_button("查看 Agla 合成条件", "construction-agla", _town_tab.bind("research"))
 	if project.key == "lamp_store" and not view.get("research", {}).is_empty():
 		_button("查看遗迹研究", "construction-research", _town_tab.bind("research"))
 

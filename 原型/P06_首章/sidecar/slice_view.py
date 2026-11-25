@@ -11,7 +11,7 @@ COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'd
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
             'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research', 'finale',
-            'event'}
+            'event', 'agla'}
 MEMBER_ID = r'[A-Za-z0-9_-]{1,80}'
 CONSUMABLE_TARGETS = rf'{MEMBER_ID}(?:,{MEMBER_ID}){{0,5}}'
 CONSUMABLE_CODES = tuple(f'CO{number:02}' for number in range(1, 13))
@@ -29,6 +29,7 @@ BUILDING_EFFECTS = {
     'barracks': '可为有出战记录的留城成员安排补训。',
     'armory': '可制作随身道具，也可购买下趟远征的防御整备。',
 }
+MULTILEVEL_BUILDINGS = ('lamp_store', 'armory')
 CONSTRUCTION_ACTIONS = ('cancel', 'pause', 'resume')
 BOOK_RESEARCH = {
     'SB-T01': ('近战研习', '每场胜利至少有一次己方近击使敌人掉血或消耗敌方护盾。'),
@@ -61,7 +62,10 @@ ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_
 ORDINARY_ROUTES = {f'R{number:02}' for number in range(1, 10)}
 HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
 FINALE_IDENTITY_ACTIONS = {('choice', 'KEEP_SELF'), ('choice', 'ACCEPT_MERGER'), ('merge', 'CONFIRM'), ('cancel',)}
-FINALE_FIXED_ACTIONS = FINALE_IDENTITY_ACTIONS | {('prepare', 'CONFIRM'), ('enter', 'CONFIRM'), ('fight', 'CONFIRM')}
+FINALE_AGLA_ACTIONS = {('seal',), ('seal', 'CONFIRM'), ('carry', 'CONFIRM')}
+FINALE_FIXED_ACTIONS = FINALE_IDENTITY_ACTIONS | FINALE_AGLA_ACTIONS | {
+    ('prepare', 'CONFIRM'), ('enter', 'CONFIRM'), ('fight', 'CONFIRM'),
+}
 FINALE_COORDINATE = r'-?[0-9]{1,2}'
 LATER_EVIDENCE_GENERALS = ('MG03', 'MG04')
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
@@ -80,6 +84,7 @@ MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
           for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',)},
+    'agla': {('craft', 'CONFIRM')},
     'event': {('EV07', 'receive', 'CONFIRM'), ('EV07', 'return', 'CONFIRM'),
               *(('EV07', 'trade', f'EF{number:02}', 'CONFIRM') for number in range(1, 9))},
     'route': {(route,) for route in ORDINARY_ROUTES},
@@ -137,7 +142,8 @@ def valid_command(command, args):
                     and bool(re.fullmatch(MEMBER_ID, args[1])) and args[2] == 'CONFIRM'))
     if command == 'facility':
         if len(args) == 5:
-            return (args[0] == 'build' and args[1] in BUILDING_EFFECTS and (args[2] == '1' or (args[1] == 'lamp_store' and args[2] in ('2', '3')))
+            return (args[0] == 'build' and args[1] in BUILDING_EFFECTS
+                    and (args[2] == '1' or (args[1] in MULTILEVEL_BUILDINGS and args[2] in ('2', '3')))
                     and bool(re.fullmatch(BUILD_ORDER_ID, args[3])) and args[4] == 'CONFIRM')
         return (len(args) == 3 and args[0] in CONSTRUCTION_ACTIONS and args[2] == 'CONFIRM'
                 and 1 <= len(args[1]) <= 64 and all(c.isalnum() or c in '-_' for c in args[1]))
@@ -1015,11 +1021,19 @@ def construction_view(game):
             }
         elif key == 'hospital' and state['hospital_progress'] is not None:
             project['legacy_remaining'] = state['hospital_progress']
-        elif level == 0 or (key == 'lamp_store' and level < 3):
+        elif level == 0 or (key in MULTILEVEL_BUILDINGS and level < 3):
             target = level + 1
             cost, required = facilities.build_cost(game, key, target)
-            if not facilities.gate(game, key, target):
-                blocker = '交齐前两将讨伐报告后开放' if target == 3 else '交存首章调查与旧名册后开放'
+            gate_blocker = ''
+            if key == 'armory':
+                unmet = [name for name, ready in construction.conditions(game, target) if not ready]
+                if unmet:
+                    gate_blocker = ('交存首章调查与旧名册后开放' if target == 1
+                                    else '建设前置：' + '、'.join(unmet))
+            elif not facilities.gate(game, key, target):
+                gate_blocker = '交齐前两将讨伐报告后开放' if target == 3 else '交存首章调查与旧名册后开放'
+            if gate_blocker:
+                blocker = gate_blocker
             elif not can_start:
                 blocker = '施工位已占用'
             elif any(funds[resource] < amount for resource, amount in cost.items()):
@@ -1029,6 +1043,38 @@ def construction_view(game):
             project['quote'] = {'target': target, 'paid': cost, 'required': required, 'blocker': blocker}
         projects.append(project)
     return {'funds': funds, 'occupied': occupied, 'workers': workers, 'order_id': order_id, 'projects': projects}
+
+
+def agla_view(game):
+    import research
+
+    state = game.s
+    assembly = state['research']['assembly']
+    recipe = game.cat.loot['agla_recipe']
+    result = {'name': research.name(game, 'KEY-AGLA'), 'assembly': assembly or {}}
+    if assembly:
+        return result
+
+    costs = dict(recipe['materials'], copper=recipe['copper'])
+    funds = {key: state['warehouse'].get(key, 0) for key in recipe['materials']}
+    funds['copper'] = state['bank']['copper']
+    missing = research.missing(game)
+    material_labels = {'crystal_shard': '晶屑', 'iron': '铁料'}
+    labels = []
+    for row in missing:
+        if row[:4] in HUNT_GENERALS and '觉醒' in row:
+            labels.append(hunt_general(game, row[:4])['human_name'] + '尚未觉醒')
+        else:
+            for code, label in material_labels.items():
+                row = row.replace(code, label)
+            labels.append(row)
+    if state['debug_tainted']:
+        labels.append('调试存档无法正式制造。')
+    result.update(cost=costs, funds=funds, missing=labels,
+                  needs_workshop='工坊Lv3' in missing,
+                  needs_materials=any(funds[key] < amount for key, amount in recipe['materials'].items()),
+                  needs_memories=any(row[:4] in HUNT_GENERALS for row in missing))
+    return result
 
 
 def campaign_research_view(game, party):
@@ -1051,6 +1097,7 @@ def campaign_research_view(game, party):
         selected = entitlement.get('selected')
         view['reward'] = {'selected': book_info(selected) if selected else {},
                           'choices': [book_info(book) for book in entitlement.get('allowed', [])] if not selected else []}
+        view['agla'] = agla_view(game)
         return view
 
     if 'analysis' not in steps:
@@ -1693,10 +1740,12 @@ def finale_view(game):
         if state['debug_tainted']:
             blocker = '调试存档无法进入正式终战。'
         if is_town:
-            if result['agla_carried']:
-                blocker = '当前携带 Agla。此处开放普通继任路线整备。'
             result['budget'] = next(row for row in game.cat.rules['command_budgets'] if row['milestone'] == 'FINALE_READY')
-            result['prepared'] = bool(final['preparation'])
+            preparation = final['preparation']
+            result['prepared'] = bool(preparation and preparation['route'] == result['route'])
+            result['preparation_stale'] = bool(preparation and not result['prepared'])
+            result['agla'] = {'assembled': bool(state['research']['assembly']),
+                              'sealed': final['sealed'], 'seal_pending': final['seal_pending']}
             result['previews'] = [
                 {'title': title, 'units': finale_enemy_preview(game, encounter)}
                 for title, encounter in (
