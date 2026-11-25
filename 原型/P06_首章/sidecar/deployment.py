@@ -23,6 +23,14 @@ class DeploymentGame(Game):
             phase = self.s['phase']
             final = self.s['finale']
             action = tuple(args)
+            if phase == 'FINAL_REGROUP' and action == ('fight', 'CONFIRM'):
+                result = super().dispatch(command, args)
+                # The frozen admin setup copies reserve actors from before fatigue.
+                fatigue = final['run'].get('reserve_fatigue', {})
+                for actor in self.s['battle']['actors']:
+                    if actor['side'] == 'player' and actor['id'] in fatigue:
+                        actor['hp'] = fatigue[actor['id']]['after']
+                return result
             if len(action) == 2 and action[0] == 'executor':
                 require(phase == 'TOWN' and not final['run'] and not final['ending'],
                         '执行者只能在城镇终战整备时指定。')
