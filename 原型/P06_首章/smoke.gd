@@ -4731,7 +4731,11 @@ func _run() -> void:
 				if mode == "chapter" and failure.is_empty():
 					await _chapter_flow()
 					var evidence: Dictionary = app.board.stage.audit
-					if app.board.show_models and (evidence.mimic_peak != 2 or evidence.mimic_releases < 1 or evidence.mimic_downs != 3 or evidence.field_props.size() != 6):
+					var gray_oak_props := ["B_SUPPORT", "C", "D", "battle-wall", "battle-fence", "battle-root"]
+					if app.board.show_models and (
+						evidence.mimic_peak != 2 or evidence.mimic_releases < 1
+						or evidence.mimic_downs != 3 or not evidence.field_props.has_all(gray_oak_props)
+					):
 						failure = "Gray Oak battlefield or landmark placement was incomplete"
 				if spear_count > 0 and app.board.show_models and app.board.show_spear and (app.board.stage.audit.spear_peak != spear_count or app.board.stage.audit.spear_hits < 2):
 					failure = "The tutorial did not render the recruited spear actors and real hits"
