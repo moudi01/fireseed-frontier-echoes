@@ -89,7 +89,7 @@ HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
 FINALE_IDENTITY_ACTIONS = {('choice', 'KEEP_SELF'), ('choice', 'ACCEPT_MERGER'), ('merge', 'CONFIRM'), ('cancel',)}
 FINALE_AGLA_ACTIONS = {('seal',), ('seal', 'CONFIRM'), ('carry', 'CONFIRM')}
 FINALE_FIXED_ACTIONS = FINALE_IDENTITY_ACTIONS | FINALE_AGLA_ACTIONS | {
-    ('prepare', 'CONFIRM'), ('enter', 'CONFIRM'), ('fight', 'CONFIRM'),
+    ('prepare', 'CONFIRM'), ('enter', 'CONFIRM'), ('fight', 'CONFIRM'), ('retry', 'CONFIRM'),
 }
 FINALE_COORDINATE = r'-?[0-9]{1,2}'
 LATER_EVIDENCE_GENERALS = ('MG03', 'MG04')
@@ -1836,6 +1836,34 @@ def finale_enemy_preview(game, encounter):
     return units
 
 
+def finale_retry_town(game):
+    import finale
+    from engine import Game
+
+    if game.s['phase'] != 'FIN_C':
+        raise ValueError('只有终战失败后才能恢复整备。')
+    finale.require_retryable_ending(game)
+    if not finale.retry_path(game).is_file():
+        raise ValueError('此存档槽缺少终战检查点。用备份恢复或移植的存档仍可查看结局。重试需要保留检查点的原存档槽。')
+    finale.handle(game, ['retry'])
+    try:
+        _, _, checkpoint, validated = finale.read_retry_checkpoint(game)
+        if not validated:
+            checkpoint = Game.from_state(checkpoint, game.cat, game.save_path).s
+    except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError) as exc:
+        raise ValueError('此存档槽的终战检查点无法验证。仍可查看本轮结局。') from exc
+    if (checkpoint['id'] != game.s['id'] or checkpoint['phase'] != 'TOWN'
+            or checkpoint['finale']['run'] or checkpoint['finale']['ending']):
+        raise ValueError('此终战检查点并非本周目的战前整备存档。')
+    # The frozen entry records a receipt immediately after saving the town snapshot.
+    # Its absolute path can change when the slot and its files are moved together.
+    entry = next((row for row in reversed(game.s['journal']) if row['type'] == 'finale_retry_checkpoint'), None)
+    if (entry is None or entry['seq'] != checkpoint['sequence'] + 1
+            or entry['day'] != checkpoint['day'] or entry['expedition_no'] != checkpoint['expedition_no']):
+        raise ValueError('此存档槽的终战检查点与本次失败不匹配。仍可查看本轮结局。')
+    return checkpoint
+
+
 def finale_view(game):
     import finale
 
@@ -1856,7 +1884,18 @@ def finale_view(game):
         result['ending'] = {'id': end['ending_id'], 'title': finale.ENDINGS[end['ending_id']][0],
                             'text': finale.ending_text(game).split('\n', 1)[-1], 'cause': end['cause'],
                             'member_losses': len(end['grade']['lost']), 'held': len(end['grade']['captives'])}
+        if (state['phase'] == 'FIN_C' and end['ending_id'] == 'FIN-C'
+                and end['cause'] in ('BATTLE_DEFEAT', 'FORMATTING_FAILED')):
+            try:
+                result['retry'] = {'day': finale_retry_town(game)['day']}
+            except ValueError as exc:
+                result['retry'] = {'blocker': str(exc)}
         return result
+    if is_town and final.get('retry_history'):
+        history = final['retry_history']
+        last = history[-1]
+        result['retry_history'] = {'count': len(history), 'cause': last['failed_ending']['cause'],
+                                   'day': last['failed_day']}
     if run and run['stage'] == 'IDENTITY':
         result['identity'] = [
             '你是魔王建立的独立分身，一直借用旧指挥官的脑体。',
@@ -2062,6 +2101,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
             budget = slice_view['budget']
             text = (f"研究报告已交存，观测站校验片入档。出征与战斗预算为 "
                     f"{budget['expedition']}/{budget['battle']} Cost。可在旧档案查看交付详情。")
+        elif receipt and active.get('proof', {}).get('command') == 'finale retry CONFIRM':
+            text = '已回到进入终战前的暮汀整备，失败结局已保留。可重新整备，再从「终战整备」进入终战。'
         line = {'speaker': speaker, 'text': text, 'receipt': receipt}
     board = None
     battle = game.s.get('battle')

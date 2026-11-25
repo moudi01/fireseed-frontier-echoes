@@ -716,7 +716,11 @@ func _refresh(row: Dictionary) -> void:
 			focus_key = "finale cancel"
 		var chapter: Dictionary = view.get("chapter", {})
 		var report := _pending_hunt_report(view) if initial_snapshot else returned_report
-		if previous is Dictionary and previous.get("result") in ["DEFEAT", "RESCUE_SUCCESS", "SEARCH_RETURN", "LOCATION_CONFIRMED", "SEARCH_EXPIRED"] and not view.get("rescue", {}).is_empty():
+		if previous_phase == "FIN_C" and not view.get("finale", {}).get("retry_history", {}).is_empty():
+			town_tab = "finale"
+			_ending_archive_open = false
+			focus_key = "finale-roster"
+		elif previous is Dictionary and previous.get("result") in ["DEFEAT", "RESCUE_SUCCESS", "SEARCH_RETURN", "LOCATION_CONFIRMED", "SEARCH_EXPIRED"] and not view.get("rescue", {}).is_empty():
 			town_tab = "rescue"
 		elif not report.is_empty() and (initial_snapshot or previous_phase == "RETURNED"):
 			town_tab = "chapter"
@@ -919,6 +923,8 @@ func _notice(message: String, command := "", args: Array = []) -> void:
 		focus_key = "book-research"
 	elif command == "choose" and args == ["BOOK"]:
 		notice.text = "手册已放入行囊。"
+	elif command == "finale" and args == ["retry", "CONFIRM"]:
+		notice.text = "已恢复终战前整备，失败记录已保留。"
 	elif command == "facility":
 		match args[0]:
 			"build": notice.text = "已付款开工，后续行动结算推进施工。"
@@ -991,7 +997,7 @@ func _display_location() -> String:
 	var finale: Dictionary = view.get("finale", {})
 	if phase == "BATTLE" and not finale.is_empty():
 		return "%s   /   连续战斗第 %d 拍" % [_finale_battle_title(finale.stage), int(view.battle_view.tick)]
-	if phase == "FIN_C" and finale.get("ending", {}).get("cause") == "PROFIT_ASSIMILATION":
+	if phase == "FIN_C" and finale.get("ending", {}).get("cause") in ["PROFIT_ASSIMILATION", "BATTLE_DEFEAT", "FORMATTING_FAILED"]:
 		return "本轮结束"
 	if phase in ["FINAL_CHOICE", "FINAL_REGROUP", "FINISHED"]:
 		return {"FINAL_CHOICE": "终战入口 · 身份选择", "FINAL_REGROUP": "终战 · 幸存者重整", "FINISHED": "本轮结束"}[phase]
@@ -1275,6 +1281,8 @@ func _render() -> void:
 					_preview_chapter_book(book)
 					break
 		_confirmation_text.text = confirmation["text"]
+		var retry: bool = confirmation.command == "finale" and confirmation.args == ["retry", "CONFIRM"]
+		command_buttons["confirm"].text = "确认恢复整备" if retry else "确认"
 		for control in command_buttons.values():
 			control.disabled = client.busy
 	else:
@@ -2234,6 +2242,10 @@ func _finale_executor_actions(executor: Dictionary) -> void:
 
 func _finale_preparation(finale: Dictionary) -> void:
 	_label(actions, "终战整备", GOLD, 24)
+	var history: Dictionary = finale.get("retry_history", {})
+	if not history.is_empty():
+		var cause := "格式化失败" if history.cause == "FORMATTING_FAILED" else "终战败北"
+		_label(actions, "已保留 %d 次失败记录 · 最近一次为第 %d 日%s" % [int(history.count), int(history.day), cause], MUTED, 16)
 	var agla: Dictionary = finale.agla
 	var carrier := ("携带 Agla" if finale.agla_carried else "Agla 已封存") if agla.assembled else "Agla 未合成"
 	_label(actions, "路线 %s · %s" % [finale.route, carrier], INK, 17)
@@ -2343,6 +2355,12 @@ func _finale_ending(finale: Dictionary) -> void:
 		return
 	_label(actions, ending.title, GOLD, 24)
 	_label(actions, ending.text, INK, 17)
+	var retry: Dictionary = finale.get("retry", {})
+	if retry.has("blocker"):
+		_label(actions, retry.blocker, MUTED, 16)
+	elif retry.has("day"):
+		_input_action("查看终战重试", "finale", ["retry", "CONFIRM"],
+			"将回到第 %d 日、进入终战前的整备。此次终战中的进度会回到检查点，失败结局保留在本槽的重试记录中。" % int(retry.day))
 	_button("收起本轮档案" if _ending_archive_open else "查看本轮档案", "ending-archive", _toggle_ending_archive)
 	var letters: Dictionary = view.get("letter_thread", {})
 	if letters.get("complete", false):

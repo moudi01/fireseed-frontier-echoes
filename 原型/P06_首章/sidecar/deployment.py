@@ -3,7 +3,8 @@
 from engine import Game, require
 import region_space
 from expedition_peril import deployable
-from slice_view import FIELD_EVENT_CHOICES, FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS, LOCAL_PROTECTION_ACTIONS
+from slice_view import (FIELD_EVENT_CHOICES, FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS,
+                        LOCAL_PROTECTION_ACTIONS, finale_retry_town)
 
 
 class DeploymentGame(Game):
@@ -37,6 +38,8 @@ class DeploymentGame(Game):
             phase = self.s['phase']
             final = self.s['finale']
             action = tuple(args)
+            if action == ('retry', 'CONFIRM'):
+                finale_retry_town(self)
             if phase == 'FINAL_REGROUP' and action == ('fight', 'CONFIRM'):
                 result = super().dispatch(command, args)
                 # The frozen admin setup copies reserve actors from before fatigue.

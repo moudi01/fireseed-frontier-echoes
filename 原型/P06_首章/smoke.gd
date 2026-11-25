@@ -1802,9 +1802,18 @@ func _check_campaign_ending(id: String) -> void:
 			or reports[1].encounter_id != "BATTLE-ADMIN" or not reports.all(func(row: Dictionary): return row.result == "VICTORY")):
 		failure = "The A ending lacks both actual victories"
 		return
-	if id == "FIN-C" and (reports.is_empty() or reports[-1].result != "DEFEAT"):
-		failure = "The C result lacks its actual defeat"
-		return
+	if id == "FIN-C":
+		var cause: String = ending.get("cause", "")
+		if cause == "PROFIT_ASSIMILATION":
+			if not reports.is_empty() or app.command_buttons.has("finale retry CONFIRM"):
+				failure = "Voluntary merger must have no battle reports or retry"
+				return
+		elif reports.is_empty() or reports[-1].result != "DEFEAT":
+			failure = "The C result lacks its actual defeat"
+			return
+		elif cause == "FORMATTING_FAILED" and reports[-1].encounter_id != "BATTLE-ADMIN":
+			failure = "The formatting failure lacks its administrator report"
+			return
 	side_checks["finale_ending"] = ending
 	side_checks["finale_reports"] = reports
 	await _capture("ending")
