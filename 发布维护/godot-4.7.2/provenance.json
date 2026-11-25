@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "godot_version": "4.7.2",
+  "build": "official",
+  "source_commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+  "collected_on": "2026-10-20",
+  "extraction": "Complete Engine.get_license_text(), get_copyright_info(), get_license_info() from local editor and both Windows x86_64 templates; identical results. License strings copied verbatim; JSON formatting and section labels are presentation only.",
+  "copyright_groups": 102,
+  "license_names": [
+    "Apache-2.0",
+    "BSD-2-clause",
+    "BSD-3-clause",
+    "BSL-1.0",
+    "CC-BY-4.0",
+    "CC0-1.0",
+    "Expat",
+    "FTL",
+    "HarfBuzz",
+    "IJG",
+    "MIT-0",
+    "MPL-2.0",
+    "OFL-1.1",
+    "Unicode",
+    "Unlicense",
+    "WOL",
+    "X11",
+    "Zlib",
+    "glslang"
+  ],
+  "files": {
+    "LICENSE.txt": {
+      "sha256": "b0435e3b3e4e55238f05f4b306f30524a1b2e20147810d436eaa554fa6855c80",
+      "bytes": 1149
+    },
+    "COPYRIGHT.json": {
+      "sha256": "4caf6b644a68bc764458f4cc5cac0bafb7883c8fd4f782fb8bb10413f0fb2840",
+      "bytes": 32125
+    },
+    "THIRD_PARTY_LICENSES.txt": {
+      "sha256": "cdd19ebfb7c703e45e72a8a80f8d274619ffb21c0ce8f4fda713b140f574d357",
+      "bytes": 77827
+    },
+    "README_许可说明.txt": {
+      "sha256": "448df3d3ad075cc33c46273c5ef551d971de6da80e6aa8eb6fefaf96ec6e0585",
+      "bytes": 1119
+    }
+  },
+  "accepted_executables": {
+    "release_x86_64": "d34d36f3be1a6c49c56525ae86469b92e4f417ddf0b43cf00dd80c385c4b0562",
+    "debug_x86_64": "51498b72b3a237f882ebd7d1787f06a4bc1eaf0572daab93837adcfd3cfdc107"
+  },
+  "editor_sha256": "c8f0a6bc45a19b33541501e57f6f7cd972ab18453743266339d495cbbe846643",
+  "release_archive": {
+    "url": "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip",
+    "sha256": "731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953"
+  },
+  "templates_archive": {
+    "url": "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz",
+    "sha256": "f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011"
+  },
+  "official_references": [
+    "https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable",
+    "https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/LICENSE.txt",
+    "https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/COPYRIGHT.txt",
+    "https://docs.godotengine.org/en/4.7/classes/class_engine.html#class-engine-method-get-license-info",
+    "https://docs.godotengine.org/en/4.7/about/complying_with_licenses.html"
+  ],
+  "source_text_note": "Official tagged source pages inspected for comparison; direct source-file download failed with TLS timeout. These are complete binary-embedded notices, not claimed byte copies of source COPYRIGHT.txt. No assumptions about optional components being enabled.",
+  "game_asset_licensing": "Separate, unresolved evidence gaps; this bundle covers Godot notices only.",
+  "p06_windows_template": {
+    "headers_size": 1024,
+    "template_size": 109268480,
+    "body_sha256": "59f7560fcdcc17559b3d7b9211987dad8b714e645c95f7eeb4b245c224430600",
+    "binding": "SHA-256 of the verified release template after its PE headers. P06 embeds PCK and may rewrite the PE headers."
+  }
+}
