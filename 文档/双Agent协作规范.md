@@ -26,7 +26,10 @@
 
 ## 3. GitHub Issue 认领与热文件防冲突规则
 
-### 3.1 开工认领声明
+### 3.1 开工前价值判断与认领声明
+
+**先判断 Issue 是否值得做。** Antigravity 和 Codex 在认领或实施前，先核实问题或需求是否成立、是否已有 Issue 覆盖，以及预期收益是否值得投入实现、回归与后续维护的成本。结合实际影响判断，例如玩家体验、项目稳定性、维护效率或当前里程碑进度。确认有价值后再认领。发现重复时关联已有 Issue，证据不足时先记录待核实项并补查，收益不足以支撑投入时在原 Issue 说明理由并建议暂缓。
+
 认领某个 GitHub Issue 并开始编码前，先在对应 Issue 下发表认领评论（或在双窗口派工指令中写明），至少包含四项信息：
 1. **执行方**：`Antigravity` 或 `Codex`
 2. **本地分支与 Worktree 路径**：如 `wt/codex-issue-5` · `D:\Personal_dev-wt\issue-5-codex`
@@ -148,9 +151,9 @@ git -C $main branch -d $br
 
 ### 模板 1 · 向 Codex 窗口派发编码 / 回归任务
 ```text
-请认领并处理 GitHub Issue #<编号>（<标题>）。
+请评估 GitHub Issue #<编号>（<标题>），确认值得做后再认领和实施。
 要求：
-1. 先阅读根目录 AGENTS.md、MEMORY.md 与 文档/双Agent协作规范.md。
+1. 先阅读根目录 AGENTS.md、MEMORY.md 与 文档/双Agent协作规范.md，按第 3.1 节判断 Issue 是否值得做，再决定是否认领。
 2. 在 D:\Personal_dev-wt\issue-<编号>-codex 创建 worktree 与本地分支 wt/codex-issue-<编号>，按规范补齐 .toolchain 联接与 assets/p03/playtest_seeds 依赖。
 3. 仅修改与 #<编号> 直接相关的文件（热文件修改前先检查冲突边界），禁止改动 local/p03_sol4_20261105/ 冻结目录。
 4. 完成后在该 worktree 运行 build_windows.ps1 与相关 smoke.gd 用例，提交本地 commit，不要推送分支；将改动清单、Commit SHA 与测试结果汇报给我（并更新到 Issue 评论），等待 Antigravity 交叉审查。
