@@ -455,13 +455,15 @@ func _layout() -> void:
 	var span := high - low
 	var middle := Vector2.ZERO
 	if _sideways:
-		var available_width := size.x - 36.0
-		var top_y := size.y * (0.36 if _town_yard else 0.24)
-		var bot_pad := 76.0 if _show_deployment else 38.0
+		var available_width := size.x - 16.0
+		var top_y := size.y * (0.36 if _town_yard else 0.13)
+		var bot_pad := 58.0 if _show_deployment else 10.0
 		var bot_y := maxf(top_y + 40.0, size.y - bot_pad)
 		var sin_pitch := sin(ShieldStage.SIDE_PITCH)
-		_scale = maxf(1.0, minf(56.0, minf(available_width / (span.x + 2.0), (bot_y - top_y) / (span.y + 2.0 * sin_pitch))))
-		middle = Vector2(size.x * 0.5, (top_y + bot_y) * 0.5)
+		_scale = maxf(1.0, minf(60.0, minf(available_width / (span.x + 1.73205), (bot_y - top_y) / (span.y + 2.0 * sin_pitch))))
+		var board_h := (span.y + 2.0 * sin_pitch) * _scale
+		var free_y := 0.0 if _town_yard else maxf(0.0, (bot_y - top_y) - board_h)
+		middle = Vector2(size.x * 0.5, (top_y + bot_y) * 0.5 + free_y * 0.25)
 	else:
 		var available_width := size.x - _overlook_width - (108.0 if at_overlook else 130.0)
 		_scale = maxf(1.0, minf(37.0, minf(available_width / (span.x + 3), (size.y - 126) / (span.y + 3))))
@@ -1244,13 +1246,14 @@ func _sync_unit_markers() -> void:
 		if not coordinate_map.has(cell):
 			continue
 		var pos_px: Vector2 = stage.foot_pixel(id) if modelled else _point(grid)
+		var sort_y: float = coordinate_map[cell].y
 		entries.append({"index": index, "actor": actor, "id": id, "modelled": modelled,
-			"down": down, "cell": cell, "pos_px": pos_px})
+			"down": down, "cell": cell, "pos_px": pos_px, "sort_y": sort_y})
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a.down != b.down:
 			return a.down
-		if not is_equal_approx(a.pos_px.y, b.pos_px.y):
-			return a.pos_px.y < b.pos_px.y
+		if not is_equal_approx(float(a.sort_y), float(b.sort_y)):
+			return float(a.sort_y) < float(b.sort_y)
 		return int(a.index) < int(b.index)
 	)
 	var retained := {}
@@ -1274,9 +1277,11 @@ func _sync_unit_markers() -> void:
 			item.draw.connect(_draw_unit_marker.bind(id))
 			label.draw.connect(_draw_unit_label.bind(id))
 		var item: Node2D = marker.node
-		if item.get_index() != retained.size():
-			_units.move_child(item, retained.size())
-			_unit_labels.move_child(marker.label, retained.size())
+		var target_index := retained.size()
+		if item.get_index() != target_index:
+			_units.move_child(item, target_index)
+		if marker.label.get_index() != target_index:
+			_unit_labels.move_child(marker.label, target_index)
 		retained[id] = true
 		var health := clampf(float(actor.hp) / maxf(1.0, float(actor.max_hp)), 0.0, 1.0) if not down and actor.has("max_hp") else -1.0
 		var enemy: bool = actor.get("side") == "enemy"

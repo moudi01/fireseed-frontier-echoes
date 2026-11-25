@@ -45,9 +45,9 @@ const CONTACT_MODEL_PATHS := {
 	"M02": AID_PATH, "M03": CROSSBOW_PATH, "M04": MIST_PATH,
 	"EL02": ENEMIES + DUAL_SAC_ASSET,
 }
-const SIDE_PITCH := PI * 36.0 / 180.0
+const SIDE_PITCH := PI * 44.0 / 180.0
 const SIDE_TURN := -PI / 3.0
-const SIDE_UNIT_SCALE := 1.16
+const SIDE_UNIT_SCALE := 1.20
 const MAP_UNIT_SCALE := 1.52
 const FACINGS := [Vector2(1, 0), Vector2(0.5, 0.8660254), Vector2(-0.5, 0.8660254),
 	Vector2(-1, 0), Vector2(-0.5, -0.8660254), Vector2(0.5, -0.8660254)]
@@ -757,6 +757,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 		visible = true
 		_schedule_board_draw()
 	var by_id := {}
+	var relocated := {}
 	var spears := 0
 	var enemy_spears := 0
 	var mimics := 0
@@ -770,7 +771,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 	for row in snapshot.actors:
 		by_id[row.id] = row
 		if _supports_deployment(row.kind) and row.side == "player" and row.pos is Array:
-			_update_actor(row, restore)
+			_update_actor(row, restore, false, relocated)
 			if row.kind == "M01" and actors.has(row.id):
 				spears += 1
 			elif row.kind == "S02" and actors.has(row.id):
@@ -784,7 +785,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 			elif row.kind == "M04" and actors.has(row.id):
 				mist_count += 1
 		elif _supports_enemy(row.kind) and row.side == "enemy" and row.pos is Array:
-			_update_actor(row, restore)
+			_update_actor(row, restore, false, relocated)
 			if row.kind == "EN01" and actors.has(row.id):
 				mimics += 1
 			elif row.kind == "EN06" and actors.has(row.id):
@@ -817,7 +818,9 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 				events.append(row)
 	audit.events += events.size()
 	if not events.is_empty():
-		_animate(events, by_id, snapshot.get("finished", false))
+		_animate(events, by_id, snapshot.get("finished", false), relocated)
+	elif not restore and not relocated.is_empty():
+		_apply_relocations(relocated, {}, {})
 	for row in snapshot.actors:
 		var pawn: Variant = actors.get(row.id, {}).get("node")
 		if pawn is Melee and not pawn.gap_cast.is_empty() and float(row.hp) > 0 \
@@ -836,7 +839,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 			var pending: Dictionary = row.get("aid_pending" if pawn is Aid else "mist_pending", {})
 			if pawn.cast_id != pending.get("id", ""):
 				pawn.cancel_cast(reduced)
-	if focused_pause and (restore or not events.is_empty()):
+	if focused_pause and (restore or not events.is_empty() or not relocated.is_empty()):
 		_schedule_board_draw()
 
 
@@ -964,7 +967,7 @@ func head_pixel(id: String) -> Vector2:
 	return camera.unproject_position(pawn.global_position + Vector3.UP * height)
 
 
-func _update_actor(row: Dictionary, restore: bool, preview := false) -> void:
+func _update_actor(row: Dictionary, restore: bool, preview := false, relocated := {}) -> void:
 	var attachment_timing: Dictionary = {}
 	if not actors.has(row.id):
 		if row.kind == "MG01" and _ado_visual_pending():
@@ -1111,12 +1114,15 @@ func _update_actor(row: Dictionary, restore: bool, preview := false) -> void:
 		actors[row.id] = {"node": pawn, "row": row}
 		restore = true
 	var token: Dictionary = actors[row.id]
+	var prev_pos: Variant = token.row.get("pos")
 	token.row = row
 	if restore:
 		token.node.snap(_world(_at(row.pos)), _facing(int(row.facing)), float(row.hp) <= 0, reduced or preview)
 	else:
 		token.node.destination = _world(_at(row.pos))
 		token.node.heading = _facing(int(row.facing))
+		if prev_pos != row.pos:
+			relocated[row.id] = true
 	_sync_pose(token.node, row, restore)
 	if not attachment_timing.is_empty():
 		attachment_timing["pose_usec"] = Time.get_ticks_usec() - int(attachment_timing.attached_usec)
@@ -1207,7 +1213,21 @@ func _draw_bone_bow(pawn: Node3D, row: Dictionary, draw: Dictionary, restore: bo
 	pawn.draw_bow(draw.id, _world(_at(base)), yaw, restore, reduced)
 
 
-func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool) -> void:
+func _apply_relocations(relocated: Dictionary, moved: Dictionary, downs: Dictionary) -> void:
+	for id: String in relocated:
+		if moved.has(id) or downs.has(id) or not actors.has(id):
+			continue
+		var token: Dictionary = actors[id]
+		if float(token.row.get("hp", 0)) <= 0:
+			continue
+		var mover: Node3D = token.node
+		if reduced:
+			mover.snap(mover.destination, mover.heading, false, true)
+		else:
+			mover.travel(mover.destination, mover.heading)
+
+
+func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relocated := {}) -> void:
 	var downs := {}
 	var contacts := {}
 	var reactions := {}
@@ -1243,13 +1263,18 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool) -> v
 			if not bone_hits.has(key):
 				bone_hits[key] = []
 			bone_hits[key].append(event.target)
+	var moved := {}
 	for event in events:
 		if event.type == "move" and actors.has(event.actor) and not downs.has(event.actor):
+			moved[event.actor] = true
 			var mover = actors[event.actor].node
 			if reduced:
 				mover.snap(mover.destination, mover.heading, false, true)
 			else:
 				mover.travel(_world(_at(event.position)), mover.heading)
+	if not relocated.is_empty():
+		_apply_relocations(relocated, moved, downs)
+	for event in events:
 		if event.type in ["basic_start", "release"] and actors.has(event.actor):
 			var source = actors[event.actor].node
 			if source is Echo and not downs.has(event.actor):
