@@ -46,7 +46,9 @@ INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
 HERO_MOVES = {
     'H01-A', 'H01-B', 'H02-A', 'H02-B', 'H03-A', 'H03-B',
     'H04-A', 'H04-B', 'H05-A', 'H05-B', 'H06-A', 'H06-B',
-    'H08-A', 'H08-B',
+    'CMD-A', 'CMD-B', 'H08-A', 'H08-B',
+    'H09-A', 'H09-B', 'H10-A', 'H10-B', 'H11-A', 'H11-B',
+    'H12-A', 'H12-B',
 }
 ECHO_MOVE = 'EN06-A'
 STING_MOVE = 'EN03-A'
