@@ -60,6 +60,8 @@ var _presentation: Dictionary = {}
 var _layout_cells: Array = []
 var _layout_size := Vector2(-1, -1)
 var _layout_sideways := false
+var _layout_town_yard := false
+var _layout_deployment := false
 var _overlook_width := 0.0
 var _overlook_art: Texture2D
 var _terrain: Control
@@ -91,6 +93,8 @@ var _reserve_label: Label
 var _reserve_style: StyleBoxFlat
 var _drop_cell := Vector2i(999, 999)
 var _drop_allowed := false
+var _battle_hover_cell := Vector2i(999, 999)
+var _deploy_hover_cell := Vector2i(999, 999)
 var _drag_label: Label
 var _deployment_drag: Variant = null
 var _discard_drag_release := false
@@ -336,6 +340,8 @@ func _refresh() -> void:
 		_set_route_hover(_route_at(get_local_mouse_position()))
 	elif slice.get("phase") != "BATTLE" or not slice.get("battle_memory", {}).is_empty():
 		_clear_battle_pointer()
+	if not _show_deployment:
+		_deploy_hover_cell = Vector2i(999, 999)
 	var terrain_state := [size, _town, _battle_mode, _sideways, art_path, slice.get("region"), slice.get("site"),
 		phase == "MISSING_SEARCH", _show_deployment, _gray_oak_field, _layout_cells, _deployment_cells(),
 		_overlook_width, overlook_path, impact_font_size]
@@ -428,11 +434,14 @@ func _layout() -> void:
 		and slice.get("tutorial_area", false) and slice.get("site") == "D"
 	var overlook_width := size.x * 0.42 if at_overlook else 0.0
 	if size == _layout_size and rows == _layout_cells and _layout_sideways == _sideways \
+			and _layout_town_yard == _town_yard and _layout_deployment == _show_deployment \
 			and _overlook_width == overlook_width:
 		return
 	coordinate_map.clear()
 	_layout_size = size
 	_layout_sideways = _sideways
+	_layout_town_yard = _town_yard
+	_layout_deployment = _show_deployment
 	_layout_cells = rows
 	_overlook_width = overlook_width
 	if _layout_cells.is_empty():
@@ -444,10 +453,19 @@ func _layout() -> void:
 		low = low.min(point)
 		high = high.max(point)
 	var span := high - low
-	var max_scale := 46.0 if _sideways else 37.0
-	var available_width := size.x - _overlook_width - (108.0 if at_overlook else 130.0)
-	_scale = maxf(1.0, minf(max_scale, minf(available_width / (span.x + 3), (size.y - 126) / (span.y + 3))))
-	var middle := Vector2((size.x + _overlook_width) * 0.5, size.y * 0.59 if _sideways else (size.y - 38) * 0.5)
+	var middle := Vector2.ZERO
+	if _sideways:
+		var available_width := size.x - 36.0
+		var top_y := size.y * (0.36 if _town_yard else 0.24)
+		var bot_pad := 76.0 if _show_deployment else 38.0
+		var bot_y := maxf(top_y + 40.0, size.y - bot_pad)
+		var sin_pitch := sin(ShieldStage.SIDE_PITCH)
+		_scale = maxf(1.0, minf(56.0, minf(available_width / (span.x + 2.0), (bot_y - top_y) / (span.y + 2.0 * sin_pitch))))
+		middle = Vector2(size.x * 0.5, (top_y + bot_y) * 0.5)
+	else:
+		var available_width := size.x - _overlook_width - (108.0 if at_overlook else 130.0)
+		_scale = maxf(1.0, minf(37.0, minf(available_width / (span.x + 3), (size.y - 126) / (span.y + 3))))
+		middle = Vector2((size.x + _overlook_width) * 0.5, (size.y - 38) * 0.5)
 	_center = middle - (low + high) * 0.5 * _scale
 	for row in _layout_cells:
 		var cell := Vector2i(int(row["q"]), int(row["r"]))
@@ -467,7 +485,7 @@ func _root_cleared() -> bool:
 func _town_scenery() -> Dictionary:
 	if coordinate_map.is_empty():
 		return {}
-	var prop_scale := minf(0.87, minf(size.x / 930.0, size.y / 670.0))
+	var prop_scale := minf(0.87, minf(size.x / 930.0, size.y / 670.0)) * (ShieldStage.MAP_UNIT_SCALE / ShieldStage.SIDE_UNIT_SCALE)
 	if _field_art != null:
 		var frame := _field_art_rect()
 		return {
@@ -507,7 +525,7 @@ func _position_town_shortcuts() -> void:
 		button.size = button.get_combined_minimum_size().max(Vector2(108, 34))
 		var anchor: Vector2 = landmark.pixel
 		var height: float = TOWN_SHORTCUT_HEIGHTS[id] * landmark.scale
-		anchor.y -= height * _scale * 1.52 * cos(ShieldStage.SIDE_PITCH)
+		anchor.y -= height * _scale * ShieldStage.unit_scale(_sideways) * cos(ShieldStage.SIDE_PITCH)
 		button.position = Vector2(clampf(anchor.x - button.size.x / 2.0, 16.0, size.x - button.size.x - 16.0),
 			maxf(18.0, anchor.y - button.size.y - 5.0))
 
@@ -546,9 +564,9 @@ func _gray_oak_battle_props() -> Dictionary:
 		fence = frame.position + Vector2(points.fence) * frame.size
 		root = frame.position + Vector2(points.root) * frame.size
 	return {
-		"battle-wall": _field_prop("SM_Wall_Short.glb", wall, 0.17),
-		"battle-fence": _field_prop("SM_Fence_TiltedEnd.glb", fence, -0.27),
-		"battle-root": _field_prop("SM_Root_Forked.glb", root, 0.17),
+		"battle-wall": _field_prop("SM_Wall_Short.glb", wall, 0.17, 1.20),
+		"battle-fence": _field_prop("SM_Fence_TiltedEnd.glb", fence, -0.27, 1.20),
+		"battle-root": _field_prop("SM_Root_Forked.glb", root, 0.17, 1.20),
 	}
 
 
@@ -570,7 +588,7 @@ func _fortress_scenery() -> Dictionary:
 	for row in _layout_cells:
 		if row.get("terrain_id") == "HIGH_OBSTACLE":
 			var grid := Vector2i(int(row.q), int(row.r))
-			pieces["masonry-%d-%d" % [grid.x, grid.y]] = _field_prop("fortress-rubble", coordinate_map[grid], 0.2 * grid.y, 0.82)
+			pieces["masonry-%d-%d" % [grid.x, grid.y]] = _field_prop("fortress-rubble", coordinate_map[grid], 0.2 * grid.y, 0.98)
 	return pieces
 
 
@@ -837,8 +855,48 @@ func _draw_deployment_grid(fortress: bool) -> void:
 		if can_deploy:
 			_terrain.draw_colored_polygon(shape, Color("32675e", 0.52))
 		shape.append(shape[0])
-		var edge := Color("8b745c", 0.62) if _field_art != null else Color("b29c78", 0.40) if fortress else Color("b6b197", 0.42)
-		_terrain.draw_polyline(shape, Color("b6e1ca") if can_deploy else edge, 1.4 if can_deploy else 1.0, true)
+		if can_deploy:
+			_terrain.draw_polyline(shape, Color(0.05, 0.08, 0.07, 0.55), 2.8, true)
+			_terrain.draw_polyline(shape, Color("c2ecd7"), 1.6, true)
+		else:
+			var edge := Color("8b745c", 0.72) if _field_art != null else Color("b29c78", 0.48) if fortress else Color("b6b197", 0.48)
+			_terrain.draw_polyline(shape, edge, 1.1, true)
+
+
+func _actor_cell(id: String) -> Vector2i:
+	if id.is_empty():
+		return Vector2i(999, 999)
+	var actors: Array = slice.get("actors", [])
+	if actors.is_empty():
+		actors = slice.get("party", [])
+	for actor: Dictionary in actors:
+		var actor_id: String = actor.get("instance_id", actor.get("id", ""))
+		if actor_id == id:
+			if not actor.get("deployed", true):
+				return Vector2i(999, 999)
+			var grid: Variant = actor.get("pos", actor.get("position"))
+			if grid is Array and grid.size() == 2:
+				return cell_index(grid)
+			return Vector2i(999, 999)
+	return Vector2i(999, 999)
+
+
+func _is_enemy_actor(id: String) -> bool:
+	for actor: Dictionary in slice.get("actors", []):
+		if actor.get("id", "") == id:
+			return actor.get("side") == "enemy"
+	return false
+
+
+func _draw_hex_highlight(canvas: CanvasItem, cell: Vector2i, fill: Color, rim: Color, rim_width := 2.4, halo_alpha := 0.82) -> void:
+	if not coordinate_map.has(cell):
+		return
+	var shape := _hex(coordinate_map[cell], _scale * 0.94)
+	if fill.a > 0.0:
+		canvas.draw_colored_polygon(shape, fill)
+	shape.append(shape[0])
+	canvas.draw_polyline(shape, Color(0.05, 0.07, 0.06, halo_alpha), rim_width + 2.8, true)
+	canvas.draw_polyline(shape, rim, rim_width, true)
 
 
 func _draw() -> void:
@@ -849,6 +907,20 @@ func _draw() -> void:
 		return
 	if not _town and not _battle_mode:
 		_draw_route()
+	if _battle_mode and not _show_deployment and slice.get("battle_memory", {}).is_empty():
+		var focused_cell := _actor_cell(battle_focus_id)
+		if coordinate_map.has(_battle_hover_cell) and _battle_hover_cell != focused_cell:
+			var hover_rim := Color("ffd4a8") if _danger_cells.has(_battle_hover_cell) else Color("d6efe0")
+			_draw_hex_highlight(self, _battle_hover_cell, Color(hover_rim, 0.11), Color(hover_rim, 0.85), 2.0, 0.65)
+		if coordinate_map.has(focused_cell):
+			var focus_rim := Color("ffc48c") if _is_enemy_actor(battle_focus_id) else Color("ffe49e")
+			_draw_hex_highlight(self, focused_cell, Color(focus_rim, 0.18), focus_rim, 2.7, 0.88)
+	elif _show_deployment:
+		var selected_cell := _actor_cell(selected_id)
+		if coordinate_map.has(_deploy_hover_cell) and _deploy_hover_cell != selected_cell and _deployment_drag == null:
+			_draw_hex_highlight(self, _deploy_hover_cell, Color("b9ebd1", 0.14), Color("daf7e7"), 2.1, 0.72)
+		if coordinate_map.has(selected_cell):
+			_draw_hex_highlight(self, selected_cell, Color("ffe49e", 0.18), Color("ffe49e"), 2.6, 0.85)
 	_draw_danger_ranges(self, false)
 	var memory: Dictionary = slice.get("battle_memory", {})
 	if memory.is_empty():
@@ -859,19 +931,16 @@ func _draw() -> void:
 
 func _draw_overlay() -> void:
 	_draw_danger_ranges(_overlay, true)
+	_draw_warning_keys()
 	if _battle_mode and not impacts.is_empty() and slice.get("battle_memory", {}).is_empty():
 		_draw_combat_impacts()
-	_draw_warning_keys()
 	if slice.get("phase") == "BATTLE" and slice.get("battle_memory", {}).is_empty() and get_viewport().gui_get_hovered_control() == self:
 		_update_battle_cursor(get_local_mouse_position())
 	if not _contact_badges.is_empty():
 		_draw_contact_badges()
 	if _show_deployment and coordinate_map.has(_drop_cell):
-		var edge := Color("a4e0c4") if _drop_allowed else DANGER
-		var shape := _hex(coordinate_map[_drop_cell], _scale * 0.93)
-		_overlay.draw_colored_polygon(shape, Color(edge, 0.30))
-		shape.append(shape[0])
-		_overlay.draw_polyline(shape, edge, 2.6, true)
+		var edge := Color("c6f8df") if _drop_allowed else Color("ff9e78")
+		_draw_hex_highlight(_overlay, _drop_cell, Color(edge, 0.30), edge, 2.8, 0.88)
 
 
 func select_contact_enemy(id: String) -> void:
@@ -910,10 +979,8 @@ func _layout_contact_badges(enemies: Array) -> void:
 
 func _draw_contact_badges() -> void:
 	if _contact_badges.has(contact_enemy_id):
-		var shape := _hex(_contact_badges[contact_enemy_id].tile, _scale * 0.93)
-		_overlay.draw_colored_polygon(shape, Color(1.0, 0.70, 0.40, 0.20))
-		shape.append(shape[0])
-		_overlay.draw_polyline(shape, Color("ffe1ab"), 2.6, true)
+		var enemy_cell := _cell_at(_contact_badges[contact_enemy_id].tile)
+		_draw_hex_highlight(_overlay, enemy_cell, Color(1.0, 0.70, 0.40, 0.22), Color("ffe1ab"), 2.7, 0.85)
 	for id in _contact_badges:
 		var row: Dictionary = _contact_badges[id]
 		var rect: Rect2 = row.box
@@ -1155,9 +1222,14 @@ func _sync_unit_markers() -> void:
 		actors = actors + map_data.get("enemy_preview", [])
 	if _layout_cells.is_empty() or (not _town and not _battle_mode) or (_town_yard and not _show_deployment):
 		actors = []
-	var retained := {}
-	var focus := battle_focus_id if slice.get("phase") == "BATTLE" else selected_id
-	var radius := minf(17, _scale * (0.41 if _sideways else 0.53))
+	var living_cells := {}
+	for actor: Dictionary in actors:
+		if float(actor.get("hp", 0)) <= 0 or not actor.get("deployed", true):
+			continue
+		var grid: Variant = actor.get("pos", actor.get("position"))
+		if grid is Array and grid.size() == 2:
+			living_cells[cell_index(grid)] = true
+	var entries: Array[Dictionary] = []
 	for index in range(actors.size()):
 		var actor: Dictionary = actors[index]
 		var id: String = actor.get("instance_id", actor.get("id", ""))
@@ -1166,13 +1238,35 @@ func _sync_unit_markers() -> void:
 		if (down and not modelled) or not actor.get("deployed", true):
 			continue
 		var grid: Variant = actor.get("pos", actor.get("position"))
-		if not grid is Array or grid.size() != 2 or not coordinate_map.has(Vector2i(int(grid[0]), int(grid[1]))):
+		if not grid is Array or grid.size() != 2:
 			continue
+		var cell := cell_index(grid)
+		if not coordinate_map.has(cell):
+			continue
+		var pos_px: Vector2 = stage.foot_pixel(id) if modelled else _point(grid)
+		entries.append({"index": index, "actor": actor, "id": id, "modelled": modelled,
+			"down": down, "cell": cell, "pos_px": pos_px})
+	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a.down != b.down:
+			return a.down
+		if not is_equal_approx(a.pos_px.y, b.pos_px.y):
+			return a.pos_px.y < b.pos_px.y
+		return int(a.index) < int(b.index)
+	)
+	var retained := {}
+	var focus := battle_focus_id if slice.get("phase") == "BATTLE" else selected_id
+	var radius := clampf(_scale * 0.37, 12.0, 16.0) if _sideways else minf(17.0, _scale * 0.53)
+	for entry: Dictionary in entries:
+		var actor: Dictionary = entry.actor
+		var id: String = entry.id
+		var modelled: bool = entry.modelled
+		var down: bool = entry.down
+		var cell: Vector2i = entry.cell
 		var marker: Dictionary = _unit_markers.get(id, {})
 		if marker.is_empty():
 			var item := Node2D.new()
 			var label := Node2D.new()
-			marker = {"node": item, "label": label, "appearance": {}, "label_style": {}, "label_box": Rect2()}
+			marker = {"node": item, "label": label, "appearance": {}, "label_style": {}, "label_box": Rect2(), "label_extent": Rect2()}
 			_unit_markers[id] = marker
 			label.set_meta("actor_id", id)
 			_units.add_child(item)
@@ -1186,11 +1280,12 @@ func _sync_unit_markers() -> void:
 		retained[id] = true
 		var health := clampf(float(actor.hp) / maxf(1.0, float(actor.max_hp)), 0.0, 1.0) if not down and actor.has("max_hp") else -1.0
 		var enemy: bool = actor.get("side") == "enemy"
-		var appearance := {"modelled": modelled, "down": down, "enemy": enemy,
+		var appearance := {"modelled": modelled, "down": down, "enemy": enemy, "sideways": _sideways,
 			"focused": id == focus, "barrier": not down and int(actor.get("private_shield", actor.get("boss_barrier", 0))) > 0,
 			"shared_shield": not down and actor.has("shared_protection"), "radius": radius}
-		var label_style := {"enemy": enemy, "modelled": modelled, "radius": radius,
-			"badge": "" if _show_deployment and enemy else actor.get("badge", str(index + 1)),
+		var label_style := {"enemy": enemy, "modelled": modelled, "down": down, "sideways": _sideways,
+			"co_located": down and living_cells.has(cell), "radius": radius,
+			"badge": "" if _show_deployment and enemy else actor.get("badge", str(int(entry.index) + 1)),
 			"health": health, "badge_font_size": impact_font_size if modelled else 14}
 		if marker.appearance != appearance:
 			marker.appearance = appearance
@@ -1199,7 +1294,7 @@ func _sync_unit_markers() -> void:
 			marker.label_style = label_style
 			marker.label.queue_redraw()
 		marker.root = stage.actors[id].node.global_position if modelled else null
-		item.position = stage.foot_pixel(id) if modelled else _point(grid)
+		item.position = entry.pos_px
 		marker.label.position = item.position
 	for id in _unit_markers.keys():
 		if not retained.has(id):
@@ -1213,8 +1308,20 @@ func _sync_unit_markers() -> void:
 
 
 static func _enemy_base(point: Vector2, radius: float) -> PackedVector2Array:
-	return PackedVector2Array([point + Vector2(0, -radius), point + Vector2(radius, 0),
-		point + Vector2(0, radius), point + Vector2(-radius, 0)])
+	return _enemy_diamond(point, radius, radius)
+
+
+static func _enemy_diamond(point: Vector2, rx: float, ry: float) -> PackedVector2Array:
+	return PackedVector2Array([point + Vector2(0, -ry), point + Vector2(rx, 0),
+		point + Vector2(0, ry), point + Vector2(-rx, 0)])
+
+
+static func _ellipse_points(center: Vector2, rx: float, ry: float, steps := 24) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for i in range(steps):
+		var angle := TAU * float(i) / float(steps)
+		points.append(center + Vector2(cos(angle) * rx, sin(angle) * ry))
+	return points
 
 
 func _draw_unit_marker(id: String) -> void:
@@ -1223,32 +1330,49 @@ func _draw_unit_marker(id: String) -> void:
 	var item: Node2D = marker.node
 	var style: Dictionary = marker.appearance
 	var radius: float = style.radius
+	var sideways: bool = style.get("sideways", false)
+	var ry := radius * 0.64 if sideways else radius
+	var rx := radius * 1.05 if sideways else radius
 	var ink := DANGER if style.enemy else Color("95dbca")
-	var rim := Color("718c87") if style.down else ink
+	var rim := Color(0.54, 0.56, 0.55, 0.42) if style.down else ink
 	if style.modelled:
-		var base := Color(0.08, 0.13, 0.13, 0.7)
-		if style.enemy:
-			var diamond := _enemy_base(Vector2.ZERO, radius)
-			item.draw_colored_polygon(diamond, base)
-			diamond.append(diamond[0])
-			item.draw_polyline(diamond, rim, 1.5, true)
-		else:
-			item.draw_circle(Vector2.ZERO, radius, base)
-			item.draw_circle(Vector2.ZERO, radius, rim, false, 1.5, true)
+		if sideways:
+			var shadow_center := Vector2(0.5, 2.0)
+			item.draw_colored_polygon(_ellipse_points(shadow_center, rx * 1.48, ry * 1.45, 20),
+				Color(0.05, 0.04, 0.03, 0.10 if style.down else 0.18))
+			item.draw_colored_polygon(_ellipse_points(shadow_center, rx * 1.15, ry * 1.15, 20),
+				Color(0.04, 0.03, 0.02, 0.15 if style.down else 0.30))
+		var base := Color(0.14, 0.15, 0.15, 0.28) if style.down else Color(0.08, 0.12, 0.12, 0.68)
+		var poly := _enemy_diamond(Vector2.ZERO, rx, ry) if style.enemy else _ellipse_points(Vector2.ZERO, rx, ry, 24)
+		item.draw_colored_polygon(poly, base)
+		poly.append(poly[0])
+		if not style.down:
+			item.draw_polyline(poly, Color(0.06, 0.06, 0.05, 0.72), 3.2, true)
+		item.draw_polyline(poly, rim, 1.1 if style.down else 1.7, true)
 	elif style.enemy:
-		item.draw_colored_polygon(_enemy_base(Vector2.ZERO, radius), ink)
+		item.draw_colored_polygon(_enemy_diamond(Vector2.ZERO, rx, ry), ink)
 	else:
-		item.draw_circle(Vector2.ZERO, radius, ink)
+		item.draw_colored_polygon(_ellipse_points(Vector2.ZERO, rx, ry, 24), ink)
 	if style.focused:
 		for direction in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
-			var corner: Vector2 = direction * (radius + 4)
-			item.draw_polyline(PackedVector2Array([corner - Vector2(direction.x * 8, 0), corner,
-				corner - Vector2(0, direction.y * 8)]), ACCENT, 2, true)
+			var corner := Vector2(direction.x * (rx + 4.0), direction.y * (ry + 4.0))
+			var arm := PackedVector2Array([corner - Vector2(direction.x * 7.5, 0), corner,
+				corner - Vector2(0, direction.y * 6.5)])
+			item.draw_polyline(arm, Color(0.05, 0.06, 0.05, 0.85), 3.8, true)
+			item.draw_polyline(arm, Color("ffe29c"), 2.1, true)
 	if style.barrier:
-		item.draw_arc(Vector2.ZERO, radius + 5.0, -PI * 0.92, PI * 0.92, 22, Color("d2c7ad"), 3.0, true)
+		var arc := PackedVector2Array()
+		for i in range(17):
+			var angle := lerpf(-PI * 0.92, PI * 0.92, float(i) / 16.0)
+			arc.append(Vector2(cos(angle) * (rx + 5.0), sin(angle) * (ry + 4.0)))
+		item.draw_polyline(arc, Color("d2c7ad"), 2.8, true)
 	if style.shared_shield:
 		for start in [-PI * 0.17, PI * 0.83]:
-			item.draw_arc(Vector2.ZERO, radius + 7.0, start, start + PI * 0.34, 10, Color("edbe84"), 2.4, true)
+			var arc := PackedVector2Array()
+			for i in range(7):
+				var angle := lerpf(start, start + PI * 0.34, float(i) / 6.0)
+				arc.append(Vector2(cos(angle) * (rx + 7.0), sin(angle) * (ry + 5.5)))
+			item.draw_polyline(arc, Color("edbe84"), 2.4, true)
 
 
 func _draw_unit_label(id: String) -> void:
@@ -1257,8 +1381,15 @@ func _draw_unit_label(id: String) -> void:
 	var item: Node2D = marker.label
 	var style: Dictionary = marker.label_style
 	var radius: float = style.radius
-	var gauge_y := radius + (15.0 if style.modelled else 5.0)
+	var sideways: bool = style.get("sideways", false)
+	var down: bool = style.get("down", false)
 	marker.label_box = Rect2()
+	marker.label_extent = Rect2()
+	if style.get("co_located", false):
+		return
+	var foot_gap := (radius * 0.64 + 1.5) if sideways else (radius + 1.0)
+	var gauge_y := foot_gap + (14.0 if style.modelled else 4.0)
+	var extent := Rect2()
 	if font != null and not style.badge.is_empty():
 		var token: String = style.badge
 		var px: int = style.badge_font_size
@@ -1269,19 +1400,37 @@ func _draw_unit_label(id: String) -> void:
 		var baseline := Vector2(-width * 0.5, 5)
 		var color := Color("132221")
 		if style.modelled:
-			var plate := Rect2(baseline.x - 3, radius + 1, width + 6, px + 3)
+			var plate := Rect2(baseline.x - 3.0, foot_gap, width + 6.0, px + 3.0)
 			marker.label_box = plate
-			item.draw_rect(plate, Color("30271e"))
+			extent = plate
+			if down:
+				item.draw_rect(plate, Color(0.15, 0.15, 0.15, 0.42))
+				item.draw_rect(plate, Color(0.56, 0.58, 0.57, 0.30), false, 1.0)
+				color = Color(0.70, 0.65, 0.63, 0.56) if style.enemy else Color(0.63, 0.70, 0.68, 0.56)
+			else:
+				item.draw_rect(plate, Color(0.14, 0.11, 0.09, 0.90))
+				var rim := Color("f6a073", 0.48) if style.enemy else Color("95dbca", 0.42)
+				item.draw_rect(plate, rim, false, 1.0)
+				color = Color("ffd6bd") if style.enemy else Color("cff5e8")
 			baseline.y = plate.get_center().y + (font.get_ascent(px) - font.get_descent(px)) * 0.5
-			color = Color("ffcbab") if style.enemy else Color("c4efe0")
-			gauge_y = plate.end.y + 2
+			gauge_y = plate.end.y + 2.0
+		else:
+			extent = Rect2(-radius, -radius, radius * 2.0, radius * 2.0)
 		item.draw_string(font, baseline, token, HORIZONTAL_ALIGNMENT_LEFT, -1, px, color)
-	if style.health >= 0.0:
+	if down and style.modelled:
+		var width := clampf(radius * 2.35, 26.0, 38.0)
+		var gauge := Rect2(-width * 0.5, gauge_y, width, 3.5)
+		item.draw_rect(gauge.grow(1.0), Color(0.08, 0.10, 0.10, 0.32))
+		item.draw_rect(gauge, Color(0.34, 0.36, 0.36, 0.38))
+		extent = extent.merge(gauge.grow(1.0)) if extent.has_area() else gauge.grow(1.0)
+	elif style.health >= 0.0:
 		var width := clampf(radius * 2.55, 28.0, 42.0)
 		var gauge := Rect2(-width * 0.5, gauge_y, width, 5.0)
 		item.draw_rect(gauge.grow(1.0), Color("0e1617"))
 		item.draw_rect(gauge, Color("455050"))
 		item.draw_rect(Rect2(gauge.position, Vector2(width * style.health, gauge.size.y)), DANGER if style.enemy else Color("95dbca"))
+		extent = extent.merge(gauge.grow(1.0)) if extent.has_area() else gauge.grow(1.0)
+	marker.label_extent = extent
 
 
 static func impact_text(row: Dictionary) -> String:
@@ -1322,9 +1471,20 @@ func _draw_combat_impacts() -> void:
 		var ink := DANGER if impact.get("down", false) or not support else Color("b3e6cf")
 		if delayed and not impact.get("down", false):
 			ink = Color("ddbeff")
-		cards.append({"priority": priority, "anchor": _point(actor.pos), "ink": ink,
+		var anchor: Vector2 = stage.head_pixel(actor.id)
+		if anchor == Vector2.INF:
+			anchor = _point(actor.pos) - Vector2(0.0, _scale * 0.6)
+		anchor = anchor.clamp(Vector2(20.0, 24.0), (size - Vector2(20.0, 50.0)).max(Vector2(20.0, 24.0)))
+		cards.append({"priority": priority, "anchor": anchor, "ink": ink,
 			"text": "%s  %s" % [actor.badge, impact_text(impact)]})
 	cards.sort_custom(func(a, b): return a.priority > b.priority)
+	var avoid: Array[Rect2] = []
+	for key: Dictionary in _drawn_warning_keys:
+		avoid.append(key.box.grow(4.0))
+	for marker: Dictionary in _unit_markers.values():
+		var extent: Rect2 = marker.get("label_extent", marker.label_box)
+		if extent.has_area():
+			avoid.append(Rect2(marker.label.position + extent.position, extent.size).grow(3.0))
 	var occupied: Array[Rect2] = []
 	for card in cards:
 		if occupied.size() == 3:
@@ -1333,20 +1493,44 @@ func _draw_combat_impacts() -> void:
 		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size).x + 14.0
 		var height := float(impact_font_size + 10)
 		var anchor: Vector2 = card.anchor
-		for offset: Vector2 in [Vector2(14, -height - 11), Vector2(14, 12), Vector2(-width - 14, -height - 11)]:
-			var point := (anchor + offset).clamp(Vector2(18, 18), size - Vector2(width + 18, height + 44))
+		var offsets := [
+			Vector2(-width * 0.5, -height - 10.0),
+			Vector2(12.0, -height - 8.0),
+			Vector2(-width - 12.0, -height - 8.0),
+			Vector2(-width * 0.5, -height * 2.0 - 16.0),
+			Vector2(14.0, -height * 2.0 - 14.0),
+			Vector2(-width - 14.0, -height * 2.0 - 14.0),
+			Vector2(20.0, -height * 0.5),
+			Vector2(-width - 20.0, -height * 0.5),
+		]
+		var chosen := Rect2()
+		var min_overlap := INF
+		for offset: Vector2 in offsets:
+			var point := (anchor + offset).clamp(Vector2(18, 14), (size - Vector2(width + 18, height + 44)).max(Vector2(18, 14)))
 			var box := Rect2(point, Vector2(width, height))
 			if occupied.any(func(prior: Rect2): return prior.grow(3).intersects(box)):
 				continue
-			var edge: Color = card.ink
-			var pin := anchor.clamp(box.position, box.end)
-			_overlay.draw_line(anchor, pin, Color(edge, 0.68), 1.3, true)
-			_overlay.draw_rect(box, Color("132322"))
-			_overlay.draw_rect(box, Color(edge, 0.65), false, 1.0)
-			_overlay.draw_string(font, point + Vector2(7, height - 7), text,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size, edge)
-			occupied.append(box)
-			break
+			var overlap := 0.0
+			for obstacle: Rect2 in avoid:
+				if box.intersects(obstacle):
+					var clip := box.intersection(obstacle)
+					overlap += clip.size.x * clip.size.y
+			if overlap == 0.0:
+				chosen = box
+				break
+			if overlap < min_overlap:
+				min_overlap = overlap
+				chosen = box
+		if not chosen.has_area():
+			continue
+		var edge: Color = card.ink
+		var pin := anchor.clamp(chosen.position, chosen.end)
+		_overlay.draw_line(anchor, pin, Color(edge, 0.72), 1.3, true)
+		_overlay.draw_rect(chosen, Color(0.07, 0.12, 0.12, 0.94))
+		_overlay.draw_rect(chosen, Color(edge, 0.80), false, 1.3)
+		_overlay.draw_string(font, chosen.position + Vector2(7, height - 7), text,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size, edge)
+		occupied.append(chosen)
 
 
 static func warning_numbers(current: Dictionary) -> Dictionary:
@@ -1449,13 +1633,17 @@ func _warning_key_layout() -> Array[Dictionary]:
 		return keys
 	var bounds := Rect2(Vector2(9, 9), size - Vector2(18, 18))
 	var height := float(impact_font_size + 7)
-	var bodies: Array[Rect2] = []
+	var label_rects: Array[Rect2] = []
+	var body_rects: Array[Rect2] = []
 	for marker: Dictionary in _unit_markers.values():
 		var foot: Vector2 = marker.node.position
-		var width := maxf(15.0, _scale * 0.62)
-		var top := _scale * 1.55 if marker.appearance.modelled and not marker.appearance.down else width
-		var bottom: float = marker.appearance.radius + impact_font_size + 12.0 if marker.appearance.modelled else 22.0
-		bodies.append(Rect2(foot - Vector2(width, top), Vector2(width * 2.0, top + bottom)))
+		var unit_extent: Rect2 = marker.get("label_extent", marker.label_box)
+		if unit_extent.has_area():
+			label_rects.append(Rect2(marker.label.position + unit_extent.position, unit_extent.size).grow(3.0))
+		if marker.appearance.modelled and not marker.appearance.down:
+			var half_w := maxf(14.0, _scale * 0.44)
+			var top := _scale * 1.45
+			body_rects.append(Rect2(foot - Vector2(half_w, top), Vector2(half_w * 2.0, top)))
 	for area: Dictionary in _danger_areas:
 		var label := str(area.number)
 		var label_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size)
@@ -1463,22 +1651,49 @@ func _warning_key_layout() -> Array[Dictionary]:
 		var best := -INF
 		var placement := {}
 		for path: PackedVector2Array in area.paths:
-			for i in path.size():
+			var count := path.size()
+			var signed_area := 0.0
+			for i in count:
+				var p0 := path[i]
+				var p1 := path[(i + 1) % count]
+				signed_area += p0.x * p1.y - p1.x * p0.y
+			var winding := 1.0 if signed_area >= 0.0 else -1.0
+			for i in count:
 				var start := path[i]
-				var end := path[(i + 1) % path.size()]
-				var anchor := (start + end) * 0.5
-				var outward := (start - end).normalized().orthogonal()
-				for distance: float in [height * 0.66, height * 1.16, height * 1.66]:
-					var box := Rect2(anchor + outward * distance - extent * 0.5, extent)
-					if not bounds.encloses(box) or keys.any(func(key: Dictionary) -> bool: return box.grow(4).intersects(key.box)):
-						continue
-					var score := 15.0 * outward.y - distance
-					if bodies.any(func(body: Rect2) -> bool: return box.intersects(body)):
-						score -= 60.0
-					if score > best:
-						best = score
-						placement = {"id": area.id, "source": area.source, "number": area.number,
-							"box": box, "anchor": anchor, "label": label, "text_width": label_size.x}
+				var end := path[(i + 1) % count]
+				var outward := (end - start).normalized().orthogonal() * winding
+				var prev := path[posmod(i - 1, count)]
+				var prev_out := (start - prev).normalized().orthogonal() * winding
+				var bisector := outward + prev_out
+				bisector = bisector.normalized() if bisector.length_squared() > 0.01 else outward
+				var anchors := [
+					{"pos": (start + end) * 0.5, "dir": outward, "bonus": 2.0},
+					{"pos": start, "dir": bisector, "bonus": 0.0},
+				]
+				for item: Dictionary in anchors:
+					var anchor: Vector2 = item.pos
+					var dir: Vector2 = item.dir
+					for distance: float in [height * 0.78, height * 1.32, height * 1.95, height * 2.60]:
+						var box := Rect2(anchor + dir * distance - extent * 0.5, extent)
+						if not bounds.encloses(box) or keys.any(func(key: Dictionary) -> bool: return box.grow(4).intersects(key.box)):
+							continue
+						var score := -22.0 * dir.y - distance * 0.75 + float(item.bonus)
+						if label_rects.any(func(rect: Rect2) -> bool: return box.intersects(rect)):
+							score -= 500.0
+						if body_rects.any(func(rect: Rect2) -> bool: return box.intersects(rect)):
+							score -= 180.0
+						var box_center := box.get_center()
+						for other_area: Dictionary in _danger_areas:
+							if other_area.id == area.id:
+								continue
+							for other_path: PackedVector2Array in other_area.paths:
+								if Geometry2D.is_point_in_polygon(box_center, other_path):
+									score -= 45.0
+									break
+						if score > best:
+							best = score
+							placement = {"id": area.id, "source": area.source, "number": area.number,
+								"box": box, "anchor": anchor, "label": label, "text_width": label_size.x}
 		if not placement.is_empty():
 			keys.append(placement)
 	return keys
@@ -1521,6 +1736,10 @@ func _gui_input(event: InputEvent) -> void:
 	if slice.get("phase") == "BATTLE" and slice.get("battle_memory", {}).is_empty():
 		if event is InputEventMouseMotion:
 			_update_battle_cursor(event.position)
+			var next_cell := _cell_at(event.position)
+			if next_cell != _battle_hover_cell:
+				_battle_hover_cell = next_cell
+				queue_redraw()
 		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 			var target := _battle_actor_at(event.position)
 			if event.pressed:
@@ -1532,6 +1751,12 @@ func _gui_input(event: InputEvent) -> void:
 					battle_actor_selected.emit(selected)
 			accept_event()
 		return
+	if _show_deployment and event is InputEventMouseMotion and _deployment_drag == null:
+		var candidate := _cell_at(event.position)
+		var next_deploy := candidate if candidate in _deployment_cells().map(cell_index) else Vector2i(999, 999)
+		if next_deploy != _deploy_hover_cell:
+			_deploy_hover_cell = next_deploy
+			queue_redraw()
 	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if not get_viewport().gui_is_dragging():
 			if deployment_open:
@@ -1587,6 +1812,9 @@ func _clear_route_hover() -> void:
 
 func _clear_battle_pointer() -> void:
 	_pressed_battle_actor = ""
+	if _battle_hover_cell != Vector2i(999, 999):
+		_battle_hover_cell = Vector2i(999, 999)
+		queue_redraw()
 	if _route_hover.is_empty():
 		mouse_default_cursor_shape = CURSOR_ARROW
 
@@ -1647,11 +1875,15 @@ func _battle_annotation_at(point: Vector2) -> String:
 	for key: Dictionary in _drawn_warning_keys:
 		if key.box.has_point(point):
 			return key.source
-	for index in range(_unit_labels.get_child_count() - 1, -1, -1):
-		var label := _unit_labels.get_child(index) as Node2D
-		var id: String = label.get_meta("actor_id")
-		if _unit_markers[id].label_box.has_point(point - label.position):
-			return id
+	for down_pass in [false, true]:
+		for index in range(_unit_labels.get_child_count() - 1, -1, -1):
+			var label := _unit_labels.get_child(index) as Node2D
+			var id: String = label.get_meta("actor_id")
+			var marker: Dictionary = _unit_markers[id]
+			if bool(marker.label_style.get("down", false)) != down_pass:
+				continue
+			if marker.label_box.has_point(point - label.position):
+				return id
 	return ""
 
 
@@ -1674,7 +1906,7 @@ func focus_battle_actor(id: String) -> void:
 		return
 	battle_focus_id = id
 	_sync_unit_markers()
-	if not _danger_areas.is_empty():
+	if _battle_mode or not _danger_areas.is_empty():
 		queue_redraw()
 	if not impacts.is_empty() or not _danger_cells.is_empty():
 		_overlay.queue_redraw()
@@ -1746,6 +1978,9 @@ func _drop_data(_position: Vector2, data: Variant) -> void:
 func _clear_drop_hint() -> void:
 	_drop_cell = Vector2i(999, 999)
 	_drop_allowed = false
+	if _deploy_hover_cell != Vector2i(999, 999):
+		_deploy_hover_cell = Vector2i(999, 999)
+		queue_redraw()
 	if _overlay != null:
 		_overlay.queue_redraw()
 

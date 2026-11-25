@@ -45,8 +45,10 @@ const CONTACT_MODEL_PATHS := {
 	"M02": AID_PATH, "M03": CROSSBOW_PATH, "M04": MIST_PATH,
 	"EL02": ENEMIES + DUAL_SAC_ASSET,
 }
-const SIDE_PITCH := PI * 28.0 / 180.0
+const SIDE_PITCH := PI * 36.0 / 180.0
 const SIDE_TURN := -PI / 3.0
+const SIDE_UNIT_SCALE := 1.16
+const MAP_UNIT_SCALE := 1.52
 const FACINGS := [Vector2(1, 0), Vector2(0.5, 0.8660254), Vector2(-0.5, 0.8660254),
 	Vector2(-1, 0), Vector2(-0.5, -0.8660254), Vector2(0.5, -0.8660254)]
 
@@ -141,6 +143,10 @@ static func project_ground(point: Vector2, sideways: bool) -> Vector2:
 		return point
 	var turned := point.rotated(SIDE_TURN)
 	return Vector2(turned.x, turned.y * sin(SIDE_PITCH))
+
+
+static func unit_scale(sideways: bool) -> float:
+	return SIDE_UNIT_SCALE if sideways else MAP_UNIT_SCALE
 
 
 func _ready() -> void:
@@ -588,7 +594,7 @@ func set_geometry(points: Dictionary, radius: float, sideways := false) -> void:
 	if not is_ready or warmup_pawn != null or size.x < 2 or size.y < 2:
 		return
 	var requested := Vector2i(size.round())
-	var extent := size.y / maxf(radius * 1.52, 1.0)
+	var extent := size.y / maxf(radius * unit_scale(sideways), 1.0)
 	if viewport_3d.size == requested and is_equal_approx(camera.size, extent) and side_view == sideways:
 		return
 	if not battle_id.is_empty():
@@ -939,6 +945,23 @@ func pick_actor(point: Vector2, allies_only := false) -> String:
 
 func foot_pixel(id: String) -> Vector2:
 	return camera.unproject_position(actors[id].node.global_position)
+
+
+func head_pixel(id: String) -> Vector2:
+	if not is_ready or not actors.has(id):
+		return Vector2.INF
+	var token: Dictionary = actors[id]
+	var pawn: Node3D = token.node
+	var height := 1.70
+	if float(token.row.get("hp", 0)) <= 0:
+		height = 0.52
+	elif pawn is Ado:
+		height = 2.40
+	elif pawn is Echo or pawn is Wasp or pawn is DualSac:
+		height = 1.15
+	elif pawn is Mimic:
+		height = 0.78
+	return camera.unproject_position(pawn.global_position + Vector3.UP * height)
 
 
 func _update_actor(row: Dictionary, restore: bool, preview := false) -> void:
@@ -1781,13 +1804,25 @@ func _mark(id: String, pos: Array, label: String, absorbed: bool, healed := fals
 func _draw() -> void:
 	for trace in ado_traces.values():
 		_draw_ado_trace(trace)
-	for mark in marks.values():
-		var point := _at(mark.pos) + Vector2(11, -14)
+	var mark_font := get_theme_default_font()
+	for id: String in marks:
+		var mark: Dictionary = marks[id]
 		var color: Color = mark.color
 		draw_circle(_at(mark.pos), 19, color, false, 2, true)
 		var label: String = mark.label
-		if label == "放空" or label.ends_with("受阻"):
-			draw_string(get_theme_default_font(), point, "受阻" if label.ends_with("受阻") else label,
+		if mark_font != null and (label == "放空" or label.ends_with("受阻")):
+			var text := "受阻" if label.ends_with("受阻") else label
+			var anchor := head_pixel(id)
+			if anchor == Vector2.INF:
+				anchor = _at(mark.pos) + Vector2(0.0, -38.0)
+			var text_size := mark_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
+			var pill := Rect2(anchor - Vector2(text_size.x * 0.5 + 6.0, text_size.y + 8.0),
+				Vector2(text_size.x + 12.0, text_size.y + 4.0))
+			pill.position = pill.position.clamp(Vector2(10.0, 10.0), (size - pill.size - Vector2(10.0, 10.0)).max(Vector2(10.0, 10.0)))
+			draw_rect(pill, Color(0.08, 0.12, 0.11, 0.88))
+			draw_rect(pill, Color(color, 0.75), false, 1.0)
+			var baseline := pill.position.y + (pill.size.y + mark_font.get_ascent(16) - mark_font.get_descent(16)) * 0.5
+			draw_string(mark_font, Vector2(pill.position.x + 6.0, baseline), text,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 16, color)
 
 
