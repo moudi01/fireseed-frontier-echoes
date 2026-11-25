@@ -96,6 +96,7 @@ var opened := false
 var captions_open := false
 var _asked_about_old_company := false
 var town_tab := "chapter"
+var _ordinary_route_profile := ""
 var construction_project := ""
 var finale_preview_open := false
 var research_member_id := ""
@@ -619,6 +620,8 @@ func _refresh(row: Dictionary) -> void:
 	if phase != "TOWN" or view.get("chapter", {}).get("books", []).is_empty():
 		books_open = false
 		_previewed_book = {}
+	if phase != "TOWN":
+		_ordinary_route_profile = ""
 	if phase != "EXPLORE":
 		field_gear_open = false
 		field_books_open = false
@@ -868,6 +871,10 @@ func _notice(message: String, command := "", args: Array = []) -> void:
 		notice.text = messages[command]
 		pouch_targets.clear()
 		focus_key = "pouch-list"
+	elif command == "route":
+		_ordinary_route_profile = ""
+		focus_key = "ordinary-route-picker"
+		notice.text = "已选定路线 %s。" % args[0]
 	elif command == "supply":
 		notice.text = "已取消材料委托。" if args[1] == "off" else "已登记材料委托。常规远征出发时锁定领取地点。"
 	elif command == "quest" and args == ["commission", "CONFIRM"]:
@@ -1336,6 +1343,7 @@ func _town_actions() -> void:
 		_chapter_actions()
 		return
 	var complete: bool = view.get("complete", false)
+	var can_expedition: bool = not view.get("ordinary_routes", []).is_empty() or view.get("chapter", {}).get("archived", false)
 	var has_records: bool = not view.get("rescue", {}).is_empty()
 	var has_books: bool = not view.get("skill_books", {}).is_empty() or not view.get("book_market", {}).get("offers", {}).is_empty()
 	var research: Dictionary = view.get("research", {})
@@ -1344,7 +1352,7 @@ func _town_actions() -> void:
 	if not complete and town_tab == "chapter":
 		town_tab = "roster"
 	_show_town_tabs({"chapter": complete, "roster": true, "skills": has_books,
-		"expedition": view.get("chapter", {}).get("archived", false), "construction": true, "items": true,
+		"expedition": can_expedition, "construction": true, "items": true,
 		"research": not research.is_empty(), "finale": not finale.is_empty(),
 		"logistics": not logistics.is_empty(), "rescue": has_records})
 	if town_tab == "rescue" and has_records:
@@ -1371,7 +1379,7 @@ func _town_actions() -> void:
 	if town_tab == "chapter" and complete:
 		_chapter_actions()
 		return
-	if town_tab == "expedition" and view.get("chapter", {}).get("archived", false):
+	if town_tab == "expedition" and can_expedition:
 		_expedition_actions()
 		return
 	_label(actions, "队伍整备" if view.get("complete", false) else "出发前整备", GOLD, 24)
@@ -1439,6 +1447,7 @@ func _town_tab(tab: String, project := "") -> void:
 	bookstore_open = false
 	bookstore_book = ""
 	book_research_open = false
+	_ordinary_route_profile = ""
 	town_tab = tab
 	focus_key = ""
 	match tab:
@@ -2275,7 +2284,69 @@ func _toggle_outfit_target(id: String) -> void:
 	_render()
 
 
+func _set_ordinary_route_profile(profile: String) -> void:
+	_ordinary_route_profile = profile
+	focus_key = "ordinary-route-picker" if profile.is_empty() else "ordinary-route-profile-" + profile
+	_render()
+	_action_scroll.set_deferred("scroll_vertical", 0)
+
+
+func _ordinary_route_title(route: Dictionary) -> String:
+	return "%s · %s → %s" % [route.id, route.start, route.target]
+
+
+func _ordinary_route_via(route: Dictionary) -> String:
+	var path: Array = route.path
+	return "" if path.size() < 3 else "计划经 " + " → ".join(path.slice(1, path.size() - 1))
+
+
+func _style_route_tab(entry: Button) -> void:
+	entry.theme_type_variation = &"TownTab"
+	entry.size_flags_horizontal = SIZE_EXPAND_FILL
+	entry.autowrap_mode = TextServer.AUTOWRAP_OFF
+	entry.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	entry.add_theme_font_size_override("font_size", 19 if settings["大字"] else 16)
+	entry.custom_minimum_size.y = 35.0 if settings["大字"] else 30.0
+
+
+func _ordinary_route_actions(routes: Array) -> void:
+	var profiles := {}
+	for route in routes:
+		profiles[route.profile] = route.cost
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	actions.add_child(row)
+	_style_route_tab(_button("返回", "ordinary-route-picker", _set_ordinary_route_profile.bind(""), true, row))
+	var names := {"SHORT": "短途", "MEDIUM": "中途", "LONG": "长途"}
+	for profile: String in names:
+		if not profiles.has(profile):
+			continue
+		var entry := _button("%s %d 份" % [names[profile], int(profiles[profile])],
+			"ordinary-route-profile-" + profile, _set_ordinary_route_profile.bind(profile), true, row)
+		_style_route_tab(entry)
+		entry.toggle_mode = true
+		entry.set_pressed_no_signal(profile == _ordinary_route_profile)
+	for route in routes:
+		if route.profile != _ordinary_route_profile:
+			continue
+		var title := ("当前  " if route.selected else "") + _ordinary_route_title(route)
+		var via := _ordinary_route_via(route)
+		if not via.is_empty():
+			title += "\n" + via
+		var entry := _input_action(title, "route", [route.id], "", not route.selected)
+		entry.add_theme_font_size_override("font_size", 21 if settings["大字"] else 16)
+	_label(actions, "费用从仓库补给扣除。实走分支以出发后锁定的远征清单为准。", MUTED, 16)
+
 func _expedition_actions() -> void:
+	var routes: Array = view.get("ordinary_routes", [])
+	if not _ordinary_route_profile.is_empty() and routes.any(func(route): return route.profile == _ordinary_route_profile):
+		_ordinary_route_actions(routes)
+		return
+	var ordinary: Dictionary = {}
+	for route in routes:
+		if route.selected:
+			ordinary = route
+			break
 	var hunts: Array = view.get("hunts", [])
 	var selected: Dictionary = {}
 	for hunt in hunts:
@@ -2287,11 +2358,16 @@ func _expedition_actions() -> void:
 	var supply := int(view.supply)
 	var copper := int(view.town_roster.copper)
 	_label(actions, "远征与补给", GOLD, 24)
+	var ordinary_title := "常规短途" if ordinary.is_empty() else _ordinary_route_title(ordinary)
+	if selected.is_empty():
+		_label(actions, "当前路线 · %s" % ordinary_title, INK, 17)
+	if not routes.is_empty():
+		var starting_profile: String = routes[0].profile if ordinary.is_empty() else ordinary.profile
+		_button("选择普通路线", "ordinary-route-picker", _set_ordinary_route_profile.bind(starting_profile))
 	if selected.is_empty():
 		for hunt in hunts:
 			if not hunt.defeated:
 				_input_action("选定%s讨伐" % hunt.name, "challenge", [hunt.id])
-		_label(actions, "当前路线 · 常规短途", MUTED, 17)
 	else:
 		_label(actions, "讨伐%s · %s" % [selected.name, " → ".join(selected.route)], INK, 18)
 		if selected.has("evidence") and not selected.evidence:
@@ -2303,8 +2379,12 @@ func _expedition_actions() -> void:
 		_label(actions, "出发需 %d 份补给，现有 %d 份。" % [cost, supply], ALERT, 16)
 	if not blocker.is_empty():
 		_label(actions, blocker + "。可回队伍与装备调整。", ALERT, 16)
-	var route := "常规短途" if selected.is_empty() else "%s讨伐" % selected.name
+	var route := ordinary_title if selected.is_empty() else "%s讨伐" % selected.name
 	var departure := "前往%s，消耗 %d 份仓库补给。" % [route, cost]
+	if selected.is_empty() and not ordinary.is_empty():
+		var via := _ordinary_route_via(ordinary)
+		if not via.is_empty():
+			departure += "\n" + via + "，实走分支以锁定的清单为准。"
 	var market: Dictionary = view.get("book_market", {})
 	if market.has("departure_cap"):
 		departure += "\n本趟普通技能书额度 · %d 本" % int(market.departure_cap)
@@ -3882,6 +3962,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_close_settings()
 	elif not confirmation.is_empty():
 		_cancel_confirmation()
+	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):
+		_set_ordinary_route_profile("")
 	elif not _book_swap_key.is_empty() and command_buttons.has("book-swap-cancel"):
 		_cancel_book_swap()
 	elif books_open and not captions_open and not client.blocked:

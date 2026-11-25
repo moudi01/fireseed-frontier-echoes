@@ -6,7 +6,7 @@ from collections import Counter
 
 
 COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'deploy_at',
-            'place', 'retreat', 'flee', 'walkto', 'interact', 'recruit', 'squad',
+            'place', 'retreat', 'flee', 'walkto', 'interact', 'recruit', 'squad', 'route',
             'town', 'book', 'summon', 'equip', 'unequip', 'dialogue', 'challenge', 'depart',
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
@@ -57,6 +57,7 @@ BONE_ARROW = 'EN22-A'
 BONE_GUARD = 'EN21-A'
 DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
+ORDINARY_ROUTES = {f'R{number:02}' for number in range(1, 10)}
 HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
 EVIDENCE_GENERALS = ('MG01', 'MG02')
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
@@ -75,6 +76,7 @@ MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
           for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',)},
+    'route': {(route,) for route in ORDINARY_ROUTES},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
     'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG05', 'RG06', 'RG07', 'RG08')},
     'memory': MEMORY, 'remember': MEMORY | {(general,) for general in EVIDENCE_GENERALS} | {('close',)},
@@ -417,6 +419,31 @@ def deployment_error(game, board=None):
     except ValueError as exc:
         return str(exc).split('：[[')[0].rstrip('。')
     return ''
+
+
+def ordinary_routes_view(game):
+    state = game.s
+    facts = set(state['unlocked_facts'])
+    profiles = game.cat.multi['profiles']
+    rows = []
+    for route in game.cat.config['routes']:
+        route_id = route['route_id']
+        if route_id not in ORDINARY_ROUTES or not facts.issuperset(route['facts']):
+            continue
+        profile = route['profile']
+        path = [game.cat.regions[region]['name'] for region in route['selected_path']]
+        rows.append({'id': route_id, 'start': path[0], 'target': path[-1], 'path': path,
+                     'profile': profile, 'cost': profiles[profile]['departure_supply_cost'],
+                     'selected': route_id == state['route']})
+    return rows
+
+
+def departure_cost(game):
+    state = game.s
+    if state.get('manifest'):
+        return state['manifest']['departure_supply_cost']
+    selected = next(route for route in game.cat.config['routes'] if route['route_id'] == state['route'])
+    return game.cat.multi['profiles'][selected['profile']]['departure_supply_cost']
 
 
 def route_view(game):
@@ -1560,7 +1587,8 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'region': state['region'], 'region_name': game.cat.regions[state['region']]['name'] if active else '',
             'supply': state['bank']['supply'], 'medical': state['medical'],
             'resources': resource_view(state),
-            'departure_cost': game.cat.multi['profiles']['SHORT']['departure_supply_cost'],
+            'departure_cost': departure_cost(game),
+            'ordinary_routes': ordinary_routes_view(game) if town else [],
             'save_version': _save_version(ledger, primary) if committed_save_version is None else committed_save_version,
             'commissioned': 'ST-101' in facts, 'commission_receipt': commission, 'complete': 'ST-102' in facts,
             'tutorial_area': active and state['mission'] == 'TUTORIAL',
