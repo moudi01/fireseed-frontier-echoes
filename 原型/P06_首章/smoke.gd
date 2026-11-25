@@ -1437,28 +1437,30 @@ func _sev_route() -> void:
 	await _check_hunt_report_archive("MG02", "SB-X02", "sev")
 
 
-func _mg03_route() -> void:
-	var hunt := _route_hunt("MG03")
+func _chapter_three_hunt(general_id: String, goal_region: String, book_id: String, seals: int) -> void:
+	var hunt := _route_hunt(general_id)
 	if app.view.get("phase") != "TOWN" or app.view.budget.milestone != "CH2_COMPLETE" \
 			or hunt.is_empty() or hunt.defeated:
-		failure = "The MG03 route needs a town save with both Chapter 2 reports and no MG03 victory"
+		failure = "The %s route needs a town save with both Chapter 2 reports and no victory over that general" % general_id
 		return
 	var old_seals := int(app.view.chapter.seals)
 	var old_books := int(hunt.report_book.count)
 	var old_budget: Dictionary = app.view.budget.duplicate()
-	var victories := await _play_hunt_route("mg03", "MG03")
+	var evidence_key := general_id.to_lower()
+	var victories := await _play_hunt_route(evidence_key, general_id)
 	if not failure.is_empty():
 		return
-	if side_checks.get("mg03_regions") != ["RG07", "RG04"] or victories.size() != 6 or victories[-1] != "BATTLE-MG03":
-		failure = "The MG03 hunt missed its two-region path or authentic battle victory"
+	if side_checks.get(evidence_key + "_regions") != ["RG07", goal_region] or victories.size() != 6 \
+			or victories[-1] != "BATTLE-" + general_id:
+		failure = "The %s hunt missed its two-region path or authentic battle victory" % general_id
 		return
-	hunt = _route_hunt("MG03")
-	if app.view.get("phase") != "TOWN" or not hunt.reported or int(app.view.chapter.seals) != old_seals + 1 \
+	hunt = _route_hunt(general_id)
+	if app.view.get("phase") != "TOWN" or not hunt.reported or int(app.view.chapter.seals) != old_seals + seals \
 			or int(hunt.report_book.count) != old_books + 1 or app.view.budget != old_budget:
-		failure = "The MG03 report did not award exactly one seal and book at the current budget"
+		failure = "The %s report awarded the wrong seals, book or budget" % general_id
 		return
-	side_checks["mg03_victories"] = victories
-	await _check_hunt_report_archive("MG03", "SB-X03", "mg03")
+	side_checks[evidence_key + "_victories"] = victories
+	await _check_hunt_report_archive(general_id, book_id, evidence_key)
 
 
 func _check_hunt_report_archive(general_id: String, book_id: String, evidence_key: String) -> void:
@@ -4666,7 +4668,7 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
-	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
+	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
 		await _check_receipt_boot()
@@ -4810,9 +4812,13 @@ func _run() -> void:
 		elif mode == "sev-report-resume":
 			await _check_hunt_report_archive("MG02", "SB-X02", "sev")
 		elif mode == "mg03-report-route":
-			await _mg03_route()
+			await _chapter_three_hunt("MG03", "RG04", "SB-X03", 1)
 		elif mode == "mg03-report-resume":
 			await _check_hunt_report_archive("MG03", "SB-X03", "mg03")
+		elif mode == "mg04-report-route":
+			await _chapter_three_hunt("MG04", "RG05", "SB-X04", 2)
+		elif mode == "mg04-report-resume":
+			await _check_hunt_report_archive("MG04", "SB-X04", "mg04")
 		elif mode == "ado-sample":
 			if failure.is_empty():
 				await _ado_sample()

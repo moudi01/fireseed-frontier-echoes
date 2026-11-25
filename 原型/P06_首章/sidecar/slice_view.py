@@ -50,7 +50,7 @@ BONE_ARROW = 'EN22-A'
 BONE_GUARD = 'EN21-A'
 DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
-HUNT_GENERALS = ('MG01', 'MG02', 'MG03')
+HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
                  ('MG01', 'record'), ('MG01', 'witness'), ('MG01', 'collect', 'CONFIRM'),
                  *(('report', general, 'CONFIRM') for general in HUNT_GENERALS)}
@@ -67,7 +67,7 @@ MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',)},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
-    'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG06', 'RG07', 'RG08')},
+    'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG05', 'RG06', 'RG07', 'RG08')},
     'memory': MEMORY, 'remember': MEMORY | {('MG01',), ('close',)},
     'dialogue': {('next',), ('skip',)}, 'buy_supply': {('1',)},
     'pack_medical': {(str(n),) for n in range(4)},
