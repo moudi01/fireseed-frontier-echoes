@@ -1,11 +1,23 @@
-"""Apply a mouse deployment as one P03 save transaction."""
+"""Adapt P06 commands to one P03 save transaction."""
 
 from engine import Game, require
 import region_space
 from expedition_peril import deployable
+from slice_view import FIELD_EVENT_CHOICES
 
 
 class DeploymentGame(Game):
+    def choose(self, option_id, target='01', plan=None):
+        state = self.s
+        if state['phase'] == 'EXPLORE' and state['mission'] == 'ORDINARY':
+            site = state['site']
+            event_id = self.manifest_region['events'].get(site, {}).get('event_id')
+            if option_id in FIELD_EVENT_CHOICES.get(event_id, ()):
+                # The text client returns success for a closed local visit.
+                require(self.current['events'][site]['state'] not in ('RESOLVED', 'DECLINED'),
+                        '本现场已处理，不能再次选择。')
+        return super().choose(option_id, target, plan)
+
     def dispatch(self, command, args):
         if command != 'deploy_at':
             return super().dispatch(command, args)

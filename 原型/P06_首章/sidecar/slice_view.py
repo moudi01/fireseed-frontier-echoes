@@ -356,6 +356,9 @@ def field_book_rewards(game):
     return result
 
 
+FIELD_EVENT_CHOICES = {'EV40': frozenset(('PRIMARY', 'SECONDARY')), 'EV59': frozenset(('RUSH',))}
+
+
 def field_event_choice(game, event_id, option, binding, material_room):
     key = option['option_id']
     if event_id == 'EV40' and key in ('PRIMARY', 'SECONDARY'):
@@ -409,7 +412,7 @@ def handbook_event_view(game):
     binding = game.manifest_region['events'].get(state['site'], {})
     source = binding.get('book_offer')
     fixed = binding.get('material_commission') or {}
-    has_site_choices = binding.get('event_id') in ('EV40', 'EV59')
+    has_site_choices = binding.get('event_id') in FIELD_EVENT_CHOICES
     if not source and not fixed and not has_site_choices:
         return {}
     event, binding, visit = game.event_info()
