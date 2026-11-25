@@ -5,9 +5,9 @@ signal geometry_ready
 const Actor = preload("res://shield_actor.gd")
 const Melee = preload("res://melee_actor.gd")
 const Bow = preload("res://bow_actor.gd")
-const Aid = preload("res://aid_actor.gd")
+const Profiles = preload("res://actor_profiles.gd")
+const Targeted = preload("res://targeted_actor.gd")
 const Crossbow = preload("res://crossbow_actor.gd")
-const Mist = preload("res://mist_actor.gd")
 const Spear = preload("res://spear_actor.gd")
 const Hero = preload("res://hero_actor.gd")
 const Mimic = preload("res://mimic_actor.gd")
@@ -21,9 +21,7 @@ const FortressKit = preload("res://fortress_kit.gd")
 const MODEL_PATH := "res://assets/S01-M_Shield_Feedback.glb"
 const MELEE_PATH := "res://assets/S02-M_GapRuntime.glb"
 const BOW_PATH := "res://assets/S03-M_Meshy_BowRuntime.glb"
-const AID_PATH := "res://assets/M02_Tripo_AidRuntime.glb"
 const CROSSBOW_PATH := "res://assets/M03_BreachRuntime.glb"
-const MIST_PATH := "res://assets/M04_MistRuntime.glb"
 const SPEAR_PATH := "res://assets/M01_Tripo_Lane_Spear.glb"
 const GRAY_OAK := "res://assets/gray_oak/"
 const MIMIC_ASSET := "en01_articulated.glb"
@@ -58,7 +56,7 @@ const CONCURRENT_MODEL_LOADS := 4
 const CONTACT_MODEL_PATHS := {
 	"MG01": ADO_PATH, "EN04": ENEMIES + RING_GUARD_ASSET, "EN17": ENEMIES + ENEMY_SPEAR_ASSET,
 	"S02": MELEE_PATH, "S03": BOW_PATH, "M01": SPEAR_PATH,
-	"M02": AID_PATH, "M03": CROSSBOW_PATH, "M04": MIST_PATH,
+	"M03": CROSSBOW_PATH,
 	"EL02": ENEMIES + DUAL_SAC_ASSET,
 }
 const SIDE_PITCH := PI * 44.0 / 180.0
@@ -107,13 +105,10 @@ var melee_model: PackedScene
 var melee_travel: AnimationLibrary
 var bow_model: PackedScene
 var bow_travel: AnimationLibrary
-var aid_model: PackedScene
-var aid_travel: AnimationLibrary
+var targeted_travels: Dictionary = {}
 var aid_capsules: Dictionary = {}
 var crossbow_model: PackedScene
 var crossbow_travel: AnimationLibrary
-var mist_model: PackedScene
-var mist_travel: AnimationLibrary
 var mist_visual: SphereMesh
 var sting_visual: CylinderMesh
 var bone_arrow_visual: CylinderMesh
@@ -491,6 +486,8 @@ func prefetch_contact_models(kinds: Array) -> void:
 			continue
 		if (kind != "M01" or show_spear) and CONTACT_MODEL_PATHS.has(kind):
 			_load_scene(CONTACT_MODEL_PATHS[kind], true)
+		elif Profiles.TARGETED.has(kind):
+			_load_scene(Profiles.TARGETED[kind].model, true)
 		elif _hero_model_supported(kind):
 			_load_scene(HERO_MODEL_PATHS[kind], true)
 
@@ -801,9 +798,8 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 	var mimics := 0
 	var melee_count := 0
 	var bow_count := 0
-	var aid_count := 0
+	var targeted_counts := {}
 	var crossbow_count := 0
-	var mist_count := 0
 	var hero_count := 0
 	var echoes := 0
 	var wasps := 0
@@ -817,12 +813,11 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 				melee_count += 1
 			elif row.kind == "S03" and actors.has(row.id):
 				bow_count += 1
-			elif row.kind == "M02" and actors.has(row.id):
-				aid_count += 1
+			elif Profiles.TARGETED.has(row.kind) and actors.has(row.id):
+				var key: String = Profiles.TARGETED[row.kind].effect + "_peak"
+				targeted_counts[key] = int(targeted_counts.get(key, 0)) + 1
 			elif row.kind == "M03" and actors.has(row.id):
 				crossbow_count += 1
-			elif row.kind == "M04" and actors.has(row.id):
-				mist_count += 1
 			elif HERO_MODEL_PATHS.has(row.kind) and actors.has(row.id):
 				hero_count += 1
 				audit.hero_kinds[row.kind] = int(audit.hero_kinds.get(row.kind, 0)) + 1
@@ -844,9 +839,9 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 	audit.peak_models = maxi(int(audit.peak_models), actors.size())
 	audit.melee_peak = maxi(int(audit.melee_peak), melee_count)
 	audit.bow_peak = maxi(int(audit.bow_peak), bow_count)
-	audit.aid_peak = maxi(int(audit.aid_peak), aid_count)
+	for key in targeted_counts:
+		audit[key] = maxi(int(audit.get(key, 0)), int(targeted_counts[key]))
 	audit.crossbow_peak = maxi(int(audit.crossbow_peak), crossbow_count)
-	audit.mist_peak = maxi(int(audit.mist_peak), mist_count)
 	audit.hero_peak = maxi(int(audit.hero_peak), hero_count)
 	audit.spear_peak = maxi(int(audit.spear_peak), spears)
 	audit.enemy_spear_peak = maxi(int(audit.enemy_spear_peak), enemy_spears)
@@ -878,8 +873,8 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 		if pawn is SkeletonEnemy and pawn.archer and not pawn.cast_id.is_empty() and float(row.hp) > 0 \
 				and pawn.cast_id != row.get("bone_pending", {}).get("id", ""):
 			pawn.cancel_bow(reduced)
-		if (pawn is Aid or pawn is Mist) and not pawn.cast_id.is_empty() and float(row.hp) > 0:
-			var pending: Dictionary = row.get("aid_pending" if pawn is Aid else "mist_pending", {})
+		if pawn is Targeted and not pawn.cast_id.is_empty() and float(row.hp) > 0:
+			var pending: Dictionary = row.get(pawn.pending_field, {})
 			if pawn.cast_id != pending.get("id", ""):
 				pawn.cancel_cast(reduced)
 		if pawn is Hero and not pawn.cast_id.is_empty() and float(row.hp) > 0 \
@@ -890,7 +885,8 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 
 
 func _supports_deployment(kind: String) -> bool:
-	return kind in ["S01", "S02", "S03", "M02", "M03", "M04"] or (kind == "M01" and show_spear) or _hero_model_supported(kind)
+	return kind in ["S01", "S02", "S03", "M03"] or Profiles.TARGETED.has(kind) \
+		or (kind == "M01" and show_spear) or _hero_model_supported(kind)
 
 
 func _supports_enemy(kind: String) -> bool:
@@ -1044,14 +1040,18 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			_actor_attachment_pending = true
 			_wake_model_dispatch()
 			return
-		if row.kind == "M02" and aid_travel == null:
-			aid_model = _load_scene(AID_PATH, true)
-			if aid_model == null:
+		var profile: Dictionary = Profiles.TARGETED.get(row.kind, {})
+		var targeted_model: PackedScene
+		if not profile.is_empty():
+			targeted_model = _load_scene(profile.model, true)
+			if targeted_model == null:
 				return
-			aid_travel = Actor.in_place_travel(aid_model, "AidWalk", false)
-			if aid_travel == null:
-				push_error("P06 apothecary asset or in-place walk is missing")
-				return
+			if not targeted_travels.has(row.kind):
+				var travel := Actor.in_place_travel(targeted_model, profile.clips.travel, false)
+				if travel == null:
+					push_error("P06 in-place travel is missing for " + str(row.kind))
+					return
+				targeted_travels[row.kind] = travel
 		if row.kind == "M03" and crossbow_travel == null:
 			crossbow_model = _load_scene(CROSSBOW_PATH, true)
 			if crossbow_model == null:
@@ -1059,14 +1059,6 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			crossbow_travel = Actor.in_place_travel(crossbow_model, "RangedAdvance")
 			if crossbow_travel == null:
 				push_error("P06 crossbow asset or movement Root track is missing")
-				return
-		if row.kind == "M04" and mist_travel == null:
-			mist_model = _load_scene(MIST_PATH, true)
-			if mist_model == null:
-				return
-			mist_travel = Actor.in_place_travel(mist_model, "MistWalk", false)
-			if mist_travel == null:
-				push_error("P06 mist caster asset or in-place walk is missing")
 				return
 		var enemy_model: PackedScene
 		if row.kind in ["EN04", "EN17", "EL02"]:
@@ -1103,12 +1095,10 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			pawn = Melee.new()
 		elif row.kind == "S03":
 			pawn = Bow.new()
-		elif row.kind == "M02":
-			pawn = Aid.new()
+		elif not profile.is_empty():
+			pawn = Targeted.new()
 		elif row.kind == "M03":
 			pawn = Crossbow.new()
-		elif row.kind == "M04":
-			pawn = Mist.new()
 		elif hero_model != null:
 			pawn = Hero.new()
 		else:
@@ -1149,10 +1139,8 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			assembled = pawn.assemble_bow(bow_model, bow_travel)
 			if assembled and bow_travel == null:
 				bow_travel = pawn.player.get_animation_library("board")
-		elif pawn is Aid:
-			assembled = pawn.assemble_aid(aid_model, aid_travel)
-		elif pawn is Mist:
-			assembled = pawn.assemble_mist(mist_model, mist_travel)
+		elif pawn is Targeted:
+			assembled = pawn.assemble_targeted(targeted_model, targeted_travels[row.kind], profile)
 		elif pawn is Hero:
 			assembled = pawn.assemble_hero(hero_model, hero_travels.get(row.kind), row.kind)
 			if assembled and not hero_travels.has(row.kind):
@@ -1194,10 +1182,8 @@ func _sync_pose(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 		_prepare_gap(pawn, row, true)
 	if restore and pawn is Bow and row.get("bow_pending") is Dictionary:
 		_prepare_bow(pawn, row, true)
-	if restore and pawn is Aid and row.get("aid_pending") is Dictionary:
-		_prepare_targeted(pawn, row.aid_pending, true)
-	if restore and pawn is Mist and row.get("mist_pending") is Dictionary:
-		_prepare_targeted(pawn, row.mist_pending, true)
+	if restore and pawn is Targeted and row.get(pawn.pending_field) is Dictionary:
+		_prepare_targeted(pawn, row[pawn.pending_field], true)
 	if restore and pawn is Hero and row.get("hero_pending") is Dictionary:
 		_prepare_hero_skill(pawn, row, true)
 	if restore and pawn is Spear and row.get("spear_pending") is Dictionary:
@@ -1310,6 +1296,9 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 	var bone_hits := {}
 	var bone_misses := {}
 	for event in events:
+		var kind: String = by_id.get(event.get("actor", ""), {}).get("kind", "")
+		var profile: Dictionary = Profiles.TARGETED.get(kind, {})
+		var effect: String = profile.get("effect", "")
 		if event.type == "down":
 			downs[event.actor] = event
 		elif event.type == "hit" and by_id.get(event.actor, {}).get("kind") == "S02":
@@ -1319,10 +1308,10 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			if not bow_impacts.has(key):
 				bow_impacts[key] = []
 			bow_impacts[key].append(event.target)
-		elif (event.type in ["heal", "skill_miss"] and event.get("move") == "M02-A") \
-				or (event.type == "hit" and by_id.get(event.actor, {}).get("kind") == "M02"):
+		elif effect == "aid" and (event.type == "hit" \
+				or (event.type in ["heal", "skill_miss"] and event.get("move") == profile.move)):
 			aid_impacts[_attack_key(event)] = event
-		elif event.type == "hit" and event.get("action") == "M04-A":
+		elif effect == "mist" and event.type == "hit" and event.get("action") == profile.move:
 			mist_impacts[_attack_key(event)] = event.target
 		elif event.type == "skill_miss" and event.get("move") == "EN03-A":
 			sting_misses[event.action_id] = true
@@ -1391,14 +1380,15 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 	for event in events:
 		var skill: bool = event.get("move") == "S02-A"
 		var piercing: bool = event.get("move") in ["S03-A", "M03-A"]
-		var medical: bool = event.get("move") == "M02-A"
-		var mist: bool = event.get("move") == "M04-A"
-		var hero_actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
+		var source_row: Dictionary = by_id.get(event.get("actor", ""), {})
+		var profile: Dictionary = Profiles.TARGETED.get(source_row.get("kind", ""), {})
+		var targeted_skill: bool = not profile.is_empty() and event.get("move") == profile.move
+		var actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
 		var event_move := str(event.get("move", ""))
-		var hero_skill: bool = hero_actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
+		var hero_skill: bool = actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
 		if hero_skill:
 			if event.type == "windup" and by_id[event.actor].get("hero_pending", {}).get("id") == event.action_id:
-				_prepare_hero_skill(hero_actor_node, by_id[event.actor], false)
+				_prepare_hero_skill(actor_node, by_id[event.actor], false)
 			elif event.type == "skill_miss":
 				_mark(event.actor, by_id[event.actor].pos, "放空", false)
 		if skill and actors.has(event.actor):
@@ -1414,25 +1404,23 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			_prepare_bow(actors[event.actor].node, by_id[event.actor], false)
 		if event.type == "skill_miss" and event.get("move") == "M03-A" and actors.has(event.actor):
 			_mark(event.actor, by_id[event.actor].pos, "放空", false)
-		if medical and event.type == "windup" and actors.has(event.actor) \
-				and by_id[event.actor].get("aid_pending", {}).get("id") == event.action_id:
-			_prepare_targeted(actors[event.actor].node, by_id[event.actor].aid_pending, false)
-		if mist and actors.has(event.actor):
-			if event.type == "windup" and by_id[event.actor].get("mist_pending", {}).get("id") == event.action_id:
-				_prepare_targeted(actors[event.actor].node, by_id[event.actor].mist_pending, false)
-			elif event.type == "skill_miss":
-				_mark(event.actor, by_id[event.actor].pos, "放空", false)
-		var attack: bool = event.type == "basic_start" or ((skill or piercing or medical or mist or hero_skill) and event.type == "release")
+		if targeted_skill and actor_node is Targeted:
+			var pending: Dictionary = source_row.get(actor_node.pending_field, {})
+			if event.type == "windup" and pending.get("id") == event.action_id:
+				_prepare_targeted(actor_node, pending, false)
+			elif actor_node.effect == "mist" and event.type == "skill_miss":
+				_mark(event.actor, source_row.pos, "放空", false)
+		var attack: bool = event.type == "basic_start" or ((skill or piercing or targeted_skill or hero_skill) and event.type == "release")
 		if attack and actors.has(event.actor) and actors[event.actor].node is Actor:
 			var attacker = actors[event.actor].node
 			var key := _attack_key(event)
 			if attacker is Bow:
 				contacts[key] = _bow_shot(attacker, event, by_id, bow_impacts.get(key, []), piercing)
 				continue
-			if attacker is Aid:
-				contacts[key] = _aid_shot(attacker, event, by_id, aid_impacts.get(key, {}), medical)
+			if attacker is Targeted and attacker.effect == "aid":
+				contacts[key] = _aid_shot(attacker, event, by_id, aid_impacts.get(key, {}), targeted_skill)
 				continue
-			if attacker is Mist and mist:
+			if attacker is Targeted and attacker.effect == "mist" and targeted_skill:
 				var hit: String = mist_impacts.get(key, "")
 				contacts[key] = _mist_shot(attacker, event, by_id, hit)
 				mist_contacts[str(event.actor) + "/" + hit] = contacts[key]

@@ -3995,12 +3995,12 @@ func _check_aid_resume() -> void:
 	if app.view.get("phase") != "BATTLE" or app._playback_running:
 		failure = "The saved aid windup did not reopen paused"
 		return
-	if not await _wait_for_battle_models():
-		return
 	var stage = app.board.stage
 	for actor in app.view.battle_view.actors:
 		if not actor.has("aid_pending"):
 			continue
+		if not await _wait_for_battle_models(actor.id):
+			return
 		var pawn: Node3D = stage.actors[actor.id].node
 		var cast: String = actor.aid_pending.id
 		if pawn.cast_id != cast or pawn.player.assigned_animation != "AidHold" or not stage.audit.aid_actions.is_empty():
@@ -4101,7 +4101,7 @@ func _check_mist(restore: bool) -> void:
 			failure = "The mist caster did not keep its deployed model on entering battle"
 			return
 		mist_marks["handoff"] = true
-	if app.view.phase != "BATTLE" or app._playback_running or not await _wait_for_battle_models():
+	if app.view.phase != "BATTLE" or app._playback_running or not await _wait_for_battle_models(id):
 		failure = "The mist caster did not open in the live battle at the saved pace"
 		return
 	var pawn: Node3D = stage.actors.get(id, {}).get("node")
@@ -4564,10 +4564,11 @@ func _check_bow_flight_lifetime() -> void:
 	bow_marks["parked_flight_reused"] = true
 
 
-func _wait_for_battle_models() -> bool:
+func _wait_for_battle_models(actor_id := "") -> bool:
 	var stage = app.board.stage
 	var id: String = app.view.battle_view.id
-	if await _wait_until(func(): return stage.battle_id == id and not stage.actors.is_empty(), 9000):
+	if await _wait_until(func(): return stage.battle_id == id and (
+			stage.actors.has(actor_id) if not actor_id.is_empty() else not stage.actors.is_empty()), 9000):
 		return true
 	failure = "The staged models were unavailable after warming the viewport"
 	return false

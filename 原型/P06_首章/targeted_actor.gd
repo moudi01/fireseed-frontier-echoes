@@ -2,6 +2,8 @@ extends "res://shield_actor.gd"
 
 const PREP_TIME := 0.24
 
+var effect := ""
+var pending_field := ""
 var cast_id := ""
 var raise_clip := ""
 var hold_clip := ""
@@ -15,9 +17,34 @@ var _socket_heading := 0.0
 var _socket_lateral := 0.0
 
 
+func assemble_targeted(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
+	var clips: Dictionary = profile.clips
+	var release: Dictionary = profile.release
+	effect = profile.effect
+	pending_field = profile.pending
+	guard_clip = clips.guard
+	move_clip = clips.travel
+	stop_clip = clips.stop
+	attack_clip = clips.attack
+	hit_clip = clips.hit
+	down_clip = clips.down
+	raise_clip = clips.raise
+	hold_clip = clips.hold
+	abort_clip = clips.abort
+	release_clip = clips.release
+	attack_contact = profile.get("attack_contact", attack_contact)
+	release_time = release.contact
+	release_entry = release.get("entry", 0.0)
+	release_speed = release.speed
+	return _attach_caster(scene, travel_library, release.socket)
+
+
 func _attach_caster(scene: PackedScene, travel_library: AnimationLibrary, socket: String) -> bool:
 	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip, raise_clip, hold_clip, abort_clip, release_clip]
-	if not _attach_model(scene, travel_library, required):
+	if not _attach_model(scene, travel_library, required) or not player.has_animation("board/" + move_clip):
+		return false
+	if release_speed <= 0.0 or release_entry < 0.0 or release_time < release_entry \
+			or release_time > player.get_animation(release_clip).length:
 		return false
 	var rigs := find_children("*", "Skeleton3D", true, false)
 	if rigs.size() != 1:
