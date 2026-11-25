@@ -100,6 +100,7 @@ var town_tab := "chapter"
 var _ordinary_route_profile := ""
 var construction_project := ""
 var finale_preview_open := false
+var finale_executor_open := false
 var finale_terms_open := false
 var research_member_id := ""
 var outfit_selection: Array[String] = []
@@ -1470,6 +1471,7 @@ func _town_tab(tab: String, project := "") -> void:
 	remembrance_history_open = false
 	construction_project = project
 	finale_preview_open = false
+	finale_executor_open = false
 	research_member_id = ""
 	outfit_selection.clear()
 	outfit_editing = false
@@ -2008,6 +2010,29 @@ func _toggle_finale_preview() -> void:
 	_render()
 
 
+func _toggle_finale_executor() -> void:
+	finale_executor_open = not finale_executor_open
+	focus_key = "finale-executor"
+	_render()
+
+
+func _finale_executor_actions(executor: Dictionary) -> void:
+	var selected: Dictionary = executor.selected
+	if selected.is_empty():
+		_label(actions, "原执行者已无法上场" if executor.stale else "暂无可上场的执行者", ALERT, 16)
+	else:
+		_label(actions, "%s · %s" % ["已指定接入执行者" if executor.explicit else "默认接入执行者", selected.name], INK, 17)
+	if executor.options.is_empty():
+		return
+	_button("收起执行者名单" if finale_executor_open else "选择接入执行者", "finale-executor", _toggle_finale_executor)
+	if finale_executor_open:
+		_label(actions, "管理员战接入时，实际进入接入格的人类可以接任。", MUTED, 16)
+		for member: Dictionary in executor.options:
+			var is_selected: bool = executor.explicit and member.id == selected.get("id", "")
+			_input_action(("已指定 · " if is_selected else "指定 · ") + member.name, "finale", ["executor", member.id],
+				"", not is_selected, null, "finale-executor")
+
+
 func _finale_preparation(finale: Dictionary) -> void:
 	_label(actions, "终战整备", GOLD, 24)
 	var agla: Dictionary = finale.agla
@@ -2030,6 +2055,8 @@ func _finale_preparation(finale: Dictionary) -> void:
 			_input_action("查看 Agla 封存后果", "finale", ["seal"])
 	else:
 		_button("查看 Agla 合成条件", "finale-agla-research", _town_tab.bind("research"))
+	if finale.has("executor"):
+		_finale_executor_actions(finale.executor)
 	_button("查看随队成员与装备", "finale-roster", _town_tab.bind("roster"))
 	var worn: Dictionary = view.get("equipment", {}).get("worn", {})
 	for member: Dictionary in view.party:
@@ -4227,6 +4254,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_cancel_confirmation()
 	elif finale_terms_open and command_buttons.has("finale-terms"):
 		_toggle_finale_terms()
+	elif finale_executor_open and command_buttons.has("finale-executor"):
+		_toggle_finale_executor()
 	elif not _ev07_panel.is_empty() and command_buttons.has("ev07-" + _ev07_panel):
 		_toggle_ev07_panel(_ev07_panel)
 	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):

@@ -131,6 +131,8 @@ def valid_command(command, args):
     if command == 'finale':
         if tuple(args) in FINALE_FIXED_ACTIONS:
             return True
+        if len(args) == 2 and args[0] == 'executor':
+            return bool(re.fullmatch(MEMBER_ID, args[1]))
         if len(args) < 3 or not re.fullmatch(MEMBER_ID, args[1]):
             return False
         if args[0] == 'deploy':
@@ -1741,6 +1743,22 @@ def finale_view(game):
             blocker = '调试存档无法进入正式终战。'
         if is_town:
             result['budget'] = next(row for row in game.cat.rules['command_budgets'] if row['milestone'] == 'FINALE_READY')
+            candidates = sorted((member for member in state['party']
+                                 if member['deployed'] and not member['unit_id'].startswith('PET')),
+                                key=lambda member: member['instance_id'])
+            selected = final.get('executor')
+            if result['agla_carried'] or selected:
+                options = [{'id': member['instance_id'], 'name': member['display_name']}
+                           for member in map(member_view, candidates)
+                           if member['deployable'] and member['injury_days'] == 0]
+                default = candidates[0]['instance_id'] if candidates else None
+                current = next((option for option in options if option['id'] == (selected or default)), {})
+                stale = selected is not None and not current
+                if result['agla_carried'] or stale:
+                    result['executor'] = {'options': options, 'selected': current,
+                                          'explicit': bool(selected), 'stale': stale}
+                if stale and not blocker:
+                    blocker = '原执行者已不在可上场人类名单中，请重新指定。'
             preparation = final['preparation']
             result['prepared'] = bool(preparation and preparation['route'] == result['route'])
             result['preparation_stale'] = bool(preparation and not result['prepared'])

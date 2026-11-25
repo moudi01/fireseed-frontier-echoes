@@ -23,7 +23,14 @@ class DeploymentGame(Game):
             phase = self.s['phase']
             final = self.s['finale']
             action = tuple(args)
-            if action in FINALE_AGLA_ACTIONS or (action == ('cancel',) and phase == 'TOWN'):
+            if len(action) == 2 and action[0] == 'executor':
+                require(phase == 'TOWN' and not final['run'] and not final['ending'],
+                        '执行者只能在城镇终战整备时指定。')
+                member = next((row for row in self.s['party'] if row['instance_id'] == action[1]), None)
+                require(self._available(member) and member['deployed'] and not member['unit_id'].startswith('PET'),
+                        '执行者须为当前可行动的上场人类。')
+                require(final.get('executor') != action[1], '该执行者已指定。')
+            elif action in FINALE_AGLA_ACTIONS or (action == ('cancel',) and phase == 'TOWN'):
                 require(phase == 'TOWN' and not final['run'], 'Agla 的携带或封存只能在城镇整备时变更。')
                 if action == ('cancel',):
                     require(final['seal_pending'], '当前没有待确认的封存。')

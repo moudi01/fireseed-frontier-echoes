@@ -197,6 +197,7 @@ def stage(source, output, release_id=None):
     finale_coordinate = {'pattern': '^' + view['FINALE_COORDINATE'] + '$'}
     constraints['finale'] = {'anyOf': [
         {'enum': sorted(view['FINALE_FIXED_ACTIONS'])},
+        {'prefixItems': [{'const': 'executor'}, member], 'minItems': 2, 'maxItems': 2},
         {'prefixItems': [{'const': 'deploy'}, member, {'enum': ['on', 'off']}], 'minItems': 3, 'maxItems': 3},
         {'prefixItems': [{'const': 'place'}, member, finale_coordinate, finale_coordinate],
          'minItems': 4, 'maxItems': 4},
