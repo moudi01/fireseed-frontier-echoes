@@ -3227,7 +3227,14 @@ func _field_handbook_event() -> void:
 		_input_action(name, "choose", ["BOOK"],
 			"将「%s」加入行囊，安全带回后入库。占 1 个技能书额度，结束本站其他选项。\n%s\n%s" % [
 				book.name, book.timing, book.summary], event.can_claim)
+	var shown_blockers: Array[String] = []
 	for option in event.choices:
+		if option.has("confirmation"):
+			if not option.blocker.is_empty() and not option.blocker in shown_blockers:
+				shown_blockers.append(option.blocker)
+				_label(actions, option.blocker, ALERT, 16)
+			_input_action(option.label, "choose", [option.id], option.confirmation, option.allowed)
+			continue
 		var materials: bool = option.kind == "materials"
 		var description := "将一件装备放入行囊。"
 		if materials:

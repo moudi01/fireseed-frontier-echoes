@@ -75,7 +75,7 @@ PLAN_ID = r'PL\d{2}'
 MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
           for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
 FIXED_ACTIONS = {
-    'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',)},
+    'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',)},
     'route': {(route,) for route in ORDINARY_ROUTES},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
     'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG05', 'RG06', 'RG07', 'RG08')},
@@ -356,6 +356,49 @@ def field_book_rewards(game):
     return result
 
 
+def field_event_choice(game, event_id, option, binding, material_room):
+    key = option['option_id']
+    if event_id == 'EV40' and key in ('PRIMARY', 'SECONDARY'):
+        candidate = next((effect['candidate_encounter_id'] for effect in option['effects']
+                          if effect['type'] == 'commit_prelocked_encounter_variant'), None)
+        encounters = game.manifest_region['encounters'].get('B1', {}).get('candidate_ids', ())
+        if 'B1' in game.current['revealed_battles']:
+            blocker = '前方巡队已经揭示，不能更换。'
+        elif candidate not in encounters:
+            blocker = '本趟未锁定这支巡队。'
+        else:
+            blocker = ''
+        confirmation = f"{option['label']}。这将锁定前方的巡队，本现场只能选择一次。"
+    elif event_id == 'EV59' and key == 'RUSH':
+        from event_conditions import SPECS
+
+        material_cost, claim_cost = 2, 1
+        effect = SPECS[key]
+        state = game.s
+        claims = state['manifest']['caps'].get('event_found_consumable_claims', 0)
+        free_claims = claims - state['debits'].get('event_found_consumable_claims', 0)
+        if len(state['pouch']) + state['used_prep_slots'] >= 4:
+            blocker = '携行袋已满，领取成品需要 1 个空位。'
+        elif material_room < material_cost:
+            blocker = f'本趟可用材料额度不足 {material_cost}。'
+        elif free_claims < claim_cost:
+            blocker = '本趟拾获成品额度已用完。'
+        else:
+            blocker = ''
+        name = game.cat.items['CO12']['name']
+        confirmation = (f'领取 1 份{name}，占 1 个携行格。'
+                        f'消耗本趟材料额度 {material_cost}、拾获成品额度 {claim_cost}。\n'
+                        f'在随身道具中使用后，接下来最多 {effect["battles"]} 场完整战斗中，'
+                        f'实际出战者直接伤害 +{effect["positive"]["direct_damage_increase"]:.0%}，'
+                        f'承伤 +{effect["negative"]["incoming_increase"]:.0%}。')
+    else:
+        return None
+    if key not in binding['enabled_options']:
+        blocker = binding['disabled_options'].get(key) or '本趟远征清单未开放该选项。'
+    return {'id': key, 'label': option['label'], 'confirmation': confirmation,
+            'blocker': blocker, 'allowed': not blocker}
+
+
 def handbook_event_view(game):
     import book_rewards
     import water
@@ -366,7 +409,8 @@ def handbook_event_view(game):
     binding = game.manifest_region['events'].get(state['site'], {})
     source = binding.get('book_offer')
     fixed = binding.get('material_commission') or {}
-    if not source and not fixed:
+    has_site_choices = binding.get('event_id') in ('EV40', 'EV59')
+    if not source and not fixed and not has_site_choices:
         return {}
     event, binding, visit = game.event_info()
     result = {'name': event['name'], 'description': event['scene']}
@@ -378,7 +422,7 @@ def handbook_event_view(game):
                                     if option['option_id'] == choice), '已处理'))
         return result
     offer = book_rewards.offer(game, source['source_key']) if source else None
-    if not offer and not fixed:
+    if not offer and not fixed and not has_site_choices:
         return {}
     caps = state['manifest']['caps']
     debits = state['debits']
@@ -387,9 +431,13 @@ def handbook_event_view(game):
     choices = []
     for option in event['options']:
         key = option['option_id']
+        site_choice = field_event_choice(game, event['event_id'], option, binding, material_room) if has_site_choices else None
+        if site_choice:
+            choices.append(site_choice)
+            continue
         if key not in binding['enabled_options'] or (key,) not in FIXED_ACTIONS['choose']:
             continue
-        if not offer and key not in fixed['options']:
+        if not offer and key not in fixed.get('options', ()):
             continue
         effects = option['effects']
         grants = [effect['bundle_id'] for effect in effects if effect['type'] == 'claim_reward']
