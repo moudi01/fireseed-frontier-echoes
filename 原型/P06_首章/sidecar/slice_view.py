@@ -11,7 +11,7 @@ COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'd
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
             'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research', 'finale',
-            'event', 'agla'}
+            'event', 'case', 'water', 'medicine', 'agla'}
 MEMBER_ID = r'[A-Za-z0-9_-]{1,80}'
 CONSUMABLE_TARGETS = rf'{MEMBER_ID}(?:,{MEMBER_ID}){{0,5}}'
 CONSUMABLE_CODES = tuple(f'CO{number:02}' for number in range(1, 13))
@@ -60,6 +60,27 @@ BONE_GUARD = 'EN21-A'
 DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
 ORDINARY_ROUTES = {f'R{number:02}' for number in range(1, 10)}
+PROTECTION_CASES = {
+    'EV03': ('case', 'escort'), 'EV05': ('event', 'return'), 'EV07': ('event', 'escort'),
+    'EV09': ('water', 'load'), 'EV12': ('event', 'destroy'), 'EV16': ('event', 'receive'),
+    'EV19': ('medicine', 'return'), 'EV22': ('event', 'release'), 'EV25': ('event', 'receive'),
+    'EV28': ('event', 'escort'),
+}
+EVENT_ESCORT_CASES = ('EV07', 'EV28')
+LOCAL_PROTECTION_ACTIONS = {('EV12', 'destroy', 'CONFIRM'), ('EV16', 'receive', 'CONFIRM'),
+                            ('EV22', 'release', 'CONFIRM'), ('EV25', 'receive', 'CONFIRM')}
+
+
+def protection_request(eid, *args):
+    command, _ = PROTECTION_CASES[eid]
+    return [command, eid, *args] if command == 'event' else [command, *args]
+
+
+PROTECTION_REQUESTS = {tuple(protection_request(eid, action, 'CONFIRM'))
+                       for eid, (_, action) in PROTECTION_CASES.items() for action in ('visit', action) if action != 'escort'}
+PROTECTION_REQUESTS.update(tuple(protection_request(eid, action, 'CONFIRM'))
+                           for eid, (_, primary) in PROTECTION_CASES.items() if primary == 'escort'
+                           for action in ('return', 'receive'))
 HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
 FINALE_IDENTITY_ACTIONS = {('choice', 'KEEP_SELF'), ('choice', 'ACCEPT_MERGER'), ('merge', 'CONFIRM'), ('cancel',)}
 FINALE_AGLA_ACTIONS = {('seal',), ('seal', 'CONFIRM'), ('carry', 'CONFIRM')}
@@ -85,8 +106,8 @@ MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',)},
     'agla': {('craft', 'CONFIRM')},
-    'event': {('EV07', 'receive', 'CONFIRM'), ('EV07', 'return', 'CONFIRM'),
-              *(('EV07', 'trade', f'EF{number:02}', 'CONFIRM') for number in range(1, 9))},
+    **{command: {request[1:] for request in PROTECTION_REQUESTS if request[0] == command}
+       for command in ('event', 'case', 'water', 'medicine')},
     'route': {(route,) for route in ORDINARY_ROUTES},
     'challenge': {(general,) for general in (*HUNT_GENERALS, 'cancel')},
     'next': {(region, 'CONFIRM') for region in ('RG01', 'RG02', 'RG03', 'RG04', 'RG05', 'RG06', 'RG07', 'RG08')},
@@ -97,6 +118,7 @@ FIXED_ACTIONS = {
     **{command: {('CONFIRM',)} for command in ('return', 'flee', 'depart', 'rest', 'maintain')},
     **{command: {()} for command in ('fight', 'step', 'retreat', 'town', 'station', 'camp', 'medical')},
 }
+FIXED_ACTIONS['event'].update(('EV07', 'trade', f'EF{number:02}', 'CONFIRM') for number in range(1, 9))
 TUTORIAL = {('recommend', 'CONFIRM'), ('start',), ('start', 'CONFIRM'), ('observe',), ('materials',),
             ('materials', 'CLAIM'), ('materials', 'PASS')}
 
@@ -162,8 +184,10 @@ def valid_command(command, args):
             return True
         return (len(args) in (2, 4) and args[-1] == 'CONFIRM' and bool(re.fullmatch(BATCH_ID, args[-2]))
                 and args[:-2] in ([], ['investigate', 'start']))
-    if command == 'event' and args[:2] == ['EV07', 'escort']:
-        return len(args) == 4 and bool(re.fullmatch(MEMBER_ID, args[2])) and args[3] == 'CONFIRM'
+    if command == 'case' and args[:1] == ['escort']:
+        return len(args) == 3 and bool(re.fullmatch(MEMBER_ID, args[1])) and args[2] == 'CONFIRM'
+    if command == 'event' and len(args) == 4 and args[0] in EVENT_ESCORT_CASES and args[1] == 'escort':
+        return bool(re.fullmatch(MEMBER_ID, args[2])) and args[3] == 'CONFIRM'
     if command in FIXED_ACTIONS:
         return tuple(args) in FIXED_ACTIONS[command]
     if command == 'book':
@@ -479,46 +503,97 @@ def handbook_event_view(game):
     return result
 
 
-def ev07_view(game):
+def protection_cases_view(game):
+    import cases
+    import medicine
+    import refugee
+    import water
+
+    state = game.s
+    phase = state['phase']
+    field = phase == 'EXPLORE'
+    site = state['site']
+    binding = game.manifest_region['events'].get(site, {}) if field else {}
+    result = {'field': [], 'reports': [], 'followups': []}
+    for eid, case in sorted(cases.entries(state)):
+        if not case['enabled'] or not case['encountered']:
+            continue
+        event = game.cat.events[eid]
+        cfg = cases.CONFIG.get(eid) or {
+            'EV03': refugee.profile('EV03'),
+            'EV09': {'subject': '原两桶封水', 'receiver': water.DESTINATION},
+            'EV19': {'subject': '原药箱', 'receiver': medicine.DESTINATION},
+        }[eid]
+        custody = case.get('custody') or case['whereabouts']['location']
+        row = {'id': eid, 'name': event['name'], 'subject': cfg['subject'],
+               'receiver': cfg['receiver'], 'state': case['state'], 'custody': custody}
+        at_scene = binding.get('event_id') == eid
+        if case['state'] in cases.TERMINAL:
+            receipt = case.get('receipt') or {}
+            if phase == 'TOWN' or (phase in ('RETURNED', 'FAILED') and receipt.get('expedition_no') == state['expedition_no']) or at_scene:
+                credit = case.get('trade_credit')
+                row.update(receipt=receipt, reward=case.get('reward_text', ''))
+                if credit:
+                    row['credit'] = {'reward': event['story_trade']['reward_text'], 'redeemed': credit['redeemed'],
+                                     'waiting_reason': credit.get('waiting_reason', '')}
+                result['field' if at_scene else 'reports'].append(row)
+            continue
+        if phase == 'TOWN':
+            result['followups'].append(dict(row, visit=protection_request(eid, 'visit', 'CONFIRM')))
+            continue
+        pending = case.get('pending')
+        loaded = eid == 'EV09' and case['loaded_trip'] == state['expedition_no']
+        if not field or not (at_scene or pending or loaded):
+            continue
+        row['at_scene'] = at_scene
+        if at_scene and game.current['events'][site]['state'] == 'DECLINED' and not (pending or loaded):
+            row['blocker'] = '本趟已明确放弃接手。回城后可续办原案。'
+        elif loaded:
+            row['loaded'] = True
+        elif at_scene and 'HUMANITY' not in binding['enabled_options'] and not pending:
+            row['blocker'] = '此现场没有可用的保全服务。'
+        else:
+            row.update(protection_scene_view(game, eid, event, case, binding, at_scene))
+        result['field'].append(row)
+    return result
+
+
+def protection_scene_view(game, eid, event, case, binding, at_scene):
     import cases
     import equipment_rolls
     import escort
+    import medicine
     import refugee
+    import water
 
-    eid = 'EV07'
     state = game.s
-    case = state.get('cases', {}).get(eid)
-    if not case or not case['enabled'] or not case['encountered']:
-        return {}
-    phase = state['phase']
-    site = state['site']
-    field = phase == 'EXPLORE'
-    binding = game.manifest_region['events'].get(site, {}) if field else {}
-    at_scene = binding.get('event_id') == eid
+    action = PROTECTION_CASES[eid][1]
     pending = case.get('pending')
-    receipt = case.get('receipt') or {}
-    terminal = case['state'] in cases.TERMINAL
-    current_settlement = (phase in ('RETURNED', 'FAILED') and
-                          receipt.get('expedition_no') == state['expedition_no'])
-    report = terminal and (phase == 'TOWN' or current_settlement)
-    if not (at_scene or (field and pending) or report):
-        return {}
-
-    event = game.cat.events[eid]
-    config = cases.CONFIG[eid]
-    result = {'name': event['name'], 'subject': config['subject'], 'receiver': config['receiver'],
-              'state': case['state'], 'at_scene': at_scene}
-    if terminal:
-        credit = case.get('trade_credit')
-        result.update(receipt=receipt, custody=case['custody'], reward=case.get('reward_text', ''))
-        if credit:
-            result['credit'] = {'reward': event['story_trade']['reward_text'], 'redeemed': credit['redeemed'],
-                                'waiting_reason': credit.get('waiting_reason', '')}
+    option = next(row for row in event['options'] if row['option_id'] == 'HUMANITY')
+    scenes = {'EV03': refugee.scene_text, 'EV09': water.scene_text, 'EV19': medicine.scene_text}
+    description = scenes[eid](game) if eid in scenes else cases.scene_text(game, eid)
+    result = {'description': description, 'action': action}
+    if action == 'load':
+        capacity = water.public(game)
+        result.update(protect=protection_request(eid, 'load', 'CONFIRM'), free=capacity['free'])
+        if capacity['free'] < 2:
+            result['blocker'] = '需要 2 份未使用的本趟材料回收额度。可回城续办原运单。'
+        return result
+    if action not in ('escort', 'return'):
+        result['protect'] = protection_request(eid, action, 'CONFIRM')
+        result['action_label'] = option['label']
         return result
 
-    if at_scene and not pending and game.current['events'][site]['state'] == 'DECLINED':
-        return dict(result, blocker='本趟已明确放弃接手。')
-    anchor = case['active_scene'] if pending else {'region': state['region'], 'site': site}
+    preview = escort.preview(game)
+    result['return_day'] = preview['settles_on']
+    if at_scene:
+        result['return'] = protection_request(eid, 'return', 'CONFIRM')
+    if pending:
+        dispatch = next(row for row in state['escort_receipts'] if row['id'] == pending['escort_id'])
+        leader = next(m for m in state['escorted'] if m['instance_id'] == dispatch['leader'])
+        result['transit'] = {'leader': member_view(leader)['display_name'], 'cost': dispatch['reserved_cost']}
+        result['receive'] = protection_request(eid, 'receive', 'CONFIRM')
+    anchor = case['active_scene'] if pending else {'region': state['region'], 'site': state['site']}
     try:
         path = refugee.clear_path(game, anchor)
     except ValueError as exc:
@@ -526,24 +601,18 @@ def ev07_view(game):
     else:
         region = state['manifest']['regions'][anchor['region']]
         nodes = {node['id']: node['name'] for node in game.cat.layouts[region['template_id']]['nodes']}
-        result['path'] = path
         result['path_names'] = [nodes[point] for point in path]
+    if action == 'return' or pending:
+        return result
 
-    preview = escort.preview(game)
-    result['return_day'] = preview['settles_on']
-    if pending:
-        dispatch = next(row for row in state['escort_receipts'] if row['id'] == pending['escort_id'])
-        leader = next(m for m in state['escorted'] if m['instance_id'] == dispatch['leader'])
-        return dict(result, transit={'leader': member_view(leader)['display_name'], 'cost': dispatch['reserved_cost']})
-
-    result['description'] = cases.scene_text(game, eid)
     humans = [m for m in state['party'] if not m['unit_id'].startswith('PET') and m['hp'] > 0
               and m['erosion'] < 100 and m['injury_days'] == 0]
     if len(humans) > 1:
-        result['leaders'] = [member_view(m) for m in humans if m['instance_id'] in preview['leaders']]
+        result['leaders'] = [dict(member_view(m), escort=protection_request(eid, 'escort', m['instance_id'], 'CONFIRM'))
+                             for m in humans if m['instance_id'] in preview['leaders']]
         result['deployed'] = [member_view(m) for m in humans if m['deployed']]
 
-    if case['state'] == 'OPEN' and 'EXPLOIT' in binding['enabled_options']:
+    if eid == 'EV07' and case['state'] == 'OPEN' and 'EXPLOIT' in binding['enabled_options']:
         terms = event['story_trade']
         slots = equipment_rolls.public_quotes(game, eid)
         if len(slots) == 1:
@@ -554,6 +623,14 @@ def ev07_view(game):
                 result['trade'] = {'quotes': quotes,
                                    'warning': refugee.source_options(game, eid)['EXPLOIT']['confirmation_text']}
     return result
+
+
+def protection_visit_route(game):
+    here = game.s['site']
+    layout = game.layout
+    neighbors = [b if here == a else a for a, b in layout['edges'] if here in (a, b)]
+    return {'neighbors': neighbors, 'safe_return': here == 'I',
+            'site_names': {node['id']: node['name'] for node in layout['nodes']}}
 
 
 def deployment_error(game, board=None):
@@ -1792,7 +1869,8 @@ def make_view(game, ledger, primary, committed_save_version=None):
     party = [member_view(m) for m in state['party']]
     battle = state.get('battle')
     active = space.active(game)
-    route = route_view(game) if active else {}
+    fixed_case = (state.get('request') or {}).get('fixed_case') if state['phase'] == 'EXPLORE' else None
+    route = route_view(game) if active else protection_visit_route(game) if fixed_case else {}
     if state['phase'] == 'FINAL_REGROUP':
         from finale import BOARD as board_id
     else:
@@ -1819,7 +1897,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
     if finale.get('reports'):
         reports = finale['reports']
     return {'phase': state['phase'], 'site': state['site'], 'day': state['day'],
-            'region': state['region'], 'region_name': game.cat.regions[state['region']]['name'] if active else '',
+            'region': state['region'], 'region_name': game.cat.regions[state['region']]['name'] if active or fixed_case else '',
             'supply': state['bank']['supply'], 'medical': state['medical'],
             'resources': resource_view(state),
             'departure_cost': departure_cost(game),
@@ -1849,7 +1927,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'book_research': book_research_view(game) if 'ST-104' in facts and state['phase'] in ('TOWN', 'EXPLORE') else [],
             'field_book_rewards': field_book_rewards(game),
             'handbook_event': handbook_event_view(game),
-            'ev07': ev07_view(game),
+            'protection_cases': protection_cases_view(game), 'fixed_protection_case': fixed_case,
             'chapter': chapter_view(game, commission) if town and 'ST-102' in facts else {},
             'whistle': whistle_view(game) if state['phase'] == 'TOWN' else {},
             'scarf': scarf_view(game) if town else {},

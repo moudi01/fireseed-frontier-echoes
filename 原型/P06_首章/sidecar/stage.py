@@ -204,8 +204,12 @@ def stage(source, output, release_id=None):
     ]}
     constraints['event'] = {'anyOf': [
         {'enum': sorted(view['FIXED_ACTIONS']['event'])},
-        {'prefixItems': [{'const': 'EV07'}, {'const': 'escort'}, member, {'const': 'CONFIRM'}],
+        {'prefixItems': [{'enum': list(view['EVENT_ESCORT_CASES'])}, {'const': 'escort'}, member, {'const': 'CONFIRM'}],
          'minItems': 4, 'maxItems': 4},
+    ]}
+    constraints['case'] = {'anyOf': [
+        {'enum': sorted(view['FIXED_ACTIONS']['case'])},
+        {'prefixItems': [{'const': 'escort'}, member, {'const': 'CONFIRM'}], 'minItems': 3, 'maxItems': 3},
     ]}
     for action, arguments in [('move', [{'enum': sorted(sites)}]), ('interact', [{'enum': sorted(sites)}]),
                               ('walkto', [coordinate, coordinate]), ('place', [{}, coordinate, coordinate, coordinate]),

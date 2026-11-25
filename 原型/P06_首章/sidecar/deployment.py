@@ -3,7 +3,7 @@
 from engine import Game, require
 import region_space
 from expedition_peril import deployable
-from slice_view import FIELD_EVENT_CHOICES, FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS
+from slice_view import FIELD_EVENT_CHOICES, FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS, LOCAL_PROTECTION_ACTIONS
 
 
 class DeploymentGame(Game):
@@ -19,6 +19,10 @@ class DeploymentGame(Game):
         return super().choose(option_id, target, plan)
 
     def dispatch(self, command, args):
+        if command == 'event' and tuple(args) in LOCAL_PROTECTION_ACTIONS:
+            case = self.s.get('cases', {}).get(args[0])
+            # The frozen client describes an old receipt as a successful command.
+            require(not case or case['state'] != 'PROTECTED', '原案件已完成，沿用原回执。')
         if command == 'finale':
             phase = self.s['phase']
             final = self.s['finale']

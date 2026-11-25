@@ -114,7 +114,8 @@ var remembrance_history_general := "MG01"
 var field_gear_open := false
 var field_books_open := false
 var field_items_open := false
-var _ev07_panel := ""
+var _protection_panel := ""
+var _protection_archive_open := false
 var pouch_item := ""
 var pouch_targets: Array[String] = []
 var bookstore_open := false
@@ -610,9 +611,13 @@ func _refresh(row: Dictionary) -> void:
 	var previous_map: Variant = model.get("map")
 	model = row.get("presentation", {})
 	view = model.get("slice", {})
-	var ev07: Dictionary = view.get("ev07", {})
-	if not ev07.get("at_scene", false) or ev07.has("receipt") or ev07.has("transit"):
-		_ev07_panel = ""
+	if previous_phase != view.get("phase", "") or not view.get("protection_cases", {}).get("field", []).any(
+			func(case: Dictionary) -> bool:
+				return case.get("at_scene", false) and not case.has("transit") and not case.has("receipt") \
+					and _protection_panel.begins_with(str(case.id).to_lower() + "-")):
+		_protection_panel = ""
+	if view.get("phase") != "TOWN":
+		_protection_archive_open = false
 	if _navigation_committed:
 		_show_navigation_receipt(previous_map)
 		_navigation_committed = false
@@ -1470,6 +1475,7 @@ func _town_tab(tab: String, project := "") -> void:
 	chapter_history_open = false
 	remembrance_history_open = false
 	construction_project = project
+	_protection_archive_open = false
 	finale_preview_open = false
 	finale_executor_open = false
 	research_member_id = ""
@@ -1503,6 +1509,9 @@ func _town_tab(tab: String, project := "") -> void:
 
 
 func _chapter_actions() -> void:
+	if _protection_archive_open:
+		_protection_archive()
+		return
 	if remembrance_history_open:
 		var hunt := _hunt_by_id(remembrance_history_general)
 		_label(actions, "%s · 已提交的追忆对白" % hunt.name, GOLD, 24)
@@ -1535,6 +1544,9 @@ func _chapter_actions() -> void:
 	else:
 		_label(actions, "首章已交档 · 应召印库存 %d 枚" % int(chapter.seals), INK, 17)
 	_button("查阅交档记录", "chapter-history", _toggle_chapter_history)
+	var cases: Dictionary = view.get("protection_cases", {})
+	if not cases.get("reports", []).is_empty() or not cases.get("followups", []).is_empty():
+		_button("查看庇护案件", "protection-archive", _toggle_protection_archive)
 	if chapter.archived:
 		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
 		var whistle: Dictionary = view.whistle
@@ -1564,7 +1576,6 @@ func _chapter_actions() -> void:
 		_whistle_section()
 	for original: Dictionary in view.get("later_evidence", {}).values():
 		_general_evidence_section(original)
-	_ev07_report(view.get("ev07", {}))
 
 
 func _chapter_history(chapter: Dictionary) -> void:
@@ -2649,7 +2660,8 @@ func _settlement_actions() -> void:
 	var scouting_delivered: bool = view.get("scouting", {}).get("delivered_here", false)
 	_label(actions, "侦路调查已交付" if scouting_delivered else "远征结算", GOLD, 24)
 	_summary()
-	_ev07_report(view.get("ev07", {}))
+	for case: Dictionary in view.get("protection_cases", {}).get("reports", []):
+		_protection_report(case)
 	var hunt := _pending_hunt_report(view, true)
 	if view.get("phase") == "RETURNED" and not hunt.is_empty():
 		_label(actions, "%s讨伐报告可在暮汀旧档案交存。" % hunt.name, INK, 17)
@@ -2808,7 +2820,8 @@ func _explore_actions() -> void:
 			_label(actions, choices[choice_key], MUTED, 16)
 		else:
 			_site_actions(site)
-	_ev07_actions()
+	for case: Dictionary in view.get("protection_cases", {}).get("field", []):
+		_protection_field_actions(case)
 	_field_book_spoils()
 	_field_handbook_event()
 	for task in view.get("book_research", []):
@@ -2832,9 +2845,9 @@ func _explore_actions() -> void:
 		_input_action("跨区前往 " + entry.name, "next", [entry.id, "CONFIRM"], "离开本区，前往%s。" % entry.name)
 	if route.get("safe_return", false):
 		var consequence := _return_consequence(scouting)
-		var ev07: Dictionary = view.get("ev07", {})
-		if ev07.has("transit"):
-			consequence += "\n安全归城将结算在途的%s，由%s接收。" % [ev07.subject, ev07.receiver]
+		for case: Dictionary in view.get("protection_cases", {}).get("field", []):
+			if case.has("transit") or case.get("loaded", false):
+				consequence += "\n安全归城时由%s接收%s。" % [case.receiver, case.subject]
 		if return_to_overlook:
 			consequence += "\n如要本趟交付，可取消归城并经根口返回远眺点。"
 		var carried := _cargo_amounts(view.get("field_book_rewards", {}).get("carried", {}))
@@ -2855,76 +2868,118 @@ func _explore_actions() -> void:
 			_input_action("沿已知道路返回入口", "walkto", [str(int(pos[0])), str(int(pos[1]))])
 
 
-func _toggle_ev07_panel(panel: String) -> void:
-	_ev07_panel = "" if _ev07_panel == panel else panel
-	focus_key = "ev07-" + panel
+func _toggle_protection_panel(key: String) -> void:
+	_protection_panel = "" if _protection_panel == key else key
+	focus_key = key
 	_render()
 
 
-func _ev07_report(case: Dictionary) -> void:
-	if not case.has("receipt"):
-		return
-	_label(actions, case.name, GOLD, 18)
+func _toggle_protection_archive() -> void:
+	_protection_archive_open = not _protection_archive_open
+	focus_key = "protection-archive"
+	_render()
+
+
+func _protection_archive() -> void:
+	var cases: Dictionary = view.get("protection_cases", {})
+	_label(actions, "暮汀 · 庇护案件", GOLD, 24)
+	_button("返回旧档案", "protection-archive", _toggle_protection_archive)
+	for case: Dictionary in cases.get("followups", []):
+		_label(actions, case.name + " · 待处理", INK, 17)
+		_label(actions, case.custody, MUTED, 16)
+		_protection_command("重访原案 · " + case.name, case.visit, _day_consequence(
+			"回到原接洽处办理%s。此次不扣出发补给，归城结算 1 日，没有普通战斗奖励。" % case.subject))
+	for case: Dictionary in cases.get("reports", []):
+		_protection_report(case)
+
+
+func _protection_report(case: Dictionary) -> void:
+	var status := "已保全" if case.state == "PROTECTED" else "已交割"
+	_label(actions, "%s · %s" % [case.name, status], GOLD, 18)
 	_label(actions, case.custody, INK, 16)
 	if not str(case.reward).is_empty():
 		_label(actions, case.reward, MUTED, 16)
 	var credit: Dictionary = case.get("credit", {})
 	if not credit.is_empty():
-		var status := "已兑现" if credit.redeemed else "待城镇结算兑现"
-		_label(actions, "%s · %s" % [status, credit.reward], MUTED, 16)
+		var redeemed := "已兑现" if credit.redeemed else "待城镇结算兑现"
+		_label(actions, "%s · %s" % [redeemed, credit.reward], MUTED, 16)
 		if not str(credit.waiting_reason).is_empty():
 			_label(actions, credit.waiting_reason, ALERT, 16)
 
 
-func _ev07_actions() -> void:
-	var case: Dictionary = view.get("ev07", {})
-	if case.is_empty():
-		return
+func _protection_command(title: String, request: Array, consequence: String, allowed := true) -> void:
+	_input_action(title, request[0], request.slice(1), consequence, allowed)
+
+
+func _protection_field_actions(case: Dictionary) -> void:
 	if case.has("receipt"):
-		_ev07_report(case)
+		_protection_report(case)
 		return
 	_label(actions, case.name, GOLD, 19)
-	var path: Array = case.get("path_names", [])
-	var path_text := "交接路线  " + " → ".join(path) if not path.is_empty() else ""
 	var blocker: String = case.get("blocker", "")
 	if not blocker.is_empty():
 		_label(actions, blocker, ALERT, 16)
+	var description: String = case.get("description", "")
+	if not description.is_empty() and not case.has("transit"):
+		_label(actions, description, INK, 16)
+	if case.get("loaded", false):
+		_label(actions, case.custody, INK, 16)
+		_label(actions, "占用 2 份本趟材料回收额度。可继续远征，安全归城并交货后才算保全。", MUTED, 16)
+		return
+	if case.has("protect"):
+		if case.action == "load":
+			_label(actions, "剩余材料回收额度 %d 份" % int(case.free), MUTED, 16)
+			_protection_command("装载两桶封水", case.protect,
+				"占用本趟 2 份材料回收额度。仍可继续探索，安全归城交给%s后才记收据。" % case.receiver,
+				blocker.is_empty())
+		else:
+			_protection_command(case.action_label, case.protect,
+				"确认「%s」。由现场接收人或见证者签发原案回执，队伍可继续远征。" % case.action_label,
+				blocker.is_empty())
+		return
+	if case.has("return") or case.has("transit"):
+		_protection_transfer_actions(case, blocker.is_empty())
+
+
+func _protection_transfer_actions(case: Dictionary, clear: bool) -> void:
+	var path: Array = case.get("path_names", [])
+	var path_text := "交接路线  " + " → ".join(path) if not path.is_empty() else ""
 	var leaders: Array = case.get("leaders", [])
 	var deployed: Array = case.get("deployed", [])
-	var can_dispatch := blocker.is_empty() and (not leaders.is_empty() or not deployed.is_empty())
+	var can_dispatch := clear and (not leaders.is_empty() or not deployed.is_empty())
+	var escort_key := str(case.id).to_lower() + "-escort"
+	var trade_key := str(case.id).to_lower() + "-trade"
 	if case.has("transit"):
 		var transit: Dictionary = case.transit
 		_label(actions, "%s在护送途中，%s尚未接收。%d Cost 仍计入本趟。" %
 			[transit.leader, case.receiver, int(transit.cost)], INK, 16)
-		_input_action("完成接收站交接", "event", ["EV07", "receive", "CONFIRM"],
+		_protection_command("完成接收站交接", case.receive,
 			"沿已清道路把%s交给%s，完成后余队可以继续远征。\n%s" %
-			[case.subject, case.receiver, path_text], blocker.is_empty())
-	else:
-		_label(actions, case.get("description", ""), INK, 16)
+			[case.subject, case.receiver, path_text], clear)
+	elif case.action == "escort":
 		if can_dispatch:
-			_button("收起护送名单" if _ev07_panel == "escort" else "选择护送队员",
-				"ev07-escort", _toggle_ev07_panel.bind("escort"))
-		elif blocker.is_empty():
+			_button("收起护送名单" if _protection_panel == escort_key else "选择护送队员",
+				escort_key, _toggle_protection_panel.bind(escort_key))
+		elif clear:
 			_label(actions, "派出后余队需至少留一名可行动人类，可选择全队提前归城。", MUTED, 16)
-	if case.at_scene and case.has("return_day"):
+	if case.has("return"):
 		var detail := "结束本趟远征，将%s交给%s，第 %d 日结算。\n%s" % [
 			case.subject, case.receiver, int(case.return_day), path_text]
-		_input_action("全队提前归城交接", "event", ["EV07", "return", "CONFIRM"],
-			_day_consequence(detail), blocker.is_empty())
+		var label := "全队提前归城送医" if case.action == "return" else "全队提前归城交接"
+		_protection_command(label, case["return"], _day_consequence(detail), clear)
 	var trade: Dictionary = case.get("trade", {})
 	if not trade.is_empty():
-		_button("收起管事报价" if _ev07_panel == "trade" else "查看管事报价",
-			"ev07-trade", _toggle_ev07_panel.bind("trade"))
-	if _ev07_panel == "escort" and can_dispatch:
-		_ev07_leader_actions(case, leaders, deployed, path_text)
-	elif _ev07_panel == "trade" and not trade.is_empty():
+		_button("收起管事报价" if _protection_panel == trade_key else "查看管事报价",
+			trade_key, _toggle_protection_panel.bind(trade_key))
+	if _protection_panel == escort_key and can_dispatch:
+		_protection_leader_actions(case, leaders, deployed, path_text)
+	elif _protection_panel == trade_key and not trade.is_empty():
 		_ev07_trade_actions(trade)
 
 
-func _ev07_leader_actions(case: Dictionary, leaders: Array, deployed: Array, path_text: String) -> void:
+func _protection_leader_actions(case: Dictionary, leaders: Array, deployed: Array, path_text: String) -> void:
 	for member: Dictionary in leaders:
-		_input_action("派出护送 · %s（%d Cost）" % [_name(member), int(member.cost)], "event",
-			["EV07", "escort", member.instance_id, "CONFIRM"],
+		_protection_command("派出护送 · %s（%d Cost）" % [_name(member), int(member.cost)], member.escort,
 			"%s离队护送%s，%d Cost 仍计入本趟。\n抵达%s后确认交接，远征结算时护送者回留城名册。\n%s" %
 			[_name(member), case.subject, int(member.cost), case.receiver, path_text])
 	if not deployed.is_empty():
@@ -4256,8 +4311,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_finale_terms()
 	elif finale_executor_open and command_buttons.has("finale-executor"):
 		_toggle_finale_executor()
-	elif not _ev07_panel.is_empty() and command_buttons.has("ev07-" + _ev07_panel):
-		_toggle_ev07_panel(_ev07_panel)
+	elif not _protection_panel.is_empty() and command_buttons.has(_protection_panel):
+		_toggle_protection_panel(_protection_panel)
+	elif _protection_archive_open and command_buttons.has("protection-archive"):
+		_toggle_protection_archive()
 	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):
 		_set_ordinary_route_profile("")
 	elif not _book_swap_key.is_empty() and command_buttons.has("book-swap-cancel"):
