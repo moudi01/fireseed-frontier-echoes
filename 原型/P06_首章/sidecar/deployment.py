@@ -3,7 +3,7 @@
 from engine import Game, require
 import region_space
 from expedition_peril import deployable
-from slice_view import FIELD_EVENT_CHOICES
+from slice_view import FIELD_EVENT_CHOICES, FINALE_IDENTITY_ACTIONS
 
 
 class DeploymentGame(Game):
@@ -19,6 +19,14 @@ class DeploymentGame(Game):
         return super().choose(option_id, target, plan)
 
     def dispatch(self, command, args):
+        if command == 'finale' and tuple(args) in FINALE_IDENTITY_ACTIONS:
+            # Prevent another success receipt for a finished or unchanged proposal.
+            require(self.s['phase'] == 'FINAL_CHOICE', '当前不在终战身份选择。')
+            pending = self.s['finale']['run']['merger_pending']
+            if args == ['choice', 'ACCEPT_MERGER']:
+                require(not pending, '归并提议已在等待确认。')
+            elif args == ['cancel']:
+                require(pending, '当前没有待确认的归并提议。')
         if command != 'deploy_at':
             return super().dispatch(command, args)
         state = self.s

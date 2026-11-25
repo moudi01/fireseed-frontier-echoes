@@ -60,6 +60,9 @@ DUAL_SAC_ROOT = 'EL02-A'
 ENEMY_MOVES = {ECHO_MOVE, STING_MOVE, ENEMY_SPEAR, BONE_ARROW, BONE_GUARD, DUAL_SAC_ROOT}
 ORDINARY_ROUTES = {f'R{number:02}' for number in range(1, 10)}
 HUNT_GENERALS = ('MG01', 'MG02', 'MG03', 'MG04')
+FINALE_IDENTITY_ACTIONS = {('choice', 'KEEP_SELF'), ('choice', 'ACCEPT_MERGER'), ('merge', 'CONFIRM'), ('cancel',)}
+FINALE_FIXED_ACTIONS = FINALE_IDENTITY_ACTIONS | {('prepare', 'CONFIRM'), ('enter', 'CONFIRM'), ('fight', 'CONFIRM')}
+FINALE_COORDINATE = r'-?[0-9]{1,2}'
 LATER_EVIDENCE_GENERALS = ('MG03', 'MG04')
 QUEST_ACTIONS = {('commission', 'CONFIRM'), ('review', 'CONFIRM'), ('archive', 'CONFIRM'),
                  *((general, *step) for general in HUNT_GENERALS
@@ -121,14 +124,13 @@ def valid_command(command, args):
         return (len(args) == 2 and args[0] in CONSUMABLE_CODES[:-2]
                 and len(args[1]) <= 256 and bool(re.fullmatch(CONSUMABLE_TARGETS, args[1])))
     if command == 'finale':
-        if tuple(args) in {('prepare', 'CONFIRM'), ('enter', 'CONFIRM'),
-                          ('choice', 'KEEP_SELF'), ('fight', 'CONFIRM')}:
+        if tuple(args) in FINALE_FIXED_ACTIONS:
             return True
         if len(args) < 3 or not re.fullmatch(MEMBER_ID, args[1]):
             return False
         if args[0] == 'deploy':
             return len(args) == 3 and args[2] in ('on', 'off')
-        return len(args) == 4 and args[0] == 'place' and all(re.fullmatch(r'-?[0-9]{1,2}', value) for value in args[2:])
+        return len(args) == 4 and args[0] == 'place' and all(re.fullmatch(FINALE_COORDINATE, value) for value in args[2:])
     if command == 'research':
         return (tuple(args) in {('analyze', 'CONFIRM'), ('test', 'CONFIRM'), ('deliver', 'CONFIRM')}
                 or (len(args) == 3 and args[0] == 'correlate'
@@ -1671,6 +1673,8 @@ def finale_view(game):
             '你是魔王建立的独立分身，一直借用旧指挥官的脑体。',
             '上代最后一次回头来自档案。现在由你决定是否保留独立人格。',
         ]
+        contract = game.cat.rules['finale']['identity_choice_contract']
+        result['merger'] = {'pending': run['merger_pending'], 'terms': contract['confirmation_text']}
     if run and run['stage'] == 'REGROUP':
         result['fatigue'] = run['reserve_fatigue']
     if state['battle'] and state['battle'].get('finale'):

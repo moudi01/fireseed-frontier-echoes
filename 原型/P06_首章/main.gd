@@ -99,6 +99,7 @@ var town_tab := "chapter"
 var _ordinary_route_profile := ""
 var construction_project := ""
 var finale_preview_open := false
+var finale_terms_open := false
 var research_member_id := ""
 var outfit_selection: Array[String] = []
 var outfit_editing := false
@@ -601,6 +602,7 @@ func _refresh(row: Dictionary) -> void:
 	var previous_battle_memory: Dictionary = view.get("battle_memory", {})
 	var was_commissioned: bool = view.get("commissioned", false)
 	var previous_phase: String = view.get("phase", "")
+	var was_merger_pending: bool = view.get("finale", {}).get("merger", {}).get("pending", false)
 	var returned_scouting: bool = view.get("scouting", {}).get("delivered_here", false)
 	var previous_map: Variant = model.get("map")
 	model = row.get("presentation", {})
@@ -613,6 +615,11 @@ func _refresh(row: Dictionary) -> void:
 		_navigation_committed = false
 	var battle: Variant = view.get("battle_view")
 	var phase: String = view.get("phase", "")
+	var merger_pending: bool = view.get("finale", {}).get("merger", {}).get("pending", false)
+	if phase != "FINAL_CHOICE" or was_merger_pending != merger_pending:
+		finale_terms_open = false
+	if phase == "FINAL_CHOICE" and (previous_phase != phase or was_merger_pending != merger_pending):
+		focus_key = "finale cancel" if merger_pending else "finale-terms"
 	_memory_reply = ""
 	if not _committed_memory_window.is_empty():
 		var receipt: Dictionary = _hunt_by_id(_committed_memory_window.get_slice("-", 0)).get("memory_reply", {}) if phase == "TOWN" else (
@@ -936,6 +943,8 @@ func _display_location() -> String:
 	var finale: Dictionary = view.get("finale", {})
 	if phase == "BATTLE" and not finale.is_empty():
 		return "%s   /   连续战斗第 %d 拍" % [_finale_battle_title(finale.stage), int(view.battle_view.tick)]
+	if phase == "FIN_C" and finale.get("ending", {}).get("cause") == "PROFIT_ASSIMILATION":
+		return "本轮结束"
 	if phase in ["FINAL_CHOICE", "FINAL_REGROUP", "FINISHED"]:
 		return {"FINAL_CHOICE": "终战入口 · 身份选择", "FINAL_REGROUP": "终战 · 幸存者重整", "FINISHED": "本轮结束"}[phase]
 	if phase in ["TOWN", "RETURNED", "FAILED", "FIN_C"]:
@@ -2002,11 +2011,28 @@ func _finale_battle_title(stage: String) -> String:
 	return "初生魔王" if stage == "DEMON" else "管理员"
 
 
+func _toggle_finale_terms() -> void:
+	finale_terms_open = not finale_terms_open
+	focus_key = "finale-terms"
+	_render()
+
+
 func _finale_identity(finale: Dictionary) -> void:
 	_label(actions, "决定是否保留独立人格", GOLD, 24)
 	for line: String in finale.identity:
 		_label(actions, line, INK, 17)
+	var merger: Dictionary = finale.merger
+	if merger.pending:
+		_label(actions, "归并提议待确认", GOLD, 19)
+		_label(actions, merger.terms, ALERT, 17)
+		_input_action("取消归并提议", "finale", ["cancel"])
+		_input_action("确认归并并结束本轮", "finale", ["merge", "CONFIRM"])
+		return
+	_button("收起归并条款" if finale_terms_open else "查看归并条款", "finale-terms", _toggle_finale_terms)
 	_input_action("保留独立人格", "finale", ["choice", "KEEP_SELF"], "独立人格仍由你掌握。确认后迎战初生魔王。")
+	if finale_terms_open:
+		_label(actions, merger.terms.trim_prefix("确认归并："), INK, 17)
+		_input_action("选择归并 · 进入确认", "finale", ["choice", "ACCEPT_MERGER"])
 
 
 func _finale_regroup(finale: Dictionary) -> void:
@@ -4119,6 +4145,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_close_settings()
 	elif not confirmation.is_empty():
 		_cancel_confirmation()
+	elif finale_terms_open and command_buttons.has("finale-terms"):
+		_toggle_finale_terms()
 	elif not _ev07_panel.is_empty() and command_buttons.has("ev07-" + _ev07_panel):
 		_toggle_ev07_panel(_ev07_panel)
 	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):
