@@ -1124,9 +1124,8 @@ def material_goal_view(game, town):
             'materials': binding['materials'], 'picked': picked, 'closed': scene.get('state') in ('RESOLVED', 'DECLINED')}
 
 
-def rescue_site_name(game, batch, record, manifests):
-    manifest = manifests.get(record.get('source_expedition')) or {}
-    region = (manifest.get('regions') or {}).get(batch['origin_region'], {})
+def rescue_site_name(game, batch, manifest):
+    region = ((manifest or {}).get('regions') or {}).get(batch['origin_region'], {})
     layout = game.cat.layouts.get(region.get('template_id'), {})
     site = batch['origin_site']
     return next((node['name'] for node in layout.get('nodes', ()) if node['id'] == site), site)
@@ -1144,10 +1143,17 @@ def rescue_view(game):
     active = {'id': current['case_id'], 'returns_on': current['settles_on'],
               'due': current['other_due']} if current else {}
     target = dict(state['rescue_target'] or {})
-    manifests = {trip['expedition_no']: trip.get('manifest') for trip in state.get('completed_history', [])
-                 if 'expedition_no' in trip}
-    if state.get('manifest'):
-        manifests[state['expedition_no']] = state['manifest']
+    manifests = {}
+    capture_manifests = {}
+    for trip in (*state.get('completed_history', []), state):
+        manifest = trip.get('manifest')
+        if not manifest:
+            continue
+        if 'expedition_no' in trip:
+            manifests[trip['expedition_no']] = manifest
+        capture = (trip.get('summary') or {}).get('capture_batch') or {}
+        if capture.get('id'):
+            capture_manifests[capture['id']] = manifest
     live = {}
     lost = {}
     recovered = {}
@@ -1167,6 +1173,8 @@ def rescue_view(game):
     for batch in state['capture_batches']:
         cid = batch['id']
         record = search['cases'].get(cid) or {}
+        source = record.get('source_expedition')
+        manifest = manifests.get(source) if source is not None else capture_manifests.get(cid)
         present = live.get(cid, [])
         members = [describe(m) for m in present]
         origin = game.cat.regions.get(batch['origin_region'], {}).get('name', '')
@@ -1182,7 +1190,7 @@ def rescue_view(game):
         batches.append({
             'id': cid, 'day': batch['capture_day'], 'deadline': batch['deadline'],
             'origin_region': origin, 'origin_site': batch['origin_site'],
-            'origin_site_name': rescue_site_name(game, batch, record, manifests),
+            'origin_site_name': rescue_site_name(game, batch, manifest),
             'members': members,
             'lost': [member_view(m) for m in lost.get(cid, [])],
             'recovered': [member_view(m) for m in recovered.get(cid, [])],
