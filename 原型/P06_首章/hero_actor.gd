@@ -26,19 +26,9 @@ var _visual: Node3D
 var _base_yaw_offset := 0.0
 
 
-func assemble_hero(scene: PackedScene, travel_library: AnimationLibrary, kind: String) -> bool:
+func assemble_hero(scene: PackedScene, travel_library: AnimationLibrary, kind: String, profile: Dictionary) -> bool:
 	hero_kind = kind
-	guard_clip = "HeroIdle"
-	move_clip = "HeroWalk"
-	stop_clip = "HeroStop"
-	attack_clip = "HeroAttack"
-	hit_clip = "HeroHit"
-	down_clip = "HeroDown"
-	stop_time = 0.16
-	attack_entry = 0.08
-	attack_contact = 0.28
-	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip]
-	if not _attach_model(scene, travel_library, required, false):
+	if not super.assemble(scene, travel_library, profile):
 		return false
 	_base_yaw_offset = float(MODEL_YAW_OFFSET.get(kind, 0.0))
 	if get_child_count() > 0:

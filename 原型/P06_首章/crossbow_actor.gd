@@ -14,15 +14,8 @@ var _launches: Dictionary = {}
 var _locked := false
 
 
-func assemble_crossbow(scene: PackedScene, travel_library: AnimationLibrary) -> bool:
-	guard_clip = "RangedGuard"
-	move_clip = "RangedAdvance"
-	stop_clip = "RangedStop"
-	attack_clip = "RangedAttack"
-	hit_clip = "RangedHit"
-	down_clip = "RangedDown"
-	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip, LOCK, KEEP, BREACH, LOWER, RELOAD]
-	if not _attach_model(scene, travel_library, required):
+func assemble_crossbow(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
+	if not super.assemble(scene, travel_library, profile, [LOCK, KEEP, BREACH, LOWER, RELOAD]):
 		return false
 	var rigs := find_children("*", "Skeleton3D", true, false)
 	var bolt := find_child("Combat_flying_arrow", true, false) as MeshInstance3D
@@ -34,7 +27,6 @@ func assemble_crossbow(scene: PackedScene, travel_library: AnimationLibrary) -> 
 	if not _read_mount(skeleton, false, "FlightArrow", attack_clip, BASIC_RELEASE_TIME) \
 			or not _read_mount(skeleton, true, "BreachMuzzle", BREACH, BREACH_RELEASE_TIME):
 		return false
-	stop_time = player.get_animation(stop_clip).length
 	return true
 
 

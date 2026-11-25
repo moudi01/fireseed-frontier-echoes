@@ -16,15 +16,8 @@ var _arrow_origin := Vector3.ZERO
 var _held_arrow: MeshInstance3D
 
 
-func assemble_bow(scene: PackedScene, travel_library: AnimationLibrary) -> bool:
-	guard_clip = "BowGuard"
-	move_clip = "BowWalk"
-	stop_clip = "BowStop"
-	attack_clip = "BowAttack"
-	hit_clip = "BowHitFront"
-	down_clip = "BowDown"
-	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip, DRAW, AIM, LOOSE, CANCEL_LOADED]
-	if not _attach_model(scene, travel_library, required, false):
+func assemble_bow(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
+	if not super.assemble(scene, travel_library, profile, [DRAW, AIM, LOOSE, CANCEL_LOADED]):
 		return false
 	var rigs := find_children("*", "Skeleton3D", true, false)
 	if rigs.size() != 1:
@@ -47,7 +40,6 @@ func assemble_bow(scene: PackedScene, travel_library: AnimationLibrary) -> bool:
 	if axis.length_squared() <= 0.9:
 		return false
 	_arrow_heading = atan2(axis.x, axis.z)
-	stop_time = player.get_animation(stop_clip).length
 	return arrow_mesh != null
 
 

@@ -16,34 +16,38 @@ var heading := 0.0
 var fallen := false
 var motion: Tween
 var last_stop := -1
-var melee := false
-var guard_clip := GUARD
-var move_clip := MOVE
-var stop_clip := STOP
-var attack_clip := ATTACK
-var hit_clip := HIT
-var down_clip := DOWN
-var stop_time := 0.20
-var attack_entry := 0.14
-var attack_contact := 0.25
+var guard_clip: String
+var move_clip: String
+var stop_clip: String
+var attack_clip: String
+var hit_clip: String
+var down_clip: String
+var stop_time: float
+var attack_entry: float
+var attack_contact: float
 
 
-func assemble(scene: PackedScene, travel_library: AnimationLibrary, use_melee := false) -> bool:
-	melee = use_melee
-	if melee:
-		guard_clip = "MeleeGuard"
-		move_clip = "MeleeAdvance"
-		stop_clip = "MeleeStop"
-		attack_clip = "MeleeAttack"
-		hit_clip = "MeleeHit"
-		down_clip = "MeleeDown"
-		stop_time = 0.16
-		attack_entry = 0.10
-		attack_contact = 0.22
+func assemble(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary,
+		extra_clips: Array = []) -> bool:
+	var clips: Dictionary = profile.clips
+	guard_clip = clips.guard
+	move_clip = clips.travel
+	stop_clip = clips.stop
+	attack_clip = clips.attack
+	hit_clip = clips.hit
+	down_clip = clips.down
+	attack_entry = float(profile.get("attack_entry", 0.14))
+	attack_contact = float(profile.get("attack_contact", 0.25))
 	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip]
-	if not melee:
-		required.append(BLOCK)
-	return _attach_model(scene, travel_library, required)
+	if clips.has("block"):
+		required.append(clips.block)
+	required.append_array(extra_clips)
+	if not _attach_model(scene, travel_library, required, profile.get("require_root_track", true)) \
+			or not player.has_animation("board/" + move_clip):
+		return false
+	stop_time = float(profile.stop_time) if profile.has("stop_time") else \
+		minf(float(profile.get("stop_limit", INF)), player.get_animation(stop_clip).length)
+	return true
 
 
 func _attach_model(scene: PackedScene, travel_library: AnimationLibrary, required: Array, require_root := true) -> bool:

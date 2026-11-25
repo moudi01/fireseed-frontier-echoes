@@ -168,7 +168,7 @@ func _ready() -> void:
 func _prepare_shield(source: PackedScene) -> void:
 	if source == null:
 		return
-	travel_library = Actor.in_place_travel(source)
+	travel_library = Actor.in_place_travel(source, Profiles.STANDARD.S01.clips.travel)
 	if travel_library == null:
 		push_error("P06 shield has no advance Root position track")
 		return
@@ -180,7 +180,7 @@ func _warmup() -> void:
 	# Rendering a tiny hidden viewport avoids a cold first draw in combat.
 	var pawn := Actor.new()
 	viewport_3d.add_child(pawn)
-	if not pawn.assemble(model, travel_library):
+	if not pawn.assemble(model, travel_library, Profiles.STANDARD.S01):
 		pawn.queue_free()
 		return
 	pawn.snap(Vector3(0, -0.65, 0), -0.6, false, true)
@@ -984,8 +984,8 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			_actor_attachment_pending = true
 			_wake_model_dispatch()
 			return
-		if profile.has("travel") and not actor_travels.has(row.kind):
-			var travel := Actor.in_place_travel(scene, profile.travel, profile.get("require_root_track", true))
+		if profile.get("prefetch_travel", false) and not actor_travels.has(row.kind):
+			var travel := Actor.in_place_travel(scene, profile.clips.travel, profile.get("require_root_track", true))
 			if travel == null:
 				push_error("P06 in-place travel is missing for " + str(row.kind))
 				return
@@ -1031,17 +1031,17 @@ func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Di
 	var travel: AnimationLibrary = actor_travels.get(kind)
 	match profile.get("assembly", "standard"):
 		"shield":
-			return pawn.assemble(scene, travel_library)
+			return pawn.assemble(scene, travel_library, profile)
 		"melee":
-			return pawn.assemble_gap(scene, travel)
+			return pawn.assemble_gap(scene, travel, profile)
 		"bow":
-			return pawn.assemble_bow(scene, travel)
+			return pawn.assemble_bow(scene, travel, profile)
 		"crossbow":
-			return pawn.assemble_crossbow(scene, travel)
+			return pawn.assemble_crossbow(scene, travel, profile)
 		"targeted":
 			return pawn.assemble_targeted(scene, travel, profile)
 		"hero":
-			return pawn.assemble_hero(scene, travel, kind)
+			return pawn.assemble_hero(scene, travel, kind, profile)
 		"enemy_spear":
 			return pawn.assemble(scene, true)
 		"skeleton":
@@ -1315,7 +1315,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			var target: Dictionary = by_id.get(melee_impacts.get(key, event.get("target")), {})
 			var direction: Vector3 = Vector3.ZERO if target.is_empty() else _world(_at(target.pos)) - attacker.destination
 			var yaw: float = attacker.heading if direction.length_squared() < 0.0001 else _yaw(direction)
-			var contact := _emit_attack_contact if not attacker.melee or melee_impacts.has(key) else Callable()
+			var contact := _emit_attack_contact if not attacker is Melee or melee_impacts.has(key) else Callable()
 			if skill:
 				contacts[key] = attacker.release_gap(event.action_id, yaw, contact, reduced)
 			elif not reduced:

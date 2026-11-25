@@ -28,14 +28,24 @@ const SKELETON_KINDS := ["EN21", "EN22"]
 # Background prefetch/attachment is limited to the existing contact queue.
 # Ado uses the queue for its special preview and attaches synchronously once ready.
 const STANDARD := {
-	"S01": {"model": SHIELD_MODEL, "script": Actor, "side": "player", "assembly": "shield"},
+	"S01": {"model": SHIELD_MODEL, "script": Actor, "side": "player", "assembly": "shield",
+		"clips": {"guard": Actor.GUARD, "travel": Actor.MOVE, "stop": Actor.STOP, "attack": Actor.ATTACK,
+			"hit": Actor.HIT, "down": Actor.DOWN, "block": Actor.BLOCK},
+		"stop_time": 0.20},
 	"S02": {"model": ASSETS + "S02-M_GapRuntime.glb", "script": Melee, "side": "player",
-		"assembly": "melee", "prefetch": true, "stagger": true},
+		"assembly": "melee", "prefetch": true, "stagger": true,
+		"clips": {"guard": "MeleeGuard", "travel": "MeleeAdvance", "stop": "MeleeStop",
+			"attack": "MeleeAttack", "hit": "MeleeHit", "down": "MeleeDown"},
+		"stop_time": 0.16, "attack_entry": 0.10, "attack_contact": 0.22},
 	"S03": {"model": ASSETS + "S03-M_Meshy_BowRuntime.glb", "script": Bow, "side": "player",
-		"assembly": "bow", "prefetch": true, "stagger": true},
+		"assembly": "bow", "prefetch": true, "stagger": true, "require_root_track": false,
+		"clips": {"guard": "BowGuard", "travel": "BowWalk", "stop": "BowStop",
+			"attack": "BowAttack", "hit": "BowHitFront", "down": "BowDown"}},
 	"M01": {"model": SPEAR_MODEL, "script": Spear, "side": "player", "prefetch": true, "spear_setting": true},
 	"M03": {"model": ASSETS + "M03_BreachRuntime.glb", "script": Crossbow, "side": "player",
-		"assembly": "crossbow", "prefetch": true, "travel": "RangedAdvance"},
+		"assembly": "crossbow", "prefetch": true, "prefetch_travel": true,
+		"clips": {"guard": "RangedGuard", "travel": "RangedAdvance", "stop": "RangedStop",
+			"attack": "RangedAttack", "hit": "RangedHit", "down": "RangedDown"}},
 	"EN01": {"model": ASSETS + "gray_oak/en01_articulated.glb", "script": Mimic, "side": "enemy", "head_height": 0.78},
 	"EN03": {"model": ENEMIES + "EN03_Runtime.glb", "script": Wasp, "side": "enemy", "head_height": 1.15},
 	"EN04": {"model": ENEMIES + "EN04_Board.glb", "script": RingGuard, "side": "enemy", "prefetch": true},
@@ -70,6 +80,10 @@ const TARGETED := {
 }
 
 
+const HERO_CLIPS := {"guard": "HeroIdle", "travel": "HeroWalk", "stop": "HeroStop",
+	"attack": "HeroAttack", "hit": "HeroHit", "down": "HeroDown"}
+
+
 static var entries: Dictionary = _build_entries()
 
 
@@ -78,9 +92,11 @@ static func _build_entries() -> Dictionary:
 	for kind in TARGETED:
 		var row: Dictionary = TARGETED[kind].duplicate()
 		row.merge({"script": Targeted, "side": "player", "assembly": "targeted",
-			"prefetch": true, "travel": row.clips.travel, "require_root_track": false})
+			"prefetch": true, "prefetch_travel": true, "require_root_track": false, "stop_limit": 0.24})
 		result[kind] = row
 	for kind in HERO_KINDS:
 		result[kind] = {"model": ASSETS + "heroes/" + kind + "_Runtime.glb", "script": Hero,
-			"side": "player", "assembly": "hero", "prefetch": true, "optional": true}
+			"side": "player", "assembly": "hero", "prefetch": true, "optional": true,
+			"require_root_track": false, "clips": HERO_CLIPS,
+			"stop_time": 0.16, "attack_entry": 0.08, "attack_contact": 0.28}
 	return result

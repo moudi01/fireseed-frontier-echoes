@@ -22,27 +22,19 @@ func assemble_targeted(scene: PackedScene, travel_library: AnimationLibrary, pro
 	var release: Dictionary = profile.release
 	effect = profile.effect
 	pending_field = profile.pending
-	guard_clip = clips.guard
-	move_clip = clips.travel
-	stop_clip = clips.stop
-	attack_clip = clips.attack
-	hit_clip = clips.hit
-	down_clip = clips.down
 	raise_clip = clips.raise
 	hold_clip = clips.hold
 	abort_clip = clips.abort
 	release_clip = clips.release
-	attack_contact = profile.get("attack_contact", attack_contact)
 	release_time = release.contact
 	release_entry = release.get("entry", 0.0)
 	release_speed = release.speed
-	return _attach_caster(scene, travel_library, release.socket)
-
-
-func _attach_caster(scene: PackedScene, travel_library: AnimationLibrary, socket: String) -> bool:
-	var required := [guard_clip, stop_clip, attack_clip, hit_clip, down_clip, raise_clip, hold_clip, abort_clip, release_clip]
-	if not _attach_model(scene, travel_library, required) or not player.has_animation("board/" + move_clip):
+	if not super.assemble(scene, travel_library, profile, [raise_clip, hold_clip, abort_clip, release_clip]):
 		return false
+	return _sample_socket(release.socket)
+
+
+func _sample_socket(socket: String) -> bool:
 	if release_speed <= 0.0 or release_entry < 0.0 or release_time < release_entry \
 			or release_time > player.get_animation(release_clip).length:
 		return false
@@ -60,7 +52,6 @@ func _attach_caster(scene: PackedScene, travel_library: AnimationLibrary, socket
 	var axis := global_basis.inverse() * skeleton.global_basis * marker.basis.y
 	_socket_heading = atan2(axis.x, axis.z)
 	_socket_lateral = _socket_origin.x * cos(_socket_heading) - _socket_origin.z * sin(_socket_heading)
-	stop_time = minf(0.24, player.get_animation(stop_clip).length)
 	return Vector2(axis.x, axis.z).length_squared() > 0.01
 
 

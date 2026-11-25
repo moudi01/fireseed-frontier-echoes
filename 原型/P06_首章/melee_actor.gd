@@ -13,12 +13,9 @@ var _mesh: MeshInstance3D
 var _gap_correctives_active := false
 
 
-func assemble_gap(scene: PackedScene, travel_library: AnimationLibrary) -> bool:
-	if not super.assemble(scene, travel_library, true):
+func assemble_gap(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
+	if not super.assemble(scene, travel_library, profile, [SET, HOLD, STRIKE, ABORT]):
 		return false
-	for clip in [SET, HOLD, STRIKE, ABORT]:
-		if not player.has_animation(clip):
-			return false
 	for mesh: MeshInstance3D in find_children("*", "MeshInstance3D", true, false):
 		if mesh.get_blend_shape_count() > 0:
 			_mesh = mesh
