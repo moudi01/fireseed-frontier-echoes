@@ -1,5 +1,7 @@
 extends RefCounted
 
+const TownKit = preload("res://town_kit.gd")
+
 const STONE := [Color("70675a"), Color("898071"), Color("9c8c74"), Color("aaa08b")]
 const TIMBER := Color("4f4537")
 const CLOTH := Color("794e43")
@@ -19,6 +21,10 @@ static var _backdrop: StandardMaterial3D
 
 
 static func piece(kind: String) -> Node3D:
+	if TownKit.supports(kind):
+		var town_node := TownKit.piece(kind)
+		if town_node != null:
+			return town_node
 	if not _pieces.has(kind):
 		_pieces[kind] = _build_mesh(kind)
 	var mesh: MultiMesh = _pieces[kind]

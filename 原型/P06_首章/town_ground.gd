@@ -3,8 +3,9 @@ extends RefCounted
 const YARD := Color("4b4939")
 const TRACK := Color("63523d")
 const TRACK_EDGE := Color("746048")
-const STONE := [Color("756a54"), Color("7e7159"), Color("70634e")]
-const LANTERN_WARMTH := Color("cb9c66")
+const STONE := [Color("887b66"), Color("94856e"), Color("7b6e5b")]
+const STONE_INK := Color("3e342a")
+const LANTERN_WARMTH := Color("dca864")
 
 
 static func paint(canvas: CanvasItem, extent: Vector2, landmarks: Dictionary, cell_size: float, models: bool) -> void:
@@ -75,23 +76,48 @@ static func paint_landmark_lighting(canvas: CanvasItem, landmarks: Dictionary, c
 
 	for entrance: Vector2 in [muster, store, gate]:
 		if models:
-			var shadow := PackedVector2Array([Vector2(-1.29, -0.13), Vector2(-0.93, -0.32), Vector2(0.99, -0.29),
-				Vector2(1.26, -0.04), Vector2(1.12, 0.24), Vector2(-0.94, 0.26)])
-			for i in shadow.size():
-				shadow[i] = entrance + shadow[i] * cell_size
-			canvas.draw_colored_polygon(shadow, Color(0.09, 0.12, 0.09, 0.40))
-		var threshold := entrance + Vector2(0, maxf(6.0, cell_size * 0.24))
+			# Two-stage warm-umber grounding shadow so 3D facilities sit firmly in the dusty yard
+			var outer := PackedVector2Array([Vector2(-1.46, -0.10), Vector2(-1.02, -0.36), Vector2(1.06, -0.33),
+				Vector2(1.42, -0.02), Vector2(1.26, 0.34), Vector2(-1.08, 0.36)])
+			var inner := PackedVector2Array([Vector2(-1.24, -0.11), Vector2(-0.88, -0.28), Vector2(0.92, -0.26),
+				Vector2(1.18, -0.04), Vector2(1.04, 0.22), Vector2(-0.90, 0.24)])
+			for i in outer.size():
+				outer[i] = entrance + outer[i] * cell_size
+				inner[i] = entrance + inner[i] * cell_size
+			canvas.draw_colored_polygon(outer, Color(0.11, 0.095, 0.075, 0.22))
+			canvas.draw_colored_polygon(inner, Color(0.08, 0.075, 0.06, 0.36))
+		var threshold := entrance + Vector2(0, maxf(7.0, cell_size * 0.26))
 		for i in range(5):
-			var offset := Vector2((i - 2) * cell_size * 0.26, (i % 2 - 1) * cell_size * 0.031)
-			flagstone(canvas, threshold + offset, Vector2(cell_size * (0.223 + (i % 3) * 0.019), cell_size * 0.105), STONE[i % STONE.size()])
+			var offset := Vector2((i - 2) * cell_size * 0.27, (i % 2 - 1) * cell_size * 0.036)
+			var st_size := Vector2(cell_size * (0.23 + (i % 3) * 0.022), cell_size * 0.115)
+			_inked_flagstone(canvas, threshold + offset, st_size, STONE[i % STONE.size()])
+	# Subtle cobblestone approach stones leading into the departure gate road
+	for step_i in range(3):
+		var approach := gate + Vector2(cell_size * (0.14 * float(step_i - 1)), cell_size * (0.50 + 0.22 * float(step_i)))
+		_inked_flagstone(canvas, approach, Vector2(cell_size * 0.26, cell_size * 0.11), STONE[(step_i + 1) % STONE.size()])
 	if models:
 		var muster_unit: float = cell_size * landmarks.muster.scale
 		var store_unit: float = cell_size * landmarks.store.scale
 		var gate_unit: float = cell_size * landmarks["departure-gate"].scale
-		_lamp_pool(canvas, muster + Vector2(-1.62, 0.31) * muster_unit, Vector2(1.13, 0.53) * muster_unit)
-		_lamp_pool(canvas, store + Vector2(0.59, 0.87) * store_unit, Vector2(1.44, 0.69) * store_unit)
-		_lamp_pool(canvas, gate + Vector2(-1.03, 0.57) * gate_unit, Vector2(1.20, 0.53) * gate_unit)
-		_lamp_pool(canvas, gate + Vector2(0.97, 0.49) * gate_unit, Vector2(1.20, 0.54) * gate_unit)
+		_lamp_pool(canvas, muster + Vector2(-1.58, 0.34) * muster_unit, Vector2(1.24, 0.58) * muster_unit)
+		_lamp_pool(canvas, store + Vector2(0.56, 0.84) * store_unit, Vector2(1.52, 0.72) * store_unit)
+		_lamp_pool(canvas, gate + Vector2(-1.04, 0.56) * gate_unit, Vector2(1.26, 0.56) * gate_unit)
+		_lamp_pool(canvas, gate + Vector2(1.02, 0.50) * gate_unit, Vector2(1.26, 0.56) * gate_unit)
+
+
+static func _inked_flagstone(canvas: CanvasItem, at: Vector2, measure: Vector2, color: Color) -> void:
+	var poly := PackedVector2Array([
+		at + Vector2(-0.54, 0.07) * measure,
+		at + Vector2(-0.38, -0.45) * measure,
+		at + Vector2(0.37, -0.43) * measure,
+		at + Vector2(0.54, 0.16) * measure,
+		at + Vector2(0.34, 0.52) * measure,
+		at + Vector2(-0.38, 0.47) * measure,
+	])
+	canvas.draw_colored_polygon(poly, color)
+	var closed := poly.duplicate()
+	closed.append(poly[0])
+	canvas.draw_polyline(closed, Color(STONE_INK, 0.48), 1.0, true)
 static func _paint_backstreet(canvas: CanvasItem, extent: Vector2) -> void:
 	# Keep the rear buildings unlit so the active entrances have the warmest light.
 	_distant_house(canvas, extent, Vector2(0.078, 0.317), Vector2(0.130, 0.085), Color("485045"))

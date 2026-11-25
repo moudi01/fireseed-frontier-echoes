@@ -14,6 +14,7 @@ signal town_shortcut_selected(key: String)
 const ShieldStage = preload("res://shield_stage.gd")
 const TownGround = preload("res://town_ground.gd")
 const OverlookGround = preload("res://overlook_ground.gd")
+const WetlandBoard = preload("res://wetland_board.gd")
 const FORTRESS_COURT_ART := {
 	"B1": "res://assets/fortress/watch_ink_court.png",
 	"B2": "res://assets/fortress/flank_ink_court.png",
@@ -235,6 +236,7 @@ func _ready() -> void:
 		var button := Button.new()
 		button.focus_mode = Control.FOCUS_NONE
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_style_town_button(button)
 		button.pressed.connect(_select_town_shortcut.bind(id))
 		button.hide()
 		_town_buttons[id] = button
@@ -537,6 +539,38 @@ func _select_town_shortcut(id: String) -> void:
 		town_shortcut_selected.emit(_town_shortcuts[id].key)
 
 
+func _style_town_button(button: Button) -> void:
+	var normal := _town_plaque_box(Color(0.145, 0.175, 0.16, 0.92), Color("b89a6c"))
+	var hover := _town_plaque_box(Color(0.21, 0.255, 0.225, 0.96), Color("f2d59c"))
+	var pressed := _town_plaque_box(Color(0.27, 0.24, 0.18, 0.98), Color("ffe4a8"))
+	var disabled := _town_plaque_box(Color(0.14, 0.15, 0.145, 0.72), Color("676256"))
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
+	button.add_theme_color_override("font_color", Color("f2e6cf"))
+	button.add_theme_color_override("font_hover_color", Color("fff4d8"))
+	button.add_theme_color_override("font_pressed_color", Color("fff4d8"))
+	button.add_theme_color_override("font_disabled_color", Color("968e7e"))
+
+
+static func _town_plaque_box(bg: Color, border: Color) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = bg
+	box.border_color = border
+	box.set_border_width_all(1)
+	box.border_width_bottom = 2
+	box.set_corner_radius_all(5)
+	box.content_margin_left = 10.0
+	box.content_margin_right = 10.0
+	box.content_margin_top = 5.0
+	box.content_margin_bottom = 5.0
+	box.shadow_color = Color(0.05, 0.04, 0.03, 0.45)
+	box.shadow_size = 3
+	box.shadow_offset = Vector2(0.0, 2.0)
+	return box
+
+
 func _gray_oak_scenery() -> Dictionary:
 	if _gray_oak_field:
 		return _gray_oak_battle_props()
@@ -747,6 +781,7 @@ func _draw_board_legend(text: String, font_px := 15) -> void:
 
 
 func _draw_ground_obstacles(fortress: bool) -> void:
+	var wetland_art: bool = _field_art != null and (slice.get("region") == "RG07" or _field_art.resource_path == GRAY_OAK_ROUTE_FIELDS.B1)
 	for row in _layout_cells:
 		var terrain: String = row.get("terrain_id", "")
 		var high := terrain == "HIGH_OBSTACLE"
@@ -755,6 +790,9 @@ func _draw_ground_obstacles(fortress: bool) -> void:
 		if high and fortress and show_models:
 			continue
 		var at: Vector2 = coordinate_map[Vector2i(int(row.q), int(row.r))]
+		if wetland_art:
+			WetlandBoard.draw_wetland_obstacle(_terrain, at, _scale, high, int(row.q) * 3 + int(row.r))
+			continue
 		var extent := Vector2(0.82, 0.34) * _scale if high else Vector2(0.65, 0.20) * _scale
 		TownGround.flagstone(_terrain, at + Vector2(0, 3), extent * 1.3, Color("231e19", 0.80))
 		if high and _field_art != null and _field_art.resource_path == GRAY_OAK_ROUTE_FIELDS.G:
@@ -784,67 +822,10 @@ func _water_and_bridge_cells() -> Dictionary:
 
 func _draw_water_and_bridges() -> void:
 	var terrain_cells := _water_and_bridge_cells()
-	for depth: String in ["SHALLOW_WATER", "DEEP_WATER"]:
-		var water: Dictionary = terrain_cells.get(depth, {})
-		var style: Dictionary = WATER_TERRAIN_STYLES[depth]
-		for cell: Vector2i in water:
-			var point: Vector2 = coordinate_map[cell]
-			_terrain.draw_colored_polygon(_hex(point, _scale), Color(style.surface, 0.88))
-			var shift := float(posmod(cell.x - cell.y, 3) - 1) * 0.12
-			for spacing: float in [-0.12, 0.11]:
-				var crest := point + Vector2(shift, spacing) * _scale
-				_terrain.draw_line(crest - Vector2(_scale * 0.23, 0), crest + Vector2(_scale * 0.22, -0.9),
-					Color(style.ripple, 0.47), 1.35, true)
-		for path: PackedVector2Array in _warning_boundary(water):
-			path.append(path[0])
-			_terrain.draw_polyline(path, Color(style.ripple, 0.48), 1.25, true)
-	var bridges: Dictionary = terrain_cells.get("FIXED_BRIDGE", {})
-	for cell: Vector2i in bridges:
-		_draw_fixed_bridge(cell, bridges)
-	if not terrain_cells.is_empty() and font != null:
-		_draw_water_and_bridge_key(terrain_cells)
-
-
-func _draw_fixed_bridge(cell: Vector2i, bridges: Dictionary) -> void:
-	var point: Vector2 = coordinate_map[cell]
-	# The deck runs along the q axis and joins only its actual axial bridge neighbors.
-	var reach := _grid(0.5, 0) * _scale
-	var across := ShieldStage.project_ground(Vector2(0, 0.40), _sideways) * _scale
-	var start := point - reach * (1.0 if bridges.has(cell - Vector2i.RIGHT) else 0.91)
-	var end := point + reach * (1.0 if bridges.has(cell + Vector2i.RIGHT) else 0.91)
-	var drop := Vector2(0, _scale * 0.15)
-	_terrain.draw_colored_polygon(PackedVector2Array([start - across + drop, end - across + drop,
-		end + across + drop * 1.6, start + across + drop * 1.6]), Color("423a31", 0.30))
-	_terrain.draw_colored_polygon(PackedVector2Array([start + across, end + across, end + across + drop, start + across + drop]),
-		Color("5e4634"))
-	_terrain.draw_colored_polygon(PackedVector2Array([start - across, end - across, end + across, start + across]),
-		WATER_TERRAIN_STYLES.FIXED_BRIDGE.surface)
-	for fraction: float in [0.16, 0.33, 0.49, 0.67, 0.83]:
-		var seam := start.lerp(end, fraction)
-		_terrain.draw_line(seam - across, seam + across, Color("594637"), 1.3, true)
-		_terrain.draw_line(seam - across + reach * 0.07, seam + across + reach * 0.07, Color("c5a481", 0.56), 1.0, true)
-	for edge: Vector2 in [-across, across]:
-		_terrain.draw_line(start + edge, end + edge, Color("4e4134"), 2.0, true)
-	for brace: Vector2 in [start.lerp(end, 0.09), start.lerp(end, 0.91)]:
-		_terrain.draw_line(brace - across, brace - across - drop * 0.42, Color("493a30"), 2.8, true)
-		_terrain.draw_line(brace + across + drop * 1.35, brace + across - drop * 0.32, Color("493a30"), 3.4, true)
-		_terrain.draw_circle(brace + across - drop * 0.33, 1.7, Color("c3a483"), true, -1, true)
-
-
-func _draw_water_and_bridge_key(terrain_cells: Dictionary) -> void:
-	var origin := Vector2(24.0, size.y - (86.0 if _show_deployment else 46.0))
-	var height := float(impact_font_size + 17)
-	var span := float(impact_font_size * 2 + 38)
-	_terrain.draw_rect(Rect2(origin, Vector2(span * terrain_cells.size() + 9.0, height)), Color(0.12, 0.15, 0.135, 0.90))
-	var left := origin.x + 9.0
-	for terrain: String in WATER_TERRAIN_STYLES:
-		if not terrain_cells.has(terrain):
-			continue
-		var style: Dictionary = WATER_TERRAIN_STYLES[terrain]
-		_terrain.draw_rect(Rect2(Vector2(left, origin.y + 9.0), Vector2(17.0, height - 18.0)), style.surface)
-		_terrain.draw_string(font, Vector2(left + 24.0, origin.y + height - 9.0), style.label,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size, TEXT)
-		left += span
+	WetlandBoard.draw_water_and_bridges(
+		_terrain, coordinate_map, terrain_cells, _warning_boundary, _grid,
+		_scale, _sideways, font, impact_font_size, size, _show_deployment, TEXT
+	)
 
 
 func _draw_deployment_grid(fortress: bool) -> void:
