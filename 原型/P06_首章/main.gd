@@ -26,6 +26,7 @@ const ADO_CUES := {
 	"whistle": preload("res://assets/fortress/audio/whistle.wav"),
 }
 const WARNING_CUE := preload("res://assets/fortress/audio/warning.wav")
+const Soundscape = preload("res://p06_audio.gd")
 const REASONS := {"SAFE_RETURN": "安全归城", "COMBAT_RETREAT": "追击后撤退", "DEFEAT": "战斗败北", "VICTORY": "胜利", "RETREAT": "撤退",
 	"RESCUE_SUCCESS": "成功救回队员", "SEARCH_RETURN": "调查记录已带回", "LOCATION_CONFIRMED": "转运点已确认", "SEARCH_EXPIRED": "调查归城时已超过搜救期限"}
 const WARNING_LEVEL_DB := -9.0
@@ -84,6 +85,9 @@ var ado_cues_seen: Dictionary = {}
 var ado_sounds: Dictionary = {}
 var ado_sound_counts: Dictionary = {}
 var _receipt_sounds: Array[String] = []
+var _soundscape: Node
+var _audio_revision := -1
+var _input_receipt_cue := ""
 var save_version := -1
 var settings := {"音效": true, "音乐": true, "静音": false, "大字": false, "低动态": false, "战斗数字": true}
 var volume := 100
@@ -509,6 +513,8 @@ func _build() -> void:
 		voice.stream = ADO_CUES[key]
 		add_child(voice)
 		ado_sounds[key] = voice
+	_soundscape = Soundscape.new()
+	add_child(_soundscape)
 	_apply_volume()
 
 
@@ -710,6 +716,15 @@ func _refresh(row: Dictionary) -> void:
 	_receipt_sounds.clear()
 	_set_danger()
 	_set_ado_audio()
+	var revision := int(row.get("state_version", -1))
+	var fresh_commit: bool = not initial_snapshot and row.get("status") == "COMMITTED" and revision > _audio_revision
+	_audio_revision = maxi(_audio_revision, revision)
+	var playback_open := _audio_receipts_visible()
+	_soundscape.observe_battle(battle, fresh_commit and playback_open and (in_battle or previous_phase == "BATTLE"),
+		settings["低动态"])
+	if fresh_commit and playback_open and not _input_receipt_cue.is_empty():
+		_soundscape.ui(_input_receipt_cue)
+	_input_receipt_cue = ""
 	initial_snapshot = false
 
 
@@ -796,6 +811,11 @@ func _flush_receipt_sounds() -> void:
 
 
 func _notice(message: String, command := "", args: Array = []) -> void:
+	_input_receipt_cue = ""
+	if command in ["place", "deploy_at"] or (command == "finale" and not args.is_empty() and args[0] == "place"):
+		_input_receipt_cue = "place"
+	elif not command.is_empty() and command not in ["step", "walkto", "move", "interact", "memory", "remember", "dialogue"]:
+		_input_receipt_cue = "confirm"
 	_navigation_committed = command in ["move", "walkto", "interact"]
 	if not initial_snapshot and command in ["memory", "remember"] and args.size() == 2 \
 			and args[0] in ["evidence", "retain"]:
@@ -1398,6 +1418,8 @@ func _town_actions() -> void:
 
 
 func _town_tab(tab: String, project := "") -> void:
+	if tab != town_tab:
+		_soundscape.ui("tab")
 	_book_swap_key = ""
 	books_open = false
 	_previewed_book = {}
@@ -2832,10 +2854,38 @@ func _sync_window_minimize() -> void:
 func _suspend_window_input() -> void:
 	_battle_timer.stop()
 	board.cancel_deployment_drag()
+	_configure_soundscape(false)
+	audio.stop()
+	for voice in ado_sounds.values():
+		voice.stop()
+
+
+func _audio_receipts_visible() -> bool:
+	return not settings_open and not captions_open and confirmation.is_empty() and not client.blocked \
+		and _window_allows_playback()
+
+
+func _audio_scene() -> String:
+	if not opened or captions_open or client.blocked:
+		return ""
+	var phase: String = view.get("phase", "")
+	if phase in ["TOWN", "RETURNED", "FAILED"]:
+		return "town"
+	if phase in ["EXPLORE", "BATTLE", "MISSING_SEARCH", "FINAL_CHOICE", "FINAL_REGROUP"]:
+		return "fortress" if view.get("region") == "RG02" and str(view.get("site")) != "RESCUE" else "wild"
+	return ""
+
+
+func _configure_soundscape(focused: bool) -> void:
+	_soundscape.configure(volume, settings["音乐"], settings["音效"], settings["静音"], focused)
 
 
 func _resume_visible_presentation() -> void:
+	_configure_soundscape(_window_allows_playback())
+	_soundscape.scene(_audio_scene())
 	_flush_receipt_sounds()
+	if not client.busy and _audio_receipts_visible():
+		_soundscape.flush_combat()
 	_schedule_battle()
 
 
@@ -3373,6 +3423,7 @@ func _begin_book_swap(key: String, first_slot: String) -> void:
 
 
 func _cancel_book_swap() -> void:
+	_soundscape.ui("cancel")
 	focus_key = _book_swap_key
 	_book_swap_key = ""
 	_render()
@@ -3716,6 +3767,8 @@ func _confirm() -> void:
 
 
 func _cancel_confirmation() -> void:
+	if not confirmation.is_empty():
+		_soundscape.ui("cancel")
 	focus_key = confirmation.get("back", "")
 	confirmation = {}
 	_render()
@@ -3771,6 +3824,7 @@ func _apply_volume() -> void:
 			voice.stop()
 	if volume == 0 or settings["静音"] or not settings["音效"]:
 		audio.stop()
+	_configure_soundscape(_window_allows_playback())
 
 
 func _save_settings() -> void:
