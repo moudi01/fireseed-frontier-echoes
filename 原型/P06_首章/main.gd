@@ -88,6 +88,7 @@ var captions_open := false
 var _asked_about_old_company := false
 var town_tab := "chapter"
 var construction_project := ""
+var research_member_id := ""
 var outfit_selection: Array[String] = []
 var outfit_editing := false
 var chapter_history_open := false
@@ -1179,6 +1180,9 @@ func _town_actions() -> void:
 	var has_books: bool = not view.get("skill_books", {}).is_empty() or not view.get("book_market", {}).get("offers", {}).is_empty()
 	if complete:
 		_button("旧档案", "town-chapter", _town_tab.bind("chapter"), town_tab != "chapter")
+	var research: Dictionary = view.get("research", {})
+	if not research.is_empty():
+		_button("遗迹研究", "town-research", _town_tab.bind("research"), town_tab != "research")
 	_button("队伍与装备" if complete else "出发前整备", "town-roster", _town_tab.bind("roster"), town_tab != "roster")
 	if has_books:
 		_button("技能书", "town-skills", _town_tab.bind("skills"), town_tab != "skills")
@@ -1199,6 +1203,9 @@ func _town_actions() -> void:
 		return
 	if town_tab == "construction":
 		_construction_actions()
+		return
+	if town_tab == "research" and not research.is_empty():
+		_research_actions(research)
 		return
 	if town_tab == "items":
 		_consumables_actions(true)
@@ -1266,13 +1273,14 @@ func _town_actions() -> void:
 	_member_actions(view.get("town_deploy_cells", []))
 
 
-func _town_tab(tab: String) -> void:
+func _town_tab(tab: String, project := "") -> void:
 	_book_swap_key = ""
 	books_open = false
 	_previewed_book = {}
 	chapter_history_open = false
 	remembrance_history_open = false
-	construction_project = ""
+	construction_project = project
+	research_member_id = ""
 	outfit_selection.clear()
 	outfit_editing = false
 	pouch_item = ""
@@ -1281,8 +1289,9 @@ func _town_tab(tab: String) -> void:
 	bookstore_book = ""
 	book_research_open = false
 	town_tab = tab
-	focus_key = "construction-project-hospital" if tab == "construction" else (
-		"town-chapter" if tab != "chapter" else "town-roster")
+	focus_key = "town-chapter" if tab != "chapter" else "town-roster"
+	if tab == "construction":
+		focus_key = "construction-project-hospital" if project.is_empty() else "construction-list"
 	_render()
 
 
@@ -1612,6 +1621,59 @@ func _select_construction(project: String) -> void:
 	_render()
 
 
+func _select_research_member(id: String) -> void:
+	research_member_id = id
+	focus_key = "research correlate %s CONFIRM" % id
+	_render()
+
+
+func _research_rewards(reward: Dictionary) -> void:
+	var selected: Dictionary = reward.get("selected", {})
+	if not selected.is_empty():
+		_label(actions, "进阶技能书「%s」已领取" % selected.name, INK, 17)
+		return
+	if reward.get("choices", []).is_empty():
+		return
+	_label(actions, "自选一本进阶技能书", GOLD, 17)
+	for book: Dictionary in reward.choices:
+		_input_action(book.name, "book", ["choice", "ST-303", book.id, "CONFIRM"],
+			"领取「%s」。\n%s\n%s" % [book.name, book.timing, book.summary])
+
+
+func _research_actions(research: Dictionary) -> void:
+	_label(actions, "遗迹观测站 · Lv%d" % int(research.level), GOLD, 24)
+	_label(actions, "研究材料 · %s" % "、".join(research.fragments), INK, 17)
+	if research.delivered:
+		_label(actions, "ST-303 已交付 · 第三章完成", INK, 17)
+		_label(actions, "出征预算 %d Cost · 战斗预算 %d Cost" % [int(view.budget.expedition), int(view.budget.battle)], MUTED, 16)
+		_research_rewards(research.reward)
+		return
+	if not research.blocker.is_empty():
+		_label(actions, research.blocker, MUTED, 16)
+		if int(research.level) < int(research.required_level):
+			_button("查看观测站施工", "research-construction", _town_tab.bind("construction", "lamp_store"))
+		return
+	match research.action:
+		"analyze":
+			_input_action("解析旧终端", "research", ["analyze", "CONFIRM"], "请许苇解析封存档案并取得旧终端解析片。")
+		"correlate":
+			_label(actions, "选择一名随队队员核对终端记录", INK, 17)
+			var selected: Dictionary = {}
+			for member: Dictionary in research.members:
+				if member.id == research_member_id:
+					selected = member
+				_button(member.name, "research-member-" + member.id,
+					_select_research_member.bind(member.id), member.id != research_member_id)
+			if not selected.is_empty():
+				_input_action("核对%s的记录" % selected.name, "research", ["correlate", selected.id, "CONFIRM"],
+					"核对%s与旧终端的记录编号。" % selected.name)
+		"test":
+			_input_action("验证空闲链路", "research", ["test", "CONFIRM"], "在空闲链路验证实验控制与生命支持能否独立运行。")
+		"deliver":
+			_input_action("交付研究结果", "research", ["deliver", "CONFIRM"],
+				"将隔离验证结果与四将讨伐报告交存，完成第三章。")
+
+
 func _construction_status(project: Dictionary) -> String:
 	var order: Dictionary = project.get("order", {})
 	if not order.is_empty():
@@ -1660,14 +1722,19 @@ func _construction_detail(project: Dictionary, next_id: String) -> void:
 		var copper := int(quote.paid.copper)
 		var crystal := int(quote.paid.crystal)
 		var required := int(quote.required)
-		_label(actions, "Lv1 工期 · %d 次行动结算" % required, MUTED, 16)
-		_input_action("开工 · %d 铜 · %d 公共结晶" % [copper, crystal], "facility", ["build", project.key, "1", next_id, "CONFIRM"],
-			"建设%s Lv1。支付 %d 铜和 %d 公共结晶。\n开工不耗日，%d 次后续行动结算后竣工。" % [project.name, copper, crystal, required],
+		var target := int(quote.target)
+		_label(actions, "Lv%d 工期 · %d 次行动结算" % [target, required], MUTED, 16)
+		if not quote.blocker.is_empty() and int(project.level) > 0:
+			_label(actions, quote.blocker, MUTED, 16)
+		_input_action("开工 · %d 铜 · %d 公共结晶" % [copper, crystal], "facility", ["build", project.key, str(target), next_id, "CONFIRM"],
+			"建设%s Lv%d。支付 %d 铜和 %d 公共结晶。\n开工不耗日，%d 次后续行动结算后竣工。" % [project.name, target, copper, crystal, required],
 			quote.blocker.is_empty())
 	elif int(project.level) > 0 and project.key in ["barracks", "armory"]:
 		_button("办理后勤服务", "construction-logistics", _town_tab.bind("logistics"))
 		if project.key == "armory":
 			_button("制作随身道具", "construction-items", _town_tab.bind("items"))
+	if project.key == "lamp_store" and not view.get("research", {}).is_empty():
+		_button("查看遗迹研究", "construction-research", _town_tab.bind("research"))
 
 
 func _service_cost(cost: Dictionary) -> String:

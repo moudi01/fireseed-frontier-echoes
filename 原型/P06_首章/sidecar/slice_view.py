@@ -10,7 +10,7 @@ COMMANDS = {'quest', 'tutorial', 'move', 'fight', 'step', 'return', 'deploy', 'd
             'town', 'book', 'summon', 'equip', 'unequip', 'dialogue', 'challenge', 'depart',
             'next', 'station', 'camp', 'medical', 'memory', 'remember', 'buy_supply',
             'pack_medical', 'rest', 'heal', 'level_up', 'care', 'stance', 'plan', 'maintain', 'rescue', 'choose',
-            'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply'}
+            'facility', 'service', 'outfit', 'craft', 'stash', 'take', 'use', 'discard', 'supply', 'research'}
 MEMBER_ID = r'[A-Za-z0-9_-]{1,80}'
 CONSUMABLE_TARGETS = rf'{MEMBER_ID}(?:,{MEMBER_ID}){{0,5}}'
 CONSUMABLE_CODES = tuple(f'CO{number:02}' for number in range(1, 13))
@@ -106,9 +106,13 @@ def valid_command(command, args):
             return args[0] in PARTY_CONSUMABLES
         return (len(args) == 2 and args[0] in CONSUMABLE_CODES[:-2]
                 and len(args[1]) <= 256 and bool(re.fullmatch(CONSUMABLE_TARGETS, args[1])))
+    if command == 'research':
+        return (tuple(args) in {('analyze', 'CONFIRM'), ('test', 'CONFIRM'), ('deliver', 'CONFIRM')}
+                or (len(args) == 3 and args[0] == 'correlate'
+                    and bool(re.fullmatch(MEMBER_ID, args[1])) and args[2] == 'CONFIRM'))
     if command == 'facility':
         if len(args) == 5:
-            return (args[0] == 'build' and args[1] in BUILDING_EFFECTS and args[2] == '1'
+            return (args[0] == 'build' and args[1] in BUILDING_EFFECTS and (args[2] == '1' or (args[1] == 'lamp_store' and args[2] in ('2', '3')))
                     and bool(re.fullmatch(BUILD_ORDER_ID, args[3])) and args[4] == 'CONFIRM')
         return (len(args) == 3 and args[0] in CONSTRUCTION_ACTIONS and args[2] == 'CONFIRM'
                 and 1 <= len(args[1]) <= 64 and all(c.isalnum() or c in '-_' for c in args[1]))
@@ -134,7 +138,7 @@ def valid_command(command, args):
             return args[1] == 'clear' or bool(re.fullmatch(BOOK_ID, args[1]))
         if len(args) == 3 and args[:2] == ['task', 'accept']:
             return args[2] in BOOK_RESEARCH
-        if len(args) == 4 and args[0] == 'choice' and (args[1] == 'ST-104' or args[1] in BOOK_RESEARCH):
+        if len(args) == 4 and args[0] == 'choice' and (args[1] in ('ST-104', 'ST-303') or args[1] in BOOK_RESEARCH):
             return bool(re.fullmatch(BOOK_ID, args[2])) and args[3] == 'CONFIRM'
         if len(args) < 3 or not re.fullmatch(MEMBER_ID, args[1]):
             return False
@@ -822,19 +826,67 @@ def construction_view(game):
             }
         elif key == 'hospital' and state['hospital_progress'] is not None:
             project['legacy_remaining'] = state['hospital_progress']
-        elif level == 0:
-            cost, required = facilities.build_cost(game, key, 1)
-            if not facilities.gate(game, key, 1):
-                blocker = '交存首章调查与旧名册后开放'
+        elif level == 0 or (key == 'lamp_store' and level < 3):
+            target = level + 1
+            cost, required = facilities.build_cost(game, key, target)
+            if not facilities.gate(game, key, target):
+                blocker = '交齐前两将讨伐报告后开放' if target == 3 else '交存首章调查与旧名册后开放'
             elif not can_start:
                 blocker = '施工位已占用'
             elif any(funds[resource] < amount for resource, amount in cost.items()):
                 blocker = '库存铜或公共结晶不足'
             else:
                 blocker = ''
-            project['quote'] = {'paid': cost, 'required': required, 'blocker': blocker}
+            project['quote'] = {'target': target, 'paid': cost, 'required': required, 'blocker': blocker}
         projects.append(project)
     return {'funds': funds, 'occupied': occupied, 'workers': workers, 'order_id': order_id, 'projects': projects}
+
+
+def campaign_research_view(game, party):
+    import facilities
+    import research
+
+    state = game.s
+    record = state['research']
+    steps = record['steps']
+    if 'archive' not in steps:
+        return {}
+    campaign = state['campaign']
+    facts = campaign['facts']
+    level = facilities.level(game, 'lamp_store')
+    fragments = [research.name(game, key) for key in research.FRAGMENTS if key in campaign['task_items']]
+    view = {'level': level, 'fragments': fragments,
+            'delivered': bool(record['delivery']), 'required_level': 0, 'action': '', 'blocker': ''}
+    if record['delivery']:
+        entitlement = state['book_rewards']['entitlements'].get('ST-303') or {}
+        selected = entitlement.get('selected')
+        view['reward'] = {'selected': book_info(selected) if selected else {},
+                          'choices': [book_info(book) for book in entitlement.get('allowed', [])] if not selected else []}
+        return view
+
+    if 'analysis' not in steps:
+        view.update(action='analyze', required_level=2)
+    elif 'correlation' not in steps:
+        view.update(action='correlate', required_level=3,
+                    members=[{'id': member['instance_id'], 'name': member['display_name']}
+                             for member in party if member['unit_id'] != 'PET-H04'])
+    elif 'isolation' not in steps:
+        view.update(action='test', required_level=3)
+    else:
+        view.update(action='deliver', required_level=3)
+    if state['debug_tainted']:
+        view['blocker'] = '调试存档无法交付正式研究。'
+    elif view['required_level'] == 3 and 'CH2_COMPLETE' not in facts:
+        view['blocker'] = '交存阿铎与赛芙的讨伐报告后继续研究。'
+    elif level < view['required_level']:
+        view['blocker'] = f"遗迹观测站升至 Lv{view['required_level']} 后继续。"
+    elif view['action'] == 'correlate' and not view['members']:
+        view['blocker'] = '请在队伍中安排一名队员后核对记录。'
+    elif view['action'] == 'deliver' and ('CH3_BATTLES_COMPLETE' not in facts or 'RESEARCH_TASKS_COMPLETE' not in facts):
+        report_facts = [row['defeat_fact'] for row in game.cat.rules['generals']]
+        count = sum(fact in facts for fact in report_facts)
+        view['blocker'] = f'讨伐报告已交存 {count}/{len(report_facts)}，齐全后可交付研究。'
+    return view
 
 
 def preparation_view(game, members):
@@ -1161,6 +1213,9 @@ def chapter_view(game, commission):
         whistle_clue = '秦姨拿出铜哨的旧照片和寄存登记单。阿铎从前用集合哨叫厨房开饭。'
         detail += '\n' + whistle_clue
         history.append({'id': 'ST-104', 'title': '首章交档', 'day': facts['ST-104']['day'], 'text': detail})
+    if 'ST-303' in facts:
+        history.append({'id': 'ST-303', 'title': '遗迹研究交付', 'day': facts['ST-303']['day'],
+                        'text': f"已收入「{research.name(game, 'KS03')}」。培养舱生命支持独立于实验网络。"})
     return {
         'reviewed': 'ST-103' in facts, 'archived': 'ST-104' in facts,
         'history': history, 'observation': observation,
@@ -1367,6 +1422,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'rescue': rescue_view(game) if state['capture_batches'] else {},
             'rescue_board': rescue_board,
             'preparation': prepare, 'construction': construction_view(game) if town else {},
+            'research': campaign_research_view(game, party) if town else {},
             'town_services': town_services_view(game) if town else {},
             'consumables': consumables_view(game, town) if town or state['phase'] == 'EXPLORE' else {},
             'material_goal': material_goal_view(game, town) if town or state['phase'] == 'EXPLORE' else {},

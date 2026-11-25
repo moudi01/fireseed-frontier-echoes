@@ -1300,6 +1300,20 @@ func _route_hunt(general_id: String) -> Dictionary:
 	return {}
 
 
+func _route_member_action(parts: PackedStringArray) -> bool:
+	var place := parts[0] == "place"
+	if app.selected_id != parts[1] or place:
+		if not await _press("member-" + parts[1]):
+			return false
+	if place:
+		if not await _press_cell("cell-%s-%s" % [parts[2], parts[3]]):
+			return false
+		while app.selected_facing != int(parts[4]):
+			if not await _press("facing"):
+				return false
+	return true
+
+
 func _play_hunt_route(route_name: String, general_id: String) -> Array[String]:
 	var path: String = app.data_dir.path_join(app.case_name + "." + route_name + "-route.json")
 	var route: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
@@ -1319,16 +1333,8 @@ func _play_hunt_route(route_name: String, general_id: String) -> Array[String]:
 				return []
 		if command in ["quest", "remember"] and app.view.hunt.get("memory", {}).is_empty() and not await _ado_tab("chapter"):
 			return []
-		if command in ["place", "stance", "deploy", "level_up"]:
-			if app.selected_id != parts[1] or command == "place":
-				if not await _press("member-" + parts[1]):
-					return []
-			if command == "place":
-				if not await _press_cell("cell-%s-%s" % [parts[2], parts[3]]):
-					return []
-				while app.selected_facing != int(parts[4]):
-					if not await _press("facing"):
-						return []
+		if command in ["place", "stance", "deploy", "level_up"] and not await _route_member_action(parts):
+			return []
 		if key == "run 600":
 			if not await _ado_steps(victories):
 				return []
@@ -1483,6 +1489,83 @@ func _check_hunt_report_archive(general_id: String, book_id: String, evidence_ke
 		return
 	side_checks[evidence_key + "_report"] = hunt
 	side_checks[evidence_key + "_budget"] = app.view.budget
+
+
+func _campaign_research_route() -> void:
+	var path: String = app.data_dir.path_join(app.case_name + ".research-commands.json")
+	var route: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not route is Dictionary or not route.get("commands") is Array:
+		failure = "Missing native research route: " + path
+		return
+	var victories: Array[String] = []
+	for value in route.commands:
+		var key := str(value)
+		var args := key.split(" ")
+		match args[0]:
+			"facility":
+				if not await _ado_tab("construction"):
+					return
+				if app.construction_project != "lamp_store" and not await _press("construction-project-lamp_store"):
+					return
+				var quote: Dictionary = _construction_project("lamp_store").quote
+				if int(quote.target) != int(args[3]) or not quote.blocker.is_empty():
+					failure = "The observatory did not expose an available next-level quote"
+					return
+			"depart", "buy_supply":
+				if not await _ado_tab("expedition"):
+					return
+			"rest":
+				if not app.command_buttons.has(key) and not await _ado_tab("expedition"):
+					return
+			"research":
+				if not await _ado_tab("research"):
+					return
+				if args[1] == "correlate" and not await _press("research-member-" + args[2]):
+					return
+			"place", "stance", "deploy":
+				if not await _route_member_action(args):
+					return
+			"run":
+				if not await _ado_steps(victories):
+					return
+				continue
+		if not await _command(key):
+			return
+	side_checks["funding_victories"] = victories
+	if not victories.is_empty() and app.view.get("phase") != "TOWN":
+		failure = "Funding trip did not return to town"
+		return
+	if mode == "research-early":
+		var research: Dictionary = app.view.research
+		if research.fragments.size() != 2 or int(research.level) != 2 or research.action != "correlate" \
+				or research.blocker.is_empty() or app.command_buttons.has("research test CONFIRM"):
+			failure = "Early terminal analysis or the next-stage gate was incorrect"
+		return
+	await _check_campaign_research()
+
+
+func _check_campaign_research() -> void:
+	var research: Dictionary = app.view.get("research", {})
+	var budget: Dictionary = app.view.get("budget", {})
+	if app.view.get("phase") != "TOWN" or not research.get("delivered", false) or research.fragments.size() != 3 \
+			or budget.get("milestone") != "CH3_COMPLETE" or int(budget.expedition) != 20 or int(budget.battle) != 16:
+		failure = "The saved research delivery, fragments or Chapter 3 budget were missing"
+		return
+	var version := int(app.client.frame.state_version)
+	if not await _ado_tab("research"):
+		return
+	if not _panel_has("ST-303 已交付") or app.command_buttons.has("research deliver CONFIRM") \
+			or (research.reward.choices.is_empty() and research.reward.selected.is_empty()):
+		failure = "Research was offered twice or its first-delivery entitlement was missing"
+		return
+	if not await _ado_tab("chapter") or not await _press("chapter-history") or not await _press("archive-ST-303"):
+		return
+	if not app._archive_page.heading.text.contains("研究交付") or not app._archive_page.body.text.contains(research.fragments[2]) \
+			or int(app.client.frame.state_version) != version:
+		failure = "Reopening the research receipt lost its last fragment or changed the save"
+		return
+	side_checks["research"] = research
+	side_checks["research_budget"] = budget
 
 
 func _fortress_frame() -> bool:
@@ -4668,7 +4751,7 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
-	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
+	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "research-route", "research-resume", "research-early", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
 		await _check_receipt_boot()
@@ -4819,6 +4902,10 @@ func _run() -> void:
 			await _chapter_three_hunt("MG04", "RG05", "SB-X04", 2)
 		elif mode == "mg04-report-resume":
 			await _check_hunt_report_archive("MG04", "SB-X04", "mg04")
+		elif mode in ["research-route", "research-early"]:
+			await _campaign_research_route()
+		elif mode == "research-resume":
+			await _check_campaign_research()
 		elif mode == "ado-sample":
 			if failure.is_empty():
 				await _ado_sample()
