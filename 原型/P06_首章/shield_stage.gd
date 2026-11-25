@@ -2,63 +2,30 @@ extends Control
 
 signal geometry_ready
 
-const Actor = preload("res://shield_actor.gd")
-const Melee = preload("res://melee_actor.gd")
-const Bow = preload("res://bow_actor.gd")
 const Profiles = preload("res://actor_profiles.gd")
-const Targeted = preload("res://targeted_actor.gd")
-const Crossbow = preload("res://crossbow_actor.gd")
-const Spear = preload("res://spear_actor.gd")
-const Hero = preload("res://hero_actor.gd")
-const Mimic = preload("res://mimic_actor.gd")
-const DualSac = preload("res://dual_sac_actor.gd")
-const Echo = preload("res://echo_actor.gd")
-const Wasp = preload("res://wasp_actor.gd")
-const RingGuard = preload("res://ring_guard_actor.gd")
-const SkeletonEnemy = preload("res://skeleton_actor.gd")
-const Ado = preload("res://ado_actor.gd")
+const Actor = Profiles.Actor
+const Melee = Profiles.Melee
+const Bow = Profiles.Bow
+const Crossbow = Profiles.Crossbow
+const Targeted = Profiles.Targeted
+const Spear = Profiles.Spear
+const Hero = Profiles.Hero
+const Mimic = Profiles.Mimic
+const DualSac = Profiles.DualSac
+const Echo = Profiles.Echo
+const Wasp = Profiles.Wasp
+const RingGuard = Profiles.RingGuard
+const SkeletonEnemy = Profiles.SkeletonEnemy
+const Ado = Profiles.Ado
 const FortressKit = preload("res://fortress_kit.gd")
-const MODEL_PATH := "res://assets/S01-M_Shield_Feedback.glb"
-const MELEE_PATH := "res://assets/S02-M_GapRuntime.glb"
-const BOW_PATH := "res://assets/S03-M_Meshy_BowRuntime.glb"
-const CROSSBOW_PATH := "res://assets/M03_BreachRuntime.glb"
-const SPEAR_PATH := "res://assets/M01_Tripo_Lane_Spear.glb"
+const MODEL_PATH := Profiles.SHIELD_MODEL
+const ADO_PATH := Profiles.ADO_MODEL
+const FORTRESS := Profiles.FORTRESS
+const ADO_ASSET := Profiles.ADO_ASSET
 const GRAY_OAK := "res://assets/gray_oak/"
-const MIMIC_ASSET := "en01_articulated.glb"
-const DUAL_SAC_ASSET := "EL02_Board.glb"
-const ECHO_ASSET := "EN06_Runtime.glb"
-const WASP_ASSET := "EN03_Runtime.glb"
-const RING_GUARD_ASSET := "EN04_Board.glb"
-const ENEMY_SPEAR_ASSET := "EN17_Board.glb"
-const SKELETON_ASSETS := {"EN21": "EN21_Board.glb", "EN22": "EN22_Board.glb"}
 const BONE_ARROW_NOSE := 0.22
 const STING_NOSE := 0.16
-const ENEMIES := "res://assets/enemies/"
-const FORTRESS := "res://assets/fortress/"
-const ADO_ASSET := "MG01_Board.glb"
-const ADO_PATH := FORTRESS + ADO_ASSET
-const HEROES := "res://assets/heroes/"
-const HERO_MODEL_PATHS := {
-	"H01": HEROES + "H01_Runtime.glb",
-	"H02": HEROES + "H02_Runtime.glb",
-	"H03": HEROES + "H03_Runtime.glb",
-	"H04": HEROES + "H04_Runtime.glb",
-	"H05": HEROES + "H05_Runtime.glb",
-	"H06": HEROES + "H06_Runtime.glb",
-	"H07": HEROES + "H07_Runtime.glb",
-	"H08": HEROES + "H08_Runtime.glb",
-	"H09": HEROES + "H09_Runtime.glb",
-	"H10": HEROES + "H10_Runtime.glb",
-	"H11": HEROES + "H11_Runtime.glb",
-	"H12": HEROES + "H12_Runtime.glb",
-}
 const CONCURRENT_MODEL_LOADS := 4
-const CONTACT_MODEL_PATHS := {
-	"MG01": ADO_PATH, "EN04": ENEMIES + RING_GUARD_ASSET, "EN17": ENEMIES + ENEMY_SPEAR_ASSET,
-	"S02": MELEE_PATH, "S03": BOW_PATH, "M01": SPEAR_PATH,
-	"M03": CROSSBOW_PATH,
-	"EL02": ENEMIES + DUAL_SAC_ASSET,
-}
 const SIDE_PITCH := PI * 44.0 / 180.0
 const SIDE_TURN := -PI / 3.0
 const SIDE_UNIT_SCALE := 1.20
@@ -101,14 +68,8 @@ var _ground_x := Vector3.ZERO
 var _ground_y := Vector3.ZERO
 var _ground_facings: Array[float] = []
 var model: PackedScene
-var melee_model: PackedScene
-var melee_travel: AnimationLibrary
-var bow_model: PackedScene
-var bow_travel: AnimationLibrary
-var targeted_travels: Dictionary = {}
+var actor_travels: Dictionary = {}
 var aid_capsules: Dictionary = {}
-var crossbow_model: PackedScene
-var crossbow_travel: AnimationLibrary
 var mist_visual: SphereMesh
 var sting_visual: CylinderMesh
 var bone_arrow_visual: CylinderMesh
@@ -116,9 +77,7 @@ var flying_projectiles: Array[MeshInstance3D] = []
 var spare_projectiles: Array[MeshInstance3D] = []
 var projectile_tweens: Dictionary = {}
 var spear_model: PackedScene
-var hero_models: Dictionary = {}
-var hero_travels: Dictionary = {}
-var _hero_supported_cache: Dictionary = {}
+var _optional_model_available: Dictionary = {}
 var spear_warmed := false
 var skeletons_warmed := false
 var gray_oak_warmed := false
@@ -247,7 +206,7 @@ func _finish_warmup() -> void:
 func _add_mimic_warmup(parent: Node3D, point: Vector3) -> void:
 	if mimic_warmed:
 		return
-	var scene := _scene(MIMIC_ASSET)
+	var scene := _load_scene(Profiles.entries["EN01"].model)
 	if scene == null:
 		return
 	var enemy := Mimic.new()
@@ -282,7 +241,7 @@ func prepare_creature(kind: String) -> void:
 	var wasp := kind == "EN03"
 	if (wasp and wasp_warmed) or (not wasp and echo_warmed):
 		return
-	var source := _scene(WASP_ASSET if wasp else ECHO_ASSET)
+	var source := _load_scene(Profiles.entries["EN03" if wasp else "EN06"].model)
 	if source == null:
 		return
 	var preview := _actor_preview(96, 2.6)
@@ -326,8 +285,8 @@ func prepare_skeletons() -> void:
 	if not is_ready or skeletons_warmed or not battle_id.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	var preview := _actor_preview(96, 3.3)
-	for kind in SKELETON_ASSETS:
-		var source := _scene(SKELETON_ASSETS[kind])
+	for kind: String in Profiles.SKELETON_KINDS:
+		var source := _load_scene(Profiles.entries[kind].model)
 		var pawn := SkeletonEnemy.new()
 		preview.add_child(pawn)
 		if source == null or not pawn.assemble(source, kind):
@@ -339,13 +298,8 @@ func prepare_skeletons() -> void:
 	RenderingServer.frame_post_draw.connect(preview.queue_free, CONNECT_ONE_SHOT)
 
 
-func _scene(asset: String, background := false) -> PackedScene:
-	var folder := GRAY_OAK
-	if asset == ADO_ASSET:
-		folder = FORTRESS
-	elif asset in [ECHO_ASSET, WASP_ASSET, ENEMY_SPEAR_ASSET, RING_GUARD_ASSET] or asset in SKELETON_ASSETS.values():
-		folder = ENEMIES
-	return _load_scene(folder + asset, background)
+func _scene(asset: String) -> PackedScene:
+	return _load_scene(GRAY_OAK + asset)
 
 
 func _load_scene(path: String, background := false) -> PackedScene:
@@ -469,7 +423,7 @@ func prepare_spear() -> void:
 
 func _load_spear() -> bool:
 	if spear_model == null:
-		spear_model = _load_scene(SPEAR_PATH, true)
+		spear_model = _load_scene(Profiles.SPEAR_MODEL, true)
 	return spear_model != null
 
 
@@ -484,20 +438,19 @@ func prefetch_contact_models(kinds: Array) -> void:
 	for kind in kinds:
 		if not (kind is String):
 			continue
-		if (kind != "M01" or show_spear) and CONTACT_MODEL_PATHS.has(kind):
-			_load_scene(CONTACT_MODEL_PATHS[kind], true)
-		elif Profiles.TARGETED.has(kind):
-			_load_scene(Profiles.TARGETED[kind].model, true)
-		elif _hero_model_supported(kind):
-			_load_scene(HERO_MODEL_PATHS[kind], true)
+		var profile: Dictionary = Profiles.entries.get(kind, {})
+		if profile.get("prefetch", false) and _profile_available(kind, profile):
+			_load_scene(profile.model, true)
 
 
-func _hero_model_supported(kind: String) -> bool:
-	if not HERO_MODEL_PATHS.has(kind):
+func _profile_available(kind: String, profile: Dictionary) -> bool:
+	if profile.get("spear_setting", false) and not show_spear:
 		return false
-	if not _hero_supported_cache.has(kind):
-		_hero_supported_cache[kind] = ResourceLoader.exists(HERO_MODEL_PATHS[kind])
-	return _hero_supported_cache[kind]
+	if not profile.get("optional", false):
+		return true
+	if not _optional_model_available.has(kind):
+		_optional_model_available[kind] = ResourceLoader.exists(profile.model)
+	return _optional_model_available[kind]
 
 
 func is_model_pending(kind: String, enemy := false) -> bool:
@@ -818,7 +771,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 				targeted_counts[key] = int(targeted_counts.get(key, 0)) + 1
 			elif row.kind == "M03" and actors.has(row.id):
 				crossbow_count += 1
-			elif HERO_MODEL_PATHS.has(row.kind) and actors.has(row.id):
+			elif row.kind in Profiles.HERO_KINDS and actors.has(row.id):
 				hero_count += 1
 				audit.hero_kinds[row.kind] = int(audit.hero_kinds.get(row.kind, 0)) + 1
 		elif _supports_enemy(row.kind) and row.side == "enemy" and row.pos is Array:
@@ -885,12 +838,12 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 
 
 func _supports_deployment(kind: String) -> bool:
-	return kind in ["S01", "S02", "S03", "M03"] or Profiles.TARGETED.has(kind) \
-		or (kind == "M01" and show_spear) or _hero_model_supported(kind)
+	var profile: Dictionary = Profiles.entries.get(kind, {})
+	return profile.get("side") == "player" and _profile_available(kind, profile)
 
 
 func _supports_enemy(kind: String) -> bool:
-	return kind in ["EN01", "EN03", "EN04", "EN06", "EN17", "EN21", "EN22", "EL02", "MG01"]
+	return Profiles.entries.get(kind, {}).get("side") == "enemy"
 
 
 func _apply_deployment(rows: Array, enemies: Array) -> void:
@@ -959,9 +912,11 @@ func inspect_contact_enemy(id: String) -> void:
 
 
 func _contact_model_bounds(id: String) -> Rect2:
-	var actor: Node3D = actors[id].node
+	var token: Dictionary = actors[id]
+	var actor: Node3D = token.node
+	var height_in_world: float = Profiles.entries[token.row.kind].get("contact_height", 1.8)
 	var foot := camera.unproject_position(actor.global_position)
-	var head := camera.unproject_position(actor.global_position + Vector3.UP * (2.7 if actor is Ado else 1.8))
+	var head := camera.unproject_position(actor.global_position + Vector3.UP * height_in_world)
 	var height := foot.y - head.y
 	var half_width := clampf(height * 0.30, 11.0, 38.0)
 	return Rect2(head - Vector2(half_width, 0), Vector2(half_width * 2.0, height))
@@ -997,15 +952,8 @@ func head_pixel(id: String) -> Vector2:
 		return Vector2.INF
 	var token: Dictionary = actors[id]
 	var pawn: Node3D = token.node
-	var height := 1.70
-	if float(token.row.get("hp", 0)) <= 0:
-		height = 0.52
-	elif pawn is Ado:
-		height = 2.40
-	elif pawn is Echo or pawn is Wasp or pawn is DualSac:
-		height = 1.15
-	elif pawn is Mimic:
-		height = 0.78
+	var height: float = 0.52 if float(token.row.get("hp", 0)) <= 0 else \
+		Profiles.entries[token.row.kind].get("head_height", 1.70)
 	return camera.unproject_position(pawn.global_position + Vector3.UP * height)
 
 
@@ -1019,138 +967,40 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 			actors[row.id] = {"node": prepared, "row": row}
 			restore = true
 	if not actors.has(row.id):
-		var profile_attachment: bool = profile_assets and row.kind in ["S02", "S03"]
+		var profile: Dictionary = Profiles.entries.get(row.kind, {})
+		if profile.is_empty():
+			return
+		var profile_attachment: bool = profile_assets and profile.get("stagger", false)
 		var started := Time.get_ticks_usec() if profile_attachment else 0
-		if row.kind == "S01" and model == null:
+		var assembly: String = profile.get("assembly", "standard")
+		var scene: PackedScene = model if assembly == "shield" else \
+			_load_scene(profile.model, profile.get("background", profile.get("prefetch", false)))
+		if scene == null:
 			return
-		if row.kind == "M01" and not _load_spear():
-			return
-		if row.kind == "S02" and melee_model == null:
-			melee_model = _load_scene(MELEE_PATH, true)
-			if melee_model == null:
-				return
-		if row.kind == "S03" and bow_model == null:
-			bow_model = _load_scene(BOW_PATH, true)
-			if bow_model == null:
-				return
 		# A loaded infantry scene can supply several deployed actors in the same refresh.
-		var stagger: bool = row.kind in ["S02", "S03"] and DisplayServer.get_name() != "headless"
+		var stagger: bool = profile.get("stagger", false) and DisplayServer.get_name() != "headless"
 		var frame := Engine.get_process_frames() if stagger else -1
 		if stagger and (focused_pause or window_hidden or frame == _actor_attachment_frames.get(row.kind, -1)):
 			_actor_attachment_pending = true
 			_wake_model_dispatch()
 			return
-		var profile: Dictionary = Profiles.TARGETED.get(row.kind, {})
-		var targeted_model: PackedScene
-		if not profile.is_empty():
-			targeted_model = _load_scene(profile.model, true)
-			if targeted_model == null:
+		if profile.has("travel") and not actor_travels.has(row.kind):
+			var travel := Actor.in_place_travel(scene, profile.travel, profile.get("require_root_track", true))
+			if travel == null:
+				push_error("P06 in-place travel is missing for " + str(row.kind))
 				return
-			if not targeted_travels.has(row.kind):
-				var travel := Actor.in_place_travel(targeted_model, profile.clips.travel, false)
-				if travel == null:
-					push_error("P06 in-place travel is missing for " + str(row.kind))
-					return
-				targeted_travels[row.kind] = travel
-		if row.kind == "M03" and crossbow_travel == null:
-			crossbow_model = _load_scene(CROSSBOW_PATH, true)
-			if crossbow_model == null:
-				return
-			crossbow_travel = Actor.in_place_travel(crossbow_model, "RangedAdvance")
-			if crossbow_travel == null:
-				push_error("P06 crossbow asset or movement Root track is missing")
-				return
-		var enemy_model: PackedScene
-		if row.kind in ["EN04", "EN17", "EL02"]:
-			enemy_model = _load_scene(CONTACT_MODEL_PATHS[row.kind], true)
-			if enemy_model == null:
-				return
-		var hero_model: PackedScene
-		if _hero_model_supported(row.kind):
-			hero_model = hero_models.get(row.kind)
-			if hero_model == null:
-				hero_model = _load_scene(HERO_MODEL_PATHS[row.kind], true)
-				if hero_model == null:
-					return
-				hero_models[row.kind] = hero_model
+			actor_travels[row.kind] = travel
 		var assembling := Time.get_ticks_usec() if profile_attachment else 0
-		var pawn: Node3D
-		if row.kind == "EN01":
-			pawn = Mimic.new()
-		elif row.kind == "EL02":
-			pawn = DualSac.new()
-		elif row.kind == "EN06":
-			pawn = Echo.new()
-		elif row.kind == "EN03":
-			pawn = Wasp.new()
-		elif row.kind == "EN04":
-			pawn = RingGuard.new()
-		elif row.kind in SKELETON_ASSETS:
-			pawn = SkeletonEnemy.new()
-		elif row.kind == "MG01":
-			pawn = Ado.new()
-		elif row.kind in ["M01", "EN17"]:
-			pawn = Spear.new()
-		elif row.kind == "S02":
-			pawn = Melee.new()
-		elif row.kind == "S03":
-			pawn = Bow.new()
-		elif not profile.is_empty():
-			pawn = Targeted.new()
-		elif row.kind == "M03":
-			pawn = Crossbow.new()
-		elif hero_model != null:
-			pawn = Hero.new()
-		else:
-			pawn = Actor.new()
+		var constructor: Script = profile.script
+		var pawn: Node3D = constructor.new()
 		viewport_3d.add_child(pawn)
-		var assembled := false
-		if pawn is Echo:
-			var echo := _scene(ECHO_ASSET)
-			assembled = echo != null and pawn.assemble(echo)
-		elif pawn is Wasp:
-			var wasp := _scene(WASP_ASSET)
-			assembled = wasp != null and pawn.assemble(wasp)
-		elif pawn is RingGuard:
-			assembled = pawn.assemble(enemy_model)
-		elif pawn is DualSac:
-			assembled = pawn.assemble(enemy_model)
-		elif pawn is SkeletonEnemy:
-			var undead := _scene(SKELETON_ASSETS[row.kind])
-			assembled = undead != null and pawn.assemble(undead, row.kind)
-		elif pawn is Mimic:
-			var enemy := _scene(MIMIC_ASSET)
-			assembled = enemy != null and pawn.assemble(enemy)
-		elif pawn is Ado:
-			var general := _scene(ADO_ASSET)
-			assembled = general != null and pawn.assemble(general)
-		elif pawn is Spear:
-			if row.kind == "EN17":
-				assembled = pawn.assemble(enemy_model, true)
-			else:
-				assembled = pawn.assemble(spear_model)
-		elif pawn is Melee:
-			assembled = pawn.assemble_gap(melee_model, melee_travel)
-			if assembled and melee_travel == null:
-				melee_travel = pawn.player.get_animation_library("board")
-		elif pawn is Crossbow:
-			assembled = pawn.assemble_crossbow(crossbow_model, crossbow_travel)
-		elif pawn is Bow:
-			assembled = pawn.assemble_bow(bow_model, bow_travel)
-			if assembled and bow_travel == null:
-				bow_travel = pawn.player.get_animation_library("board")
-		elif pawn is Targeted:
-			assembled = pawn.assemble_targeted(targeted_model, targeted_travels[row.kind], profile)
-		elif pawn is Hero:
-			assembled = pawn.assemble_hero(hero_model, hero_travels.get(row.kind), row.kind)
-			if assembled and not hero_travels.has(row.kind):
-				hero_travels[row.kind] = pawn.player.get_animation_library("board")
-		else:
-			assembled = pawn.assemble(model, travel_library)
+		var assembled := _assemble_actor(pawn, scene, row.kind, profile)
 		if not assembled:
 			pawn.queue_free()
 			push_error("P06 animation import is incomplete: " + str(row.kind))
 			return
+		if assembly in ["melee", "bow", "hero"] and not actor_travels.has(row.kind):
+			actor_travels[row.kind] = pawn.player.get_animation_library("board")
 		if stagger:
 			_actor_attachment_frames[row.kind] = frame
 		if profile_attachment:
@@ -1175,6 +1025,28 @@ func _update_actor(row: Dictionary, restore: bool, preview := false, relocated :
 	if not attachment_timing.is_empty():
 		attachment_timing["pose_usec"] = Time.get_ticks_usec() - int(attachment_timing.attached_usec)
 		actor_attachment_timings.append(attachment_timing)
+
+
+func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Dictionary) -> bool:
+	var travel: AnimationLibrary = actor_travels.get(kind)
+	match profile.get("assembly", "standard"):
+		"shield":
+			return pawn.assemble(scene, travel_library)
+		"melee":
+			return pawn.assemble_gap(scene, travel)
+		"bow":
+			return pawn.assemble_bow(scene, travel)
+		"crossbow":
+			return pawn.assemble_crossbow(scene, travel)
+		"targeted":
+			return pawn.assemble_targeted(scene, travel, profile)
+		"hero":
+			return pawn.assemble_hero(scene, travel, kind)
+		"enemy_spear":
+			return pawn.assemble(scene, true)
+		"skeleton":
+			return pawn.assemble(scene, kind)
+	return pawn.assemble(scene)
 
 
 func _sync_pose(pawn: Node3D, row: Dictionary, restore: bool) -> void:

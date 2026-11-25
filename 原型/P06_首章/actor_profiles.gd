@@ -1,5 +1,54 @@
 extends RefCounted
 
+const Actor = preload("res://shield_actor.gd")
+const Melee = preload("res://melee_actor.gd")
+const Bow = preload("res://bow_actor.gd")
+const Targeted = preload("res://targeted_actor.gd")
+const Crossbow = preload("res://crossbow_actor.gd")
+const Spear = preload("res://spear_actor.gd")
+const Hero = preload("res://hero_actor.gd")
+const Mimic = preload("res://mimic_actor.gd")
+const DualSac = preload("res://dual_sac_actor.gd")
+const Echo = preload("res://echo_actor.gd")
+const Wasp = preload("res://wasp_actor.gd")
+const RingGuard = preload("res://ring_guard_actor.gd")
+const SkeletonEnemy = preload("res://skeleton_actor.gd")
+const Ado = preload("res://ado_actor.gd")
+
+const ASSETS := "res://assets/"
+const ENEMIES := ASSETS + "enemies/"
+const SHIELD_MODEL := ASSETS + "S01-M_Shield_Feedback.glb"
+const FORTRESS := ASSETS + "fortress/"
+const ADO_ASSET := "MG01_Board.glb"
+const ADO_MODEL := FORTRESS + ADO_ASSET
+const SPEAR_MODEL := ASSETS + "M01_Tripo_Lane_Spear.glb"
+const HERO_KINDS := ["H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10", "H11", "H12"]
+const SKELETON_KINDS := ["EN21", "EN22"]
+
+# Background prefetch/attachment is limited to the existing contact queue.
+# Ado uses the queue for its special preview and attaches synchronously once ready.
+const STANDARD := {
+	"S01": {"model": SHIELD_MODEL, "script": Actor, "side": "player", "assembly": "shield"},
+	"S02": {"model": ASSETS + "S02-M_GapRuntime.glb", "script": Melee, "side": "player",
+		"assembly": "melee", "prefetch": true, "stagger": true},
+	"S03": {"model": ASSETS + "S03-M_Meshy_BowRuntime.glb", "script": Bow, "side": "player",
+		"assembly": "bow", "prefetch": true, "stagger": true},
+	"M01": {"model": SPEAR_MODEL, "script": Spear, "side": "player", "prefetch": true, "spear_setting": true},
+	"M03": {"model": ASSETS + "M03_BreachRuntime.glb", "script": Crossbow, "side": "player",
+		"assembly": "crossbow", "prefetch": true, "travel": "RangedAdvance"},
+	"EN01": {"model": ASSETS + "gray_oak/en01_articulated.glb", "script": Mimic, "side": "enemy", "head_height": 0.78},
+	"EN03": {"model": ENEMIES + "EN03_Runtime.glb", "script": Wasp, "side": "enemy", "head_height": 1.15},
+	"EN04": {"model": ENEMIES + "EN04_Board.glb", "script": RingGuard, "side": "enemy", "prefetch": true},
+	"EN06": {"model": ENEMIES + "EN06_Runtime.glb", "script": Echo, "side": "enemy", "head_height": 1.15},
+	"EN17": {"model": ENEMIES + "EN17_Board.glb", "script": Spear, "side": "enemy",
+		"assembly": "enemy_spear", "prefetch": true},
+	"EN21": {"model": ENEMIES + "EN21_Board.glb", "script": SkeletonEnemy, "side": "enemy", "assembly": "skeleton"},
+	"EN22": {"model": ENEMIES + "EN22_Board.glb", "script": SkeletonEnemy, "side": "enemy", "assembly": "skeleton"},
+	"EL02": {"model": ENEMIES + "EL02_Board.glb", "script": DualSac, "side": "enemy", "head_height": 1.15, "prefetch": true},
+	"MG01": {"model": ADO_MODEL, "script": Ado, "side": "enemy", "head_height": 2.40,
+		"contact_height": 2.70, "prefetch": true, "background": false},
+}
+
 # Presentation only. Move and pending keys come from the existing battle view.
 const TARGETED := {
 	"M02": {
@@ -19,3 +68,19 @@ const TARGETED := {
 		"release": {"socket": "MistPalm", "contact": 12.0 / 30.0, "speed": 4.0},
 	},
 }
+
+
+static var entries: Dictionary = _build_entries()
+
+
+static func _build_entries() -> Dictionary:
+	var result := STANDARD.duplicate()
+	for kind in TARGETED:
+		var row: Dictionary = TARGETED[kind].duplicate()
+		row.merge({"script": Targeted, "side": "player", "assembly": "targeted",
+			"prefetch": true, "travel": row.clips.travel, "require_root_track": false})
+		result[kind] = row
+	for kind in HERO_KINDS:
+		result[kind] = {"model": ASSETS + "heroes/" + kind + "_Runtime.glb", "script": Hero,
+			"side": "player", "assembly": "hero", "prefetch": true, "optional": true}
+	return result
