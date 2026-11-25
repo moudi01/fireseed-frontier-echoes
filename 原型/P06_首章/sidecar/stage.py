@@ -79,6 +79,27 @@ def stage(source, output, release_id=None):
     shutil.copyfile(Path(__file__).with_name('recover_save.py'), output / 'recover_save.py')
     service = output / 'protocol_service.py'
     text = service.read_text(encoding='utf-8')
+    text = replace(text, "    parser.add_argument('--case-id', required=True)\n",
+                   "    parser.add_argument('--case-id', required=True)\n"
+                   "    parser.add_argument('--slot-mode', choices=('legacy', 'existing', 'new'), default='legacy')\n")
+    text = replace(text, "    root = store.open_session(case)\n",
+                   "    if args.slot_mode == 'new':\n"
+                   "        pending = runs.parent / f'{args.case_id}.pending.json'\n"
+                   "        try:\n"
+                   "            if pending.exists() or pending.with_suffix('.json.tmp').exists():\n"
+                   "                raise FileExistsError(pending)\n"
+                   "            case.mkdir(parents=True, exist_ok=False)\n"
+                   "        except FileExistsError:\n"
+                   "            print(json.dumps({'status': 'SLOT_EXISTS'}), flush=True)\n"
+                   "            return\n"
+                   "        root = case\n"
+                   "    elif args.slot_mode == 'existing':\n"
+                   "        if not case.is_dir():\n"
+                   "            print(json.dumps({'status': 'SLOT_MISSING'}), flush=True)\n"
+                   "            return\n"
+                   "        root = case\n"
+                   "    else:\n"
+                   "        root = store.open_session(case)\n")
     text = replace(text, 'def main():',
                    'def main():\n'
                    '    from contextlib import ExitStack')
@@ -91,6 +112,12 @@ def stage(source, output, release_id=None):
                    "                raise\n"
                    "            print(f'Session busy: {exc}', file=sys.stderr, flush=True)\n"
                    "            print(json.dumps({'status': 'SESSION_BUSY'}), flush=True)\n"
+                   "            return\n"
+                   "        if args.slot_mode == 'existing' and not (root / 'save.json').is_file():\n"
+                   "            print(json.dumps({'status': 'SLOT_MISSING'}), flush=True)\n"
+                   "            return\n"
+                   "        if args.slot_mode == 'new' and any(item.name != 'session.lock' for item in root.iterdir()):\n"
+                   "            print(json.dumps({'status': 'SLOT_EXISTS'}), flush=True)\n"
                    "            return\n")
     text = replace(text, "        if not save.exists() and (ledger['entries'] or (root / 'save.json.bak').exists()):\n"
                    "            raise ValueError('RECOVERY_REQUIRED: missing primary')\n",
@@ -100,6 +127,12 @@ def stage(source, output, release_id=None):
                    "            pending = runs.parent / f'{args.case_id}.pending.json'\n"
                    "            if pending.exists() or pending.with_suffix('.json.tmp').exists():\n"
                    "                raise ValueError('RECOVERY_REQUIRED: request journal without primary')\n")
+    text = replace(text, '        game = Game.load(save) if save.exists() else Game.new_campaign(seed=11, save_path=save)',
+                   "        if args.slot_mode == 'new' and save.exists():\n"
+                   "            print(json.dumps({'status': 'SLOT_EXISTS'}), flush=True)\n"
+                   "            return\n"
+                   "        game = (Game.load(save) if args.slot_mode == 'existing' or save.exists()\n"
+                   "                else Game.new_campaign(seed=11, save_path=save))")
     text = replace(text, '    from engine import Game', '    from deployment import DeploymentGame as Game')
     start = text.index('COMMANDS = ')
     finish = text.index('\n\n\ndef read_frame', start)

@@ -21,6 +21,7 @@ var _stderr: FileAccess
 var _pid := -1
 var _thread: Thread
 var _bundle: String
+var _slot_mode := "legacy"
 var _operation := ""
 var _receipt_for_snapshot: Dictionary = {}
 var _expires := 0
@@ -36,8 +37,9 @@ var contact_hint_timing: Dictionary = {}
 var _receipt_timing: Dictionary = {}
 
 
-func boot(bundle: String, directory: String, session: String) -> void:
+func boot(bundle: String, directory: String, session: String, slot_mode := "legacy") -> void:
 	_bundle = bundle
+	_slot_mode = slot_mode
 	data_dir = directory
 	case_name = session
 	_open()
@@ -53,10 +55,11 @@ func _open() -> void:
 	var log_directory := data_dir.path_join("logs")
 	DirAccess.make_dir_recursive_absolute(log_directory)
 	runtime_log = log_directory.path_join("runtime-" + Crypto.new().generate_random_bytes(12).hex_encode() + ".log")
-	var process := OS.execute_with_pipe(_bundle.path_join("runtime/python.exe"), PackedStringArray([
-		"-B", "-I", _bundle.path_join("launch_runtime.py"), runtime_log,
-		"--case-id", case_name, "--runs-dir", data_dir.path_join("runs")
-	]), true)
+	var args := PackedStringArray(["-B", "-I", _bundle.path_join("launch_runtime.py"), runtime_log,
+		"--case-id", case_name, "--runs-dir", data_dir.path_join("runs")])
+	if _slot_mode != "legacy":
+		args.append_array(["--slot-mode", _slot_mode])
+	var process := OS.execute_with_pipe(_bundle.path_join("runtime/python.exe"), args, true)
 	if process.is_empty():
 		_stop("无法启动样段运行时，请核对旁载包。")
 		return
@@ -181,9 +184,17 @@ func _receive(incoming: Variant, error: ExchangeError) -> void:
 			if row.get("status") == "SESSION_BUSY":
 				_stop("此试玩会话正在使用。请关闭原窗口，再选择「重新连接」。", true)
 				return
+			if row.get("status") == "SLOT_MISSING":
+				_stop("所选存档的主档已丢失。请查看恢复提示或另选存档。")
+				return
+			if row.get("status") == "SLOT_EXISTS":
+				_stop("新槽名已被使用。现有存档仍可从主菜单打开。")
+				return
 			if row.get("status") != "READY":
 				_stop("旁载进程未能打开此存档。")
 				return
+			if _slot_mode == "new":
+				_slot_mode = "existing"
 			if not _load_pending():
 				_kill_sidecar()
 				return

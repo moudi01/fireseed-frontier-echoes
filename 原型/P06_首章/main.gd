@@ -1,6 +1,8 @@
 extends Control
 
 const Pipe = preload("res://pipe_client.gd")
+const SlotCatalog = preload("res://slot_catalog.gd")
+const ENTRY_META := &"p06_player_entry"
 const Board = preload("res://hex_board.gd")
 const ArchivePage = preload("res://archive_page.gd")
 const MemoryPauseCard = preload("res://memory_pause_card.gd")
@@ -181,6 +183,14 @@ var _new_warning := false
 var _battle_pace := 1
 var _window_was_minimized := false
 var _close_after_save := false
+var _returning_to_menu := false
+var _main_menu := false
+var _selecting_slot := false
+var _slot_rows: Array[Dictionary] = []
+var _selected_slot := ""
+var _menu_actions: VBoxContainer
+var _menu_buttons: Dictionary = {}
+var _ending_archive_open := false
 var _closing := false
 var _restore_after_reconnect := false
 var _logged_location: Array = []
@@ -195,28 +205,45 @@ func _ready() -> void:
 		base = ProjectSettings.globalize_path("res://build")
 	bundle = base.path_join("sidecar")
 	data_dir = base.path_join("data")
+	var direct := false
+	var smoke_mode := ""
 	for item in OS.get_cmdline_user_args():
 		if item.begins_with("--case="):
 			case_name = item.trim_prefix("--case=")
+			direct = true
 		elif item.begins_with("--sidecar="):
 			bundle = item.trim_prefix("--sidecar=")
 		elif item.begins_with("--data="):
 			data_dir = item.trim_prefix("--data=")
 		elif item.begins_with("--smoke="):
+			smoke_mode = item.trim_prefix("--smoke=")
 			_default_playback = "--auto-combat-check" in OS.get_cmdline_user_args()
-	var check := RegEx.create_from_string("^[A-Za-z0-9_-]{1,80}$")
-	if check.search(case_name) == null:
+			direct = true
+	var slot_mode := "legacy"
+	if get_tree().has_meta(ENTRY_META):
+		var selection: Dictionary = get_tree().get_meta(ENTRY_META)
+		get_tree().remove_meta(ENTRY_META)
+		slot_mode = selection.mode
+		direct = true
+		case_name = selection.name
+		smoke_mode = ""
+	_main_menu = not direct
+	if direct and not SlotCatalog.valid_name(case_name):
 		push_error("Invalid P06 session name")
 		get_tree().quit(2)
 		return
 	var build_id := FileAccess.get_file_as_string(bundle.path_join("release-id.txt")).strip_edges() \
 		if FileAccess.file_exists(bundle.path_join("release-id.txt")) else "unlabelled"
-	print("P06 start build=%s pid=%d case=%s" % [build_id, OS.get_process_id(), case_name])
+	print("P06 start build=%s pid=%d case=%s" % [build_id, OS.get_process_id(), "menu" if _main_menu else case_name])
 	_load_settings()
-	if DisplayServer.get_name() != "headless":
+	if not _main_menu and DisplayServer.get_name() != "headless":
 		# The stage connects its asset dispatcher when the board enters the tree.
 		get_tree().process_frame.connect(_sync_window_minimize)
 	_build()
+	if _main_menu:
+		_build_player_menu()
+		_render()
+		return
 	_battle_timer = Timer.new()
 	_battle_timer.one_shot = true
 	add_child(_battle_timer)
@@ -230,16 +257,15 @@ func _ready() -> void:
 	client.notice.connect(_notice)
 	client.busy_changed.connect(_busy)
 	client.contact_model_hint.connect(board.stage.prefetch_contact_models)
-	client.boot(bundle, data_dir, case_name)
-	for item in OS.get_cmdline_user_args():
-		if item.begins_with("--smoke="):
-			var test_script: Script = load("res://smoke.gd")
-			if test_script == null or not test_script.can_instantiate():
-				get_tree().quit(2)
-				return
-			var runner: Node = test_script.new()
-			add_child(runner)
-			runner.start(self, item.trim_prefix("--smoke="))
+	client.boot(bundle, data_dir, case_name, slot_mode)
+	if not smoke_mode.is_empty():
+		var test_script: Script = load("res://smoke.gd")
+		if test_script == null or not test_script.can_instantiate():
+			get_tree().quit(2)
+			return
+		var runner: Node = test_script.new()
+		add_child(runner)
+		runner.start(self, smoke_mode)
 
 
 func _box(fill: String, edge: String, radius: int, padding: float) -> StyleBoxFlat:
@@ -386,7 +412,7 @@ func _build() -> void:
 	body.add_child(map_column)
 	board = Board.new()
 	board.font = ui_font
-	board.show_models = "--pieces" not in OS.get_cmdline_user_args()
+	board.show_models = not _main_menu and "--pieces" not in OS.get_cmdline_user_args()
 	board.show_spear = "--spear-pieces" not in OS.get_cmdline_user_args()
 	board.custom_minimum_size = Vector2(370, 330)
 	board.size_flags_vertical = SIZE_EXPAND_FILL
@@ -996,6 +1022,145 @@ func _clear_actions(page: VBoxContainer, buttons: Dictionary) -> void:
 	buttons.clear()
 
 
+func _build_player_menu() -> void:
+	_frame.hide()
+	var backdrop := PanelContainer.new()
+	backdrop.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	backdrop.add_theme_stylebox_override("panel", _standard_frame)
+	add_child(backdrop)
+	var center := CenterContainer.new()
+	backdrop.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size.x = 560
+	panel.add_theme_stylebox_override("panel", _box("172527", "41524c", 9, 24))
+	center.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size.y = 510
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	panel.add_child(scroll)
+	_menu_actions = VBoxContainer.new()
+	_menu_actions.size_flags_horizontal = SIZE_EXPAND_FILL
+	_menu_actions.add_theme_constant_override("separation", 10)
+	scroll.add_child(_menu_actions)
+	notice = _label(backdrop, "", MUTED, 16)
+	notice.hide()
+
+
+func _render_player_menu() -> void:
+	actions = _menu_actions
+	command_buttons = _menu_buttons
+	_clear_actions(actions, command_buttons)
+	theme.default_font_size = 24 if settings["大字"] else 16
+	_set_panel_text_size(settings["大字"])
+	if settings_open:
+		_settings_actions()
+	elif _selecting_slot:
+		_slot_actions()
+	else:
+		_label(actions, "火种计划 · 边境回响", GOLD, 31)
+		_button("选择存档", "choose-slot", _show_slots)
+		_button("开始新周目", "new-cycle", _start_new_cycle)
+		_button("设置", "settings", _show_settings)
+		_button("退出游戏", "quit", _quit)
+	if not notice.text.is_empty():
+		_label(actions, notice.text, ALERT, 16)
+	var focused: Variant = command_buttons.get(focus_key)
+	if focused is Button and not focused.disabled:
+		focused.call_deferred("grab_focus")
+	else:
+		for control: Button in command_buttons.values():
+			if not control.disabled:
+				control.call_deferred("grab_focus")
+				break
+
+
+func _show_player_menu_after_session() -> void:
+	_suspend_window_input()
+	_soundscape.scene("")
+	_archive_page.dismiss()
+	if get_tree().process_frame.is_connected(_sync_window_minimize):
+		get_tree().process_frame.disconnect(_sync_window_minimize)
+	get_window().focus_entered.disconnect(_resume_visible_presentation)
+	get_window().focus_exited.disconnect(_suspend_window_input)
+	if is_instance_valid(client):
+		var closing_client := client
+		client = null
+		remove_child(closing_client)
+		closing_client.queue_free()
+	model = {}
+	view = {}
+	opened = false
+	captions_open = false
+	settings_open = false
+	confirmation = {}
+	_main_menu = true
+	_closing = false
+	_close_after_save = false
+	_returning_to_menu = false
+	focus_key = "choose-slot"
+	_build_player_menu()
+	print("P06 player entry pid=%d case=menu" % OS.get_process_id())
+	_render()
+
+
+func _show_slots() -> void:
+	_selecting_slot = true
+	_slot_rows = SlotCatalog.list_slots(data_dir)
+	if not _slot_rows.any(func(row: Dictionary) -> bool: return row.name == _selected_slot):
+		_selected_slot = _slot_rows[0].name if not _slot_rows.is_empty() else ""
+	focus_key = "slot-" + _selected_slot if not _selected_slot.is_empty() else "slot-back"
+	_render()
+
+
+func _close_slots() -> void:
+	_selecting_slot = false
+	focus_key = "choose-slot"
+	_render()
+
+
+func _select_slot(name: String) -> void:
+	_selected_slot = name
+	focus_key = "open-slot"
+	_render()
+
+
+func _slot_actions() -> void:
+	_label(actions, "选择存档", GOLD, 24)
+	_button("返回主菜单", "slot-back", _close_slots)
+	if _slot_rows.is_empty():
+		_label(actions, "这里还没有可以打开的存档。", MUTED, 16)
+		return
+	for row: Dictionary in _slot_rows:
+		var mark := " · 已选" if row.name == _selected_slot else ""
+		_button(row.name + mark, "slot-" + row.name, _select_slot.bind(row.name))
+		if row.name == _selected_slot:
+			var status := "有主档和备份" if row.primary and row.backup else ("有主档" if row.primary else (
+				"主档缺失，仍有备份" if row.backup else "主档缺失，可查看存档目录"))
+			_label(actions, status, MUTED, 16)
+			_button("打开所选存档", "open-slot", _switch_player_scene.bind("existing", row.name))
+
+
+func _start_new_cycle() -> void:
+	_switch_player_scene("new", SlotCatalog.new_name())
+
+
+func _switch_player_scene(mode: String, name := "") -> void:
+	if get_tree().current_scene != self:
+		_closing = false
+		_returning_to_menu = false
+		notice.text = "无法切换游戏页面。"
+		return
+	get_tree().set_meta(ENTRY_META, {"mode": mode, "name": name})
+	var result := get_tree().reload_current_scene()
+	if result != OK:
+		get_tree().remove_meta(ENTRY_META)
+		_closing = false
+		_returning_to_menu = false
+		notice.text = "无法切换游戏页面，请重试。"
+		_render()
+
+
 func _refresh_action_scroll_bounds() -> void:
 	# ScrollContainer measures its children when calculating its minimum size.
 	_action_scroll.get_minimum_size()
@@ -1003,6 +1168,9 @@ func _refresh_action_scroll_bounds() -> void:
 
 
 func _render() -> void:
+	if _main_menu:
+		_render_player_menu()
+		return
 	var started := Time.get_ticks_usec() if profile_panels else 0
 	var previous_actions := actions
 	var phase: String = view.get("phase", "")
@@ -1095,13 +1263,9 @@ func _render() -> void:
 				_label(actions, "请打开发布包根目录的 恢复存档.cmd。主档损坏时在原位置恢复（--recover %s）；搬移后只剩备份时选择导入。恢复会创建新槽，原文件保留。" % case_name, MUTED, 16)
 			else:
 				_label(actions, "主档损坏时，试玩入口的 --recover 可从校验后的备份新建会话。", MUTED, 16)
-		_button("退出游戏", "quit", _quit)
+		focus_key = "reconnect" if client.can_reconnect else "return-menu"
 	elif settings_open:
-		_label(actions, "设置", GOLD, 23)
-		_button("主音量 · %d%%" % volume, "volume", _cycle_volume)
-		for setting in settings.keys():
-			_button(setting + (" · 开" if settings[setting] else " · 关"), setting, _toggle.bind(setting))
-		_button("返回", "settings-back", _close_settings)
+		_settings_actions()
 		if field and not opening_lines.is_empty():
 			_button("回看开场字幕", "opening-replay", _replay_opening)
 	elif show_confirmation:
@@ -1145,11 +1309,14 @@ func _render() -> void:
 		elif phase == "FINISHED":
 			_finale_ending(view.finale)
 		elif phase == "FIN_C":
-			if view.get("finale", {}).get("ending", {}).get("cause") not in [null, "HUMANITY_EXTINCT"]:
+			var ending: Dictionary = view.get("finale", {}).get("ending", {})
+			if _ending_archive_open or ending.get("cause") not in [null, "HUMANITY_EXTINCT"]:
 				_finale_ending(view.finale)
 			else:
 				_label(actions, "本轮结束 · 名册已无可救回人员", ALERT, 23)
 				_rescue_office(false)
+				if not ending.is_empty():
+					_button("查看本轮档案", "ending-archive", _toggle_ending_archive)
 		if opened and not captions_open and not view.get("opening_lines", []).is_empty():
 			_button("回看开场字幕", "opening-replay", _replay_opening)
 	if not show_combat and not show_confirmation:
@@ -1157,8 +1324,10 @@ func _render() -> void:
 			var settings_button := _button("设置", "settings", _show_settings, true, _contact_controls)
 			settings_button.autowrap_mode = TextServer.AUTOWRAP_OFF
 		else:
-			if not settings_open:
+			if not settings_open and not client.blocked:
 				_button("设置", "settings", _show_settings)
+			if not settings_open:
+				_button("返回主菜单", "return-menu", _return_to_menu)
 			_button("退出游戏", "quit", _quit)
 		if phase == "EXPLORE" and _show_deployment() and not client.busy and not client.blocked:
 			_prepare_contact_battle_rows()
@@ -2174,15 +2343,23 @@ func _finale_ending(finale: Dictionary) -> void:
 		return
 	_label(actions, ending.title, GOLD, 24)
 	_label(actions, ending.text, INK, 17)
+	_button("收起本轮档案" if _ending_archive_open else "查看本轮档案", "ending-archive", _toggle_ending_archive)
 	var letters: Dictionary = view.get("letter_thread", {})
 	if letters.get("complete", false):
 		_letter_history(letters)
-	if not finale.reports.is_empty():
+	if _ending_archive_open and not finale.reports.is_empty():
 		_label(actions, "终战记录", GOLD, 17)
 		for report: Dictionary in finale.reports:
 			var stage := "DEMON" if report.encounter_id == "BATTLE-DEMON" else "ADMIN"
 			_label(actions, "%s · %s · 第 %d 拍" % [
 				_finale_battle_title(stage), REASONS.get(report.result, report.result), int(report.tick)], MUTED, 16)
+
+
+func _toggle_ending_archive() -> void:
+	_ending_archive_open = not _ending_archive_open
+	_letter_history_open = false
+	focus_key = "ending-archive"
+	_render()
 
 
 func _construction_status(project: Dictionary) -> String:
@@ -4364,6 +4541,16 @@ func _replay_opening() -> void:
 	_render()
 
 
+func _settings_actions() -> void:
+	_label(actions, "设置", GOLD, 23)
+	_button("主音量 · %d%%" % volume, "volume", _cycle_volume)
+	for setting in settings.keys():
+		_button(setting + (" · 开" if settings[setting] else " · 关"), setting, _toggle.bind(setting))
+	_button("返回", "settings-back", _close_settings)
+	if not _main_menu:
+		_button("返回主菜单", "return-menu", _return_to_menu)
+
+
 func _show_settings() -> void:
 	settings_open = true
 	focus_key = "volume"
@@ -4405,7 +4592,7 @@ func _save_settings() -> void:
 		file.set_value("presentation", entry, settings[entry])
 	file.set_value("presentation", "volume", volume)
 	file.set_value("presentation", "battle_pace", _battle_pace)
-	if file.save(data_dir.path_join("display.cfg")) != OK:
+	if DirAccess.make_dir_recursive_absolute(data_dir) != OK or file.save(data_dir.path_join("display.cfg")) != OK:
 		notice.text = "本次显示设置已生效，设置文件未能保存。"
 	_render()
 
@@ -4453,6 +4640,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if settings_open:
 		_close_settings()
+	elif _main_menu and _selecting_slot:
+		_close_slots()
+	elif _main_menu:
+		return
 	elif not confirmation.is_empty():
 		_cancel_confirmation()
 	elif finale_terms_open and command_buttons.has("finale-terms"):
@@ -4465,6 +4656,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_protection_archive()
 	elif _letter_history_open and command_buttons.has("letter-history"):
 		_toggle_letter_history()
+	elif _ending_archive_open and command_buttons.has("ending-archive"):
+		_toggle_ending_archive()
 	elif _letter_open and command_buttons.has("letter-open"):
 		_toggle_letter()
 	elif not _ordinary_route_profile.is_empty() and command_buttons.has("ordinary-route-picker"):
@@ -4484,7 +4677,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_returning_to_menu = false
 		_quit()
+
+
+func _return_to_menu() -> void:
+	_returning_to_menu = true
+	_quit()
 
 
 func _quit() -> void:
@@ -4495,7 +4694,7 @@ func _quit() -> void:
 		cancelled_snapshot = client.cancel_snapshot_for_close()
 		if not cancelled_snapshot:
 			_close_after_save = true
-			notice.text = "等待正在提交的操作完成后再退出。"
+			notice.text = "等待操作保存后返回主菜单。" if _returning_to_menu else "等待正在提交的操作完成后再退出。"
 			notice.show()
 			return
 	_closing = true
@@ -4513,6 +4712,10 @@ func _quit() -> void:
 			reason = "pending_preserved"
 		elif _close_after_save:
 			reason = "after_receipt"
-		print("P06 exit version=%d queued=%s pending=%s reason=%s active_models=%d queued_models=%d" % [
-			int(client.frame.get("state_version", -1)), _close_after_save, has_pending, reason, models.x, models.y])
-	get_tree().quit()
+		print("P06 exit version=%d queued=%s pending=%s reason=%s active_models=%d queued_models=%d destination=%s" % [
+			int(client.frame.get("state_version", -1)), _close_after_save, has_pending, reason, models.x, models.y,
+			"menu" if _returning_to_menu else "desktop"])
+	if _returning_to_menu:
+		_show_player_menu_after_session.call_deferred()
+	else:
+		get_tree().quit()
