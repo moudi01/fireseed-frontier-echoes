@@ -1493,6 +1493,15 @@ def finale_view(game):
     return result
 
 
+def resource_view(state):
+    bank, warehouse, party = state['bank'], state['warehouse'], state['party']
+    return {'copper': bank['copper'], 'crystal': bank['crystal'],
+            'warehouse': {material: warehouse.get(material, 0)
+                          for material in ('iron', 'fiber', 'herb', 'crystal_shard')},
+            'expedition_used': sum(member['cost'] for member in party) + state['escort_reserved_cost'],
+            'battle_used': sum(member['cost'] for member in party if member['deployed'])}
+
+
 def make_view(game, ledger, primary, committed_save_version=None):
     import region_space as space
     state = game.s
@@ -1530,6 +1539,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
     return {'phase': state['phase'], 'site': state['site'], 'day': state['day'],
             'region': state['region'], 'region_name': game.cat.regions[state['region']]['name'] if active else '',
             'supply': state['bank']['supply'], 'medical': state['medical'],
+            'resources': resource_view(state),
             'departure_cost': game.cat.multi['profiles']['SHORT']['departure_supply_cost'],
             'save_version': _save_version(ledger, primary) if committed_save_version is None else committed_save_version,
             'commissioned': 'ST-101' in facts, 'commission_receipt': commission, 'complete': 'ST-102' in facts,
@@ -1619,7 +1629,13 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
         if actor_id:
             speaker = next((member['display_name'] for member in slice_view['party']
                             if member['instance_id'] == actor_id), '随行队员')
-        line = {'speaker': speaker, 'text': record['text']}
+        text = record['text']
+        receipt = record['id'] == 'receipt'
+        if receipt and active['id'] == 'research-deliver':
+            budget = slice_view['budget']
+            text = (f"研究报告已交存，观测站校验片入档。出征与战斗预算为 "
+                    f"{budget['expedition']}/{budget['battle']} Cost。可在旧档案查看交付详情。")
+        line = {'speaker': speaker, 'text': text, 'receipt': receipt}
     board = None
     battle = game.s.get('battle')
     if game.s['phase'] == 'BATTLE' and battle and battle.get('finale'):

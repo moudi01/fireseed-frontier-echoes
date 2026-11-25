@@ -56,10 +56,15 @@ var _contact_controls: HBoxContainer
 var _subtitle_row: HBoxContainer
 var _field_title_font: Font
 var location: Label
+var _resource_bar: VBoxContainer
+var _resource_totals: Label
+var _material_totals: Label
 var save_info: Label
 var notice: Label
 var _navigation_committed := false
 var subtitles: Label
+var _receipt_plate: PanelContainer
+var _receipt_text: Label
 var dialogue_next: Button
 var dialogue_skip: Button
 var audio: AudioStreamPlayer
@@ -126,6 +131,8 @@ var focus_key := ""
 var profile_panels := false
 var panel_timings: Array[Dictionary] = []
 var _action_scroll: ScrollContainer
+var _town_navigation: GridContainer
+var _town_buttons: Dictionary = {}
 var _combat_actions: VBoxContainer
 var _general_actions: VBoxContainer
 var _confirmation_actions: VBoxContainer
@@ -330,12 +337,25 @@ func _build() -> void:
 	_frame.add_child(stack)
 
 	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 16)
 	stack.add_child(header)
 	var title := VBoxContainer.new()
-	title.size_flags_horizontal = SIZE_EXPAND_FILL
+	title.custom_minimum_size.x = 285.0
 	header.add_child(title)
 	area_title = _label(title, "火种计划  /  灰栎边道", INK, 31)
+	area_title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	location = _label(title, "暮汀", MUTED, 17)
+	_resource_bar = VBoxContainer.new()
+	_resource_bar.size_flags_horizontal = SIZE_EXPAND_FILL
+	_resource_bar.size_flags_vertical = SIZE_SHRINK_CENTER
+	_resource_bar.add_theme_constant_override("separation", 3)
+	header.add_child(_resource_bar)
+	_resource_totals = _label(_resource_bar, "", GOLD, 17)
+	_resource_totals.theme_type_variation = &"PanelText17"
+	_resource_totals.remove_theme_font_size_override("font_size")
+	_material_totals = _label(_resource_bar, "", MUTED, 15)
+	_material_totals.theme_type_variation = &"PanelText15"
+	_material_totals.remove_theme_font_size_override("font_size")
 	save_info = _label(header, "正在打开存档", GOLD, 15)
 	save_info.autowrap_mode = TextServer.AUTOWRAP_OFF
 	save_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -412,10 +432,20 @@ func _build() -> void:
 	_standard_panel = _box("172527", "41524c", 9, 13)
 	_side_panel.add_theme_stylebox_override("panel", _standard_panel)
 	body.add_child(_side_panel)
+	var side_stack := VBoxContainer.new()
+	side_stack.add_theme_constant_override("separation", 10)
+	_side_panel.add_child(side_stack)
+	_town_navigation = GridContainer.new()
+	_town_navigation.columns = 3
+	_town_navigation.add_theme_constant_override("h_separation", 5)
+	_town_navigation.add_theme_constant_override("v_separation", 4)
+	side_stack.add_child(_town_navigation)
+	_build_town_tabs()
 	_action_scroll = ScrollContainer.new()
 	_action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_action_scroll.follow_focus = true
-	_side_panel.add_child(_action_scroll)
+	_action_scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	side_stack.add_child(_action_scroll)
 	var pages := VBoxContainer.new()
 	pages.size_flags_horizontal = SIZE_EXPAND_FILL
 	_action_scroll.add_child(pages)
@@ -435,7 +465,7 @@ func _build() -> void:
 	_button("取消", "cancel", _cancel_confirmation)
 	_button("确认", "confirm", _confirm)
 	_button("设置", "settings", _show_settings)
-	_button("退出样段", "quit", _quit)
+	_button("退出游戏", "quit", _quit)
 	actions = _general_actions
 	command_buttons = _general_buttons
 
@@ -456,6 +486,14 @@ func _build() -> void:
 	subtitles = _label(_subtitle_row, "", INK, 18)
 	subtitles.size_flags_horizontal = SIZE_EXPAND_FILL
 	subtitles.custom_minimum_size.y = 32
+	_receipt_plate = PanelContainer.new()
+	_receipt_plate.size_flags_horizontal = SIZE_EXPAND_FILL
+	_receipt_plate.add_theme_stylebox_override("panel", _box("192525", "465d52", 4, 7))
+	_subtitle_row.add_child(_receipt_plate)
+	_receipt_text = _label(_receipt_plate, "", MUTED, 16)
+	_receipt_text.theme_type_variation = &"PanelText16"
+	_receipt_text.remove_theme_font_size_override("font_size")
+	_receipt_plate.hide()
 	dialogue_next = _button("下一句", "dialogue next", _advance_dialogue.bind("next"), false, _subtitle_row)
 	dialogue_skip = _button("跳过对白", "dialogue skip", _advance_dialogue.bind("skip"), false, _subtitle_row)
 	for button in [dialogue_next, dialogue_skip]:
@@ -918,6 +956,7 @@ func _render() -> void:
 		actions = _general_actions
 		command_buttons = _general_buttons
 		_clear_actions(actions, command_buttons)
+	_town_navigation.hide()
 	var font_size := 24 if settings["大字"] else 16
 	if theme.default_font_size != font_size:
 		theme.default_font_size = font_size
@@ -940,6 +979,7 @@ func _render() -> void:
 		region = "灰栎边道"
 	area_title.text = region if field else "火种计划  /  " + region
 	location.text = "暮汀北门 · 独返" if showing_opening else _display_location()
+	_render_resources(opened and not showing_opening)
 	save_info.text = "结果待核实" if client.blocked else "正在处理" if client.busy else "已保存 · 版本 %d" % save_version if save_version >= 0 else "存档尚未确认"
 	save_info.visible = not field or client.blocked
 	_warning_plate.visible = field and phase == "BATTLE"
@@ -979,7 +1019,7 @@ func _render() -> void:
 			_button("打开运行时日志", "runtime-log", _open_runtime_log)
 		if opening_failed and FileAccess.file_exists(data_dir.path_join("runs").path_join(case_name).path_join("save.json.bak")):
 			_label(actions, "主档损坏时，试玩入口的 --recover 可从校验后的备份新建会话。", MUTED, 16)
-		_button("退出样段", "quit", _quit)
+		_button("退出游戏", "quit", _quit)
 	elif settings_open:
 		_label(actions, "设置", GOLD, 23)
 		_button("主音量 · %d%%" % volume, "volume", _cycle_volume)
@@ -998,15 +1038,18 @@ func _render() -> void:
 		for control in command_buttons.values():
 			control.disabled = client.busy
 	else:
-		if opened and not captions_open and phase in ["EXPLORE", "RETURNED", "FAILED", "TOWN"] and snapshot is Dictionary:
-			if snapshot.get("finished", false) and not _show_deployment() \
-					and not chapter_history_open and not remembrance_history_open and not books_open and not _overlook_open \
-					and view.get("town_memory", {}).is_empty():
-				_finished_battle(snapshot)
+		var show_finished: bool = opened and not captions_open and phase in ["EXPLORE", "RETURNED", "FAILED", "TOWN"] \
+			and snapshot is Dictionary and snapshot.get("finished", false) and not _show_deployment() \
+			and not chapter_history_open and not remembrance_history_open and not books_open and not _overlook_open \
+			and view.get("town_memory", {}).is_empty()
+		if show_finished and phase != "TOWN":
+			_finished_battle(snapshot)
 		if (not opened or captions_open) and not view.is_empty():
 			_opening_actions()
 		elif phase == "TOWN":
 			_town_actions()
+			if show_finished:
+				_finished_battle(snapshot)
 		elif phase in ["RETURNED", "FAILED"]:
 			_settlement_actions()
 		elif phase == "EXPLORE":
@@ -1038,7 +1081,7 @@ func _render() -> void:
 		else:
 			if not settings_open:
 				_button("设置", "settings", _show_settings)
-			_button("退出游戏" if field else "退出样段", "quit", _quit)
+			_button("退出游戏", "quit", _quit)
 		if phase == "EXPLORE" and _show_deployment() and not client.busy and not client.blocked:
 			_prepare_contact_battle_rows()
 	_contact_controls.visible = _contact_controls.get_child_count() > 0
@@ -1053,7 +1096,7 @@ func _render() -> void:
 	var reading_records: bool = not client.blocked and not settings_open and not captions_open \
 		and (chapter_history_open or remembrance_history_open or books_open)
 	notice.visible = not reading_records and (not field or not notice.text.is_empty())
-	_subtitle_row.visible = not reading_records and (not field or not subtitles.text.is_empty() or dialogue_next.visible)
+	_subtitle_row.visible = not reading_records and (subtitles.visible or _receipt_plate.visible or dialogue_next.visible)
 	if command_buttons.has(focus_key) and not command_buttons[focus_key].disabled:
 		if command_buttons[focus_key].visible:
 			command_buttons[focus_key].call_deferred("grab_focus")
@@ -1072,6 +1115,21 @@ func _render() -> void:
 			"board_usec": actions_started - board_started, "actions_usec": switch_started - actions_started,
 			"page_switch_usec": footer_started - switch_started,
 			"footer_usec": Time.get_ticks_usec() - footer_started, "confirmation": show_confirmation})
+
+
+func _render_resources(visible_on_screen: bool) -> void:
+	var resources: Dictionary = view.get("resources", {})
+	_resource_bar.visible = visible_on_screen and not resources.is_empty()
+	if not _resource_bar.visible:
+		return
+	var budget: Dictionary = view.budget
+	_resource_totals.text = "铜币 %d　结晶 %d　出征 %d/%d　战斗 %d/%d Cost" % [
+		int(resources.copper), int(resources.crystal), int(resources.expedition_used), int(budget.expedition),
+		int(resources.battle_used), int(budget.battle)]
+	var materials := PackedStringArray()
+	for material: String in resources.warehouse:
+		materials.append("%s %d" % [CARGO_NAMES[material], int(resources.warehouse[material])])
+	_material_totals.text = "　".join(materials)
 
 
 func _render_town_shortcuts() -> void:
@@ -1141,20 +1199,26 @@ func _render_subtitle() -> void:
 		can_read = false
 	dialogue_next.visible = can_read
 	dialogue_skip.visible = can_read
+	var is_receipt: bool = line is Dictionary and line.get("receipt", false)
+	var progress := ""
 	if can_read:
 		var cursor := int(active.cursor) + 1
 		var count := int(active.line_count)
-		dialogue_next.text = "完成阅读" if cursor == count else "下一句"
+		progress = "%d/%d   " % [cursor, count]
+		dialogue_next.text = "完成阅读" if cursor == count else ("继续" if is_receipt else "下一句")
+		dialogue_skip.text = "略过记录" if is_receipt else "跳过对白"
 		dialogue_next.disabled = client.busy
 		dialogue_skip.disabled = client.busy
 		command_buttons["dialogue next"] = dialogue_next
 		command_buttons["dialogue skip"] = dialogue_skip
-		subtitles.text = "%d/%d   %s   %s" % [cursor, count, line.speaker, line.text]
 	else:
 		command_buttons.erase("dialogue next")
 		command_buttons.erase("dialogue skip")
-		subtitles.text = _memory_reply if show_memory_reply else (
-			"%s   %s" % [line.speaker, line.text] if line is Dictionary else "")
+	_receipt_plate.visible = is_receipt and can_read
+	_receipt_text.text = progress + "行程记录　" + str(line.text) if _receipt_plate.visible else ""
+	subtitles.text = _memory_reply if show_memory_reply else (
+		progress + "%s   %s" % [line.speaker, line.text] if line is Dictionary and not is_receipt else "")
+	subtitles.visible = not subtitles.text.is_empty()
 
 
 func _advance_dialogue(action: String) -> void:
@@ -1185,6 +1249,49 @@ func _turn_caption(offset: int) -> void:
 	_render()
 
 
+func _build_town_tabs() -> void:
+	theme.set_type_variation("TownTab", "Button")
+	theme.set_stylebox("normal", "TownTab", _box("23373a", "46615e", 3, 6))
+	theme.set_stylebox("hover", "TownTab", _box("324c4b", "81a99c", 3, 6))
+	theme.set_stylebox("pressed", "TownTab", _box("51462e", "d5a358", 3, 6))
+	theme.set_stylebox("disabled", "TownTab", _box("51462e", "d5a358", 3, 6))
+	theme.set_color("font_disabled_color", "TownTab", GOLD)
+	var tabs := {
+		"chapter": ["旧档案", "旧档案"],
+		"roster": ["队伍", "队伍与装备"],
+		"skills": ["技能书", "技能书"],
+		"expedition": ["远征", "远征与补给"],
+		"construction": ["施工", "城镇施工"],
+		"items": ["道具", "随身道具"],
+		"research": ["遗迹研究", "遗迹研究"],
+		"finale": ["终战整备", "终战整备"],
+		"logistics": ["后勤", "后勤服务"],
+		"rescue": ["搜救所", "搜救所"],
+	}
+	for tab: String in tabs:
+		var entry := _new_button(tabs[tab][0], "town-" + tab, _town_tab.bind(tab), true)
+		entry.theme_type_variation = &"TownTab"
+		entry.autowrap_mode = TextServer.AUTOWRAP_OFF
+		entry.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		entry.size_flags_horizontal = SIZE_EXPAND_FILL
+		entry.tooltip_text = tabs[tab][1]
+		_town_navigation.add_child(entry)
+		_town_buttons[tab] = entry
+	_town_navigation.hide()
+
+
+func _show_town_tabs(available: Dictionary) -> void:
+	_town_navigation.show()
+	for tab: String in _town_buttons:
+		var entry: Button = _town_buttons[tab]
+		entry.visible = available[tab]
+		if entry.visible:
+			entry.disabled = tab == town_tab
+			entry.add_theme_font_size_override("font_size", 21 if settings["大字"] else 16)
+			entry.custom_minimum_size.y = 39.0 if settings["大字"] else 33.0
+			command_buttons["town-" + tab] = entry
+
+
 func _town_actions() -> void:
 	if not view.get("commissioned", false):
 		_label(actions, "暮汀委任", GOLD, 24)
@@ -1207,26 +1314,15 @@ func _town_actions() -> void:
 	var complete: bool = view.get("complete", false)
 	var has_records: bool = not view.get("rescue", {}).is_empty()
 	var has_books: bool = not view.get("skill_books", {}).is_empty() or not view.get("book_market", {}).get("offers", {}).is_empty()
-	if complete:
-		_button("旧档案", "town-chapter", _town_tab.bind("chapter"), town_tab != "chapter")
 	var research: Dictionary = view.get("research", {})
-	if not research.is_empty():
-		_button("遗迹研究", "town-research", _town_tab.bind("research"), town_tab != "research")
 	var finale: Dictionary = view.get("finale", {})
-	if not finale.is_empty():
-		_button("终战整备", "town-finale", _town_tab.bind("finale"), town_tab != "finale")
-	_button("队伍与装备" if complete else "出发前整备", "town-roster", _town_tab.bind("roster"), town_tab != "roster")
-	if has_books:
-		_button("技能书", "town-skills", _town_tab.bind("skills"), town_tab != "skills")
-	if view.get("chapter", {}).get("archived", false):
-		_button("远征与补给", "town-expedition", _town_tab.bind("expedition"), town_tab != "expedition")
-	_button("城镇施工", "town-construction", _town_tab.bind("construction"), town_tab != "construction")
-	_button("随身道具", "town-items", _town_tab.bind("items"), town_tab != "items")
 	var logistics: Dictionary = view.get("town_services", {})
-	if not logistics.is_empty():
-		_button("后勤服务", "town-logistics", _town_tab.bind("logistics"), town_tab != "logistics")
-	if has_records:
-		_button("搜救所", "town-rescue", _town_tab.bind("rescue"), town_tab != "rescue")
+	if not complete and town_tab == "chapter":
+		town_tab = "roster"
+	_show_town_tabs({"chapter": complete, "roster": true, "skills": has_books,
+		"expedition": view.get("chapter", {}).get("archived", false), "construction": true, "items": true,
+		"research": not research.is_empty(), "finale": not finale.is_empty(),
+		"logistics": not logistics.is_empty(), "rescue": has_records})
 	if town_tab == "rescue" and has_records:
 		_rescue_office()
 		return
@@ -1276,14 +1372,8 @@ func _town_actions() -> void:
 	if not view.get("complete", false):
 		_whistle_section()
 	var treasury: Dictionary = view.get("town_roster", {})
-	var expedition := 0
-	var deployed := 0
-	for member in party:
-		expedition += int(member.cost)
-		if member.deployed:
-			deployed += int(member.cost)
-	_label(actions, "出征 %d/%d · 战斗 %d/%d Cost" % [expedition, int(view.budget.expedition),
-		deployed, int(view.budget.battle)], MUTED, 16)
+	var expedition: int = int(view.resources.expedition_used)
+	_member_actions(view.get("town_deploy_cells", []))
 	if not treasury.is_empty():
 		var price := int(treasury.spear_price)
 		_input_action("招募护运枪卫 · %d 铜" % price, "recruit", ["M01"],
@@ -1305,7 +1395,6 @@ func _town_actions() -> void:
 					if member.instance_id == selected_id:
 						_equipment_actions(member)
 						_recovery_actions(member)
-	_member_actions(view.get("town_deploy_cells", []))
 
 
 func _town_tab(tab: String, project := "") -> void:
@@ -1325,10 +1414,24 @@ func _town_tab(tab: String, project := "") -> void:
 	bookstore_book = ""
 	book_research_open = false
 	town_tab = tab
-	focus_key = "town-chapter" if tab != "chapter" else "town-roster"
-	if tab == "construction":
-		focus_key = "construction-project-hospital" if project.is_empty() else "construction-list"
+	focus_key = ""
+	match tab:
+		"chapter":
+			var chapter: Dictionary = view.get("chapter", {})
+			if not chapter.is_empty():
+				if chapter.archived:
+					focus_key = "chapter-history"
+				else:
+					focus_key = "quest archive CONFIRM" if chapter.reviewed else "quest review CONFIRM"
+		"construction":
+			focus_key = "construction-project-hospital" if project.is_empty() else "construction-list"
 	_render()
+	_action_scroll.set_deferred("scroll_vertical", 0)
+	if focus_key.is_empty():
+		for control: Control in command_buttons.values():
+			if control is Button and actions.is_ancestor_of(control) and control.visible and not control.disabled:
+				control.call_deferred("grab_focus")
+				break
 
 
 func _chapter_actions() -> void:
@@ -1363,9 +1466,16 @@ func _chapter_actions() -> void:
 				int(chapter.archive_seals), chapter.archive_item])
 	else:
 		_label(actions, "首章已交档 · 应召印库存 %d 枚" % int(chapter.seals), INK, 17)
-		_label(actions, "出征预算 %d Cost · 战斗预算 %d Cost" % [int(view.budget.expedition), int(view.budget.battle)], MUTED, 16)
 	_button("查阅交档记录", "chapter-history", _toggle_chapter_history)
 	if chapter.archived:
+		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
+		var whistle: Dictionary = view.whistle
+		if whistle.get("stage") == "record":
+			_label(actions, chapter.whistle_clue, MUTED, 16)
+		_whistle_actions(whistle)
+		var archived_budget: Dictionary = chapter.archive_budget
+		_label(actions, "出征预算 %d Cost · 战斗预算 %d Cost" % [
+			int(archived_budget.expedition), int(archived_budget.battle)], MUTED, 16)
 		var selected: Dictionary = chapter.get("book_selected", {})
 		if not selected.is_empty():
 			_label(actions, _chapter_book_text(selected), MUTED, 16)
@@ -1382,11 +1492,6 @@ func _chapter_actions() -> void:
 					_hunt_report(hunt)
 			if hunt.id == "MG02":
 				_scarf_section(view.scarf)
-		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
-		var whistle: Dictionary = view.whistle
-		if whistle.get("stage") == "record":
-			_label(actions, chapter.whistle_clue, MUTED, 16)
-		_whistle_actions(whistle)
 	else:
 		_whistle_section()
 
@@ -1664,6 +1769,8 @@ func _toggle_remembrance_history(general_id: String) -> void:
 	remembrance_history_general = general_id
 	_memory_reply = ""
 	focus_key = _remembrance_key(general_id)
+	if remembrance_history_open:
+		_action_scroll.scroll_vertical = 0
 	_render()
 	if remembrance_history_open:
 		_action_scroll.set_deferred("scroll_vertical", 0)
@@ -3206,12 +3313,13 @@ func _skill_book_actions(id: String) -> void:
 	var member: Dictionary = library.get("members", {}).get(id, {})
 	if member.is_empty():
 		return
+	var catalog: Dictionary = library.catalog
 	var equipped: Array = member.equipped
 	for i in range(2):
-		var name: String = library.catalog[equipped[i]].name if i < equipped.size() else "空"
+		var name: String = catalog[equipped[i]].name if i < equipped.size() else "空"
 		_label(actions, "书槽 %d · %s" % [i + 1, name], MUTED, 16)
 	for study in member.study:
-		var book: Dictionary = library.catalog[study.id]
+		var book: Dictionary = catalog[study.id]
 		var label: String = "学习 · " + book.name
 		if not study.blocked.is_empty():
 			label = book.name + " · " + study.blocked
@@ -3219,10 +3327,10 @@ func _skill_book_actions(id: String) -> void:
 			"消耗 1 本「%s」供%s学习。\n%s\n%s" % [book.name, member.name, book.timing, book.summary],
 			study.blocked.is_empty())
 	for bid in member.learned:
-		var book: Dictionary = library.catalog[bid]
+		var book: Dictionary = catalog[bid]
 		var already := equipped.has(bid)
 		if not already and equipped.size() == 2:
-			_book_swap_actions(id, book, equipped, library.catalog)
+			_book_swap_actions(id, book, equipped, catalog)
 			continue
 		var next := equipped.duplicate()
 		if already:
@@ -3306,31 +3414,60 @@ func _tactics_actions(id: String, member: Dictionary) -> void:
 
 
 func _member_actions(cells: Array) -> void:
+	var party: Array = view.get("party", [])
+	var selected: Dictionary = {}
+	for member: Dictionary in party:
+		if member.instance_id == selected_id:
+			selected = member
+			break
+	if not selected.is_empty():
+		_deployment_member_button(selected)
+		_selected_deployment(selected, cells)
+		_label(actions, "随队名册", GOLD, 17)
 	if not cells.is_empty():
 		_label(actions, "拖到空格上阵，拖动已上阵队员可换位", MUTED, 16)
-	for member in view.get("party", []):
-		var member_id: String = member["instance_id"]
-		var injury_days := int(member.injury_days)
-		var title := ("◆ " if member.deployed else "◇ ") + _name(member)
-		if injury_days > 0:
-			title += " · 旧伤 %d 日" % injury_days
-		var entry := _button(title, "member-" + member_id, _choose_member.bind(member_id))
-		entry.set_drag_forwarding(board.begin_deployment_drag.bind(member_id), Callable(), Callable())
-		if member_id == selected_id:
-			if view.get("complete", false):
-				_label(actions, "Lv%d · 生命 %d/%d" % [int(member.level), int(member.hp), int(member.max_hp)], MUTED, 15)
-			_equipment_actions(member)
-			if view.get("phase") == "EXPLORE":
-				_skill_book_actions(member_id)
-			if view.get("phase") == "TOWN" and not view.get("town_roster", {}).is_empty():
-				_recovery_actions(member)
-				_input_action("留城 · " + _name(member), "squad", [member_id, "off"])
-			_input_action("撤下部署" if member.deployed else "加入部署", "deploy",
-				[member_id, "off" if member.deployed else "on"], "", member.deployed or (member.deployable and injury_days == 0))
-			if view.get("complete", false):
-				for stance in STANCES:
-					_input_action(("当前 · " if member.stance == stance else "改为 ") + STANCES[stance], "stance", [member_id, stance], "", member.stance != stance)
-			_deployment_cells(member_id, cells)
+	for member: Dictionary in party:
+		if member.instance_id != selected_id:
+			_deployment_member_button(member)
+	if selected.is_empty():
+		return
+	if view.get("phase") == "EXPLORE" and view.get("skill_books", {}).get("members", {}).has(selected_id):
+		actions.add_child(HSeparator.new())
+		_label(actions, "技能与自动战斗", GOLD, 17)
+		_skill_book_actions(selected_id)
+	_equipment_actions(selected)
+	if view.get("phase") == "TOWN" and not view.get("town_roster", {}).is_empty():
+		_recovery_actions(selected)
+		_input_action("留城 · " + _name(selected), "squad", [selected_id, "off"])
+
+
+func _deployment_member_button(member: Dictionary) -> void:
+	var id: String = member.instance_id
+	var title := ("◆ " if member.deployed else "◇ ") + _name(member)
+	if int(member.injury_days) > 0:
+		title += " · 旧伤 %d 日" % int(member.injury_days)
+	var entry := _button(title, "member-" + id, _choose_member.bind(id))
+	entry.set_drag_forwarding(board.begin_deployment_drag.bind(id), Callable(), Callable())
+
+
+func _selected_deployment(member: Dictionary, cells: Array) -> void:
+	var advanced: bool = view.get("complete", false)
+	if advanced:
+		_label(actions, "Lv%d · 生命 %d/%d" % [int(member.level), int(member.hp), int(member.max_hp)], MUTED, 15)
+	var can_deploy: bool = member.deployable and int(member.injury_days) == 0
+	_input_action("撤下部署" if member.deployed else "加入部署", "deploy",
+		[member.instance_id, "off" if member.deployed else "on"], "", member.deployed or can_deploy)
+	if advanced:
+		_label(actions, "战术姿态 · " + str(STANCES[member.stance]), GOLD, 17)
+		var posture := GridContainer.new()
+		posture.columns = 4
+		actions.add_child(posture)
+		for stance: String in STANCES:
+			var control := _input_action(STANCES[stance], "stance", [member.instance_id, stance],
+				"", member.stance != stance, posture)
+			control.size_flags_horizontal = SIZE_EXPAND_FILL
+			control.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_deployment_cells(member.instance_id, cells)
 
 
 func _deployment_cells(id: String, cells: Array) -> void:
@@ -3435,6 +3572,8 @@ func _cargo_amounts(rows: Dictionary) -> String:
 func _choose_member(id: String) -> void:
 	_book_swap_key = ""
 	selected_id = id
+	if _show_deployment():
+		focus_key = "member-" + id
 	selected_cell = Vector2i(-999, -999)
 	deployment_cells_open = false
 	for member in view.get("party", []):
