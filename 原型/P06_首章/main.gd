@@ -189,6 +189,7 @@ var _selecting_slot := false
 var _slot_rows: Array[Dictionary] = []
 var _selected_slot := ""
 var _menu_actions: VBoxContainer
+var _menu_settings_heading: Label
 var _menu_buttons: Dictionary = {}
 var _ending_archive_open := false
 var _closing := false
@@ -1040,11 +1041,17 @@ func _build_player_menu() -> void:
 	panel.custom_minimum_size.x = 560
 	panel.add_theme_stylebox_override("panel", _box("172527", "41524c", 9, 24))
 	center.add_child(panel)
+	var content := VBoxContainer.new()
+	content.custom_minimum_size.y = 510
+	content.add_theme_constant_override("separation", 10)
+	panel.add_child(content)
+	_menu_settings_heading = _label(content, "设置", GOLD, 23)
+	_menu_settings_heading.hide()
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size.y = 510
+	scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
-	panel.add_child(scroll)
+	content.add_child(scroll)
 	_menu_actions = VBoxContainer.new()
 	_menu_actions.size_flags_horizontal = SIZE_EXPAND_FILL
 	_menu_actions.add_theme_constant_override("separation", 10)
@@ -1059,8 +1066,9 @@ func _render_player_menu() -> void:
 	_clear_actions(actions, command_buttons)
 	theme.default_font_size = 24 if settings["大字"] else 16
 	_set_panel_text_size(settings["大字"])
+	_menu_settings_heading.visible = settings_open
 	if settings_open:
-		_settings_actions()
+		_settings_actions(false)
 	elif _selecting_slot:
 		_slot_actions()
 	else:
@@ -4559,8 +4567,9 @@ func _replay_opening() -> void:
 	_render()
 
 
-func _settings_actions() -> void:
-	_label(actions, "设置", GOLD, 23)
+func _settings_actions(show_heading := true) -> void:
+	if show_heading:
+		_label(actions, "设置", GOLD, 23)
 	_button("主音量 · %d%%" % volume, "volume", _cycle_volume)
 	for setting in settings.keys():
 		_button(setting + (" · 开" if settings[setting] else " · 关"), setting, _toggle.bind(setting))
