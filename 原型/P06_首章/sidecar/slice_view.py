@@ -56,6 +56,8 @@ GENERAL_CAST_MOVES = {
     'EN15': {'EN15-A'},
     'EN16': {'EN16-A'},
     'EN18': {'EN18-A'},
+    'EN19': {'EN19-A'},
+    'EN20': {'EN20-A'},
 }
 CONCEAL_EVENTS = {'conceal_ready', 'conceal_miss', 'conceal_revealed', 'concealment_expired'}
 HUNT_BOARD_ART = {'MIRROR_COURT', 'SALT_CROSSING', 'FORGE_CROSSING'}
@@ -956,6 +958,8 @@ def record_impact(impacts, event):
             row['choir_healed'] = row.get('choir_healed', 0) + event['effective']
     elif kind == 'skill_miss' and event.get('move') == 'EN05-A':
         impacts.setdefault(event['actor'], {})['salt_arc_missed'] = True
+    elif kind == 'skill_miss' and event.get('move') in ('EN19-A', 'EN20-A'):
+        impacts.setdefault(event['actor'], {})['goblin_miss'] = event['move']
     elif kind == 'conceal_revealed' and event.get('reason') == 'attack':
         impacts.setdefault(event['actor'], {})['conceal_revealed'] = True
     elif kind == 'down':
@@ -1033,6 +1037,7 @@ def battle_view(game):
     events = []
     impacts = {}
     locks = {}
+    pin_until = {}
     fields = ('event_id', 'tick', 'type', 'actor', 'target', 'position', 'action',
               'action_id', 'actual_hp_damage', 'absorbed', 'move', 'cells',
               'release_tick', 'cast_id', 'until', 'surface', 'phase', 'effective',
@@ -1044,6 +1049,10 @@ def battle_view(game):
                                            or general_cast_move(by_id.get(event.get('actor'), {}).get('kind'),
                                                                 event.get('move'))):
             locks[event['action_id']] = event
+        pin = event['type'] == 'movement_block' and event.get('move') == 'EN20-A'
+        if pin and event['tick'] <= tick <= event['until']:
+            target = event['target']
+            pin_until[target] = max(pin_until.get(target, 0), event['until'])
         if event.get('tick') != battle['tick']:
             continue
         name = event['type']
@@ -1085,7 +1094,7 @@ def battle_view(game):
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
                 or general_event or mimic_started or skill_heal or mist_delay or enemy_event or bone_guard
                 or edge_event or law_event or formatting_event or summon_event or charge_moved
-                or name in CONCEAL_EVENTS):
+                or pin or name in CONCEAL_EVENTS):
             continue
         row = {key: event[key] for key in fields if key in event}
         if name in CONCEAL_EVENTS:
@@ -1141,6 +1150,10 @@ def battle_view(game):
             concealment = actor.get('concealment')
             if not battle.get('result') and concealment_active(concealment, tick):
                 row['concealment'] = {key: concealment[key] for key in ('starts', 'expires', 'distance')}
+            if actor['id'] in pin_until and not battle.get('result'):
+                blocked = min(pin_until[actor['id']], actor.get('blocked_until', 0))
+                if blocked >= tick:
+                    row['pin_until'] = blocked
         side, kind = actor['side'], actor['kind']
         ordinals[side] += 1
         row['badge'] = f"{'我' if side == 'player' else '敌'}{ordinals[side]}"
@@ -1244,7 +1257,8 @@ def combat_notes(events, by_id):
         if kind == 'hit' and last_hit is None:
             last_hit = event
         bone_guard = kind == 'private_shield' and by_id.get(event['actor'], {}).get('kind') == 'EN21'
-        if ((not bone_guard and kind not in CONCEAL_EVENTS
+        pin = kind == 'movement_block' and event.get('move') == 'EN20-A'
+        if ((not bone_guard and not pin and kind not in CONCEAL_EVENTS
              and kind not in ('release', 'heal', 'down', 'boss_phase', 'boss_private_shield', 'skill_miss',
                                            'boss_memory_choice', 'cast_delayed', 'guard_redirect', 'shared_shield'))
                 or (kind == 'release' and (not event.get('move') or event['move'] == 'BASIC'))
@@ -1254,7 +1268,7 @@ def combat_notes(events, by_id):
         if len(notes) >= 8:
             break
     fields = ('id', 'event_id', 'tick', 'type', 'actor', 'target', 'move', 'phase', 'amount',
-              'actual_hp_damage', 'absorbed', 'effective', 'release_tick', 'ward', 'members', 'expires')
+              'actual_hp_damage', 'absorbed', 'effective', 'release_tick', 'ward', 'members', 'expires', 'until')
     return [{key: event[key] for key in fields if key in event}
             | ({'reason': event['reason']} if event['type'] == 'conceal_revealed' and 'reason' in event else {})
             for event in (notes or ([last_hit] if last_hit is not None else []))]

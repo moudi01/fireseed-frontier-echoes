@@ -25,6 +25,9 @@ const En02Profile = preload("res://en02_profile.gd")
 const En05Profile = preload("res://en05_profile.gd")
 const En08Profile = preload("res://en08_profile.gd")
 const En15Profile = preload("res://en15_profile.gd")
+const En19Profile = preload("res://en19_profile.gd")
+const En20Profile = preload("res://en20_profile.gd")
+const GoblinCrossbow = preload("res://goblin_crossbow_actor.gd")
 
 const ASSETS := "res://assets/"
 const ENEMIES := ASSETS + "enemies/"
@@ -112,6 +115,14 @@ static func _build_entries() -> Dictionary:
 	var choir := En15Profile.entry(Admin)
 	choir["assembly"] = "enemy_cast"
 	result["EN15"] = choir
+	var raider := En19Profile.entry(Admin)
+	raider["assembly"] = "enemy_cast"
+	result["EN19"] = raider
+	var crossbow := En20Profile.entry(GoblinCrossbow)
+	crossbow["assembly"] = "enemy_cast"
+	# Local clip time at the authored recoil marker.
+	crossbow["bolt_release_time"] = 0.153
+	result["EN20"] = crossbow
 	var sev := Mg02.profile_entry(Mg02)
 	sev["optional"] = true
 	result["MG02"] = sev

@@ -23,10 +23,12 @@ const Mg04 = Profiles.Mg04
 const Demon = Profiles.Demon
 const Admin = Profiles.Admin
 const En02 = Profiles.En02
+const GoblinCrossbow = Profiles.GoblinCrossbow
 const GENERAL_CAST_MOVES := {
 	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
 	"EN02": [En02.MOVE_ID], "EN05": [Profiles.En05Profile.PROFILE.move], "EN08": [Profiles.En08Profile.PROFILE.move],
 	"EN15": [Profiles.En15Profile.PROFILE.move], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
+	"EN19": [Profiles.En19Profile.PROFILE.move], "EN20": [Profiles.En20Profile.PROFILE.move],
 }
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
@@ -38,7 +40,7 @@ const ADO_PATH := Profiles.ADO_MODEL
 const FORTRESS := Profiles.FORTRESS
 const ADO_ASSET := Profiles.ADO_ASSET
 const GRAY_OAK := "res://assets/gray_oak/"
-const BONE_ARROW_NOSE := 0.22
+const SMALL_ARROW_NOSE := 0.22
 const STING_NOSE := 0.16
 const CONCURRENT_MODEL_LOADS := 4
 const SIDE_PITCH := PI * 44.0 / 180.0
@@ -72,7 +74,7 @@ var audit := {"clips": {}, "contacts": 0, "absorptions": 0, "events": 0, "peak_m
 	"ado_windups": {}, "ado_moves": {}, "ado_shields": 0, "ado_cues": [], "field_props": {},
 	"sev_shots": {},
 	"ado_prepared_before_battle": false, "viewport_resizes_in_battle": 0, "scenery_updates": 0,
-	"bone_arrows": {}, "bone_arrow_flights": 0,
+	"bone_arrows": {}, "bone_arrow_flights": 0, "goblin_bolts": {},
 	"hero_peak": 0, "hero_kinds": {}, "hero_skills": {}}
 var marks: Dictionary = {}
 var ado_traces: Dictionary = {}
@@ -88,7 +90,7 @@ var actor_travels: Dictionary = {}
 var aid_capsules: Dictionary = {}
 var mist_visual: SphereMesh
 var sting_visual: CylinderMesh
-var bone_arrow_visual: CylinderMesh
+var small_arrow_visual: CylinderMesh
 var flying_projectiles: Array[MeshInstance3D] = []
 var spare_projectiles: Array[MeshInstance3D] = []
 var projectile_tweens: Dictionary = {}
@@ -1165,8 +1167,16 @@ func _uses_general_casts(pawn: Variant) -> bool:
 
 func _prepare_general_cast(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 	var pending: Dictionary = row.boss_pending
-	var yaw := _intent_facing(pending.get("facing"), int(row.facing))
+	var facing := _intent_facing(pending.get("facing"), int(row.facing))
+	var yaw := _general_cast_yaw(pawn, str(pending.move_id), pending.get("cells", []), facing)
 	pawn.apply_boss_event("prepare", str(pending.move_id), str(pending.id), yaw, reduced, restore)
+
+
+func _general_cast_yaw(pawn: Node3D, move_id: String, cells: Array, fallback: float) -> float:
+	if move_id not in ["EN19-A", "EN20-A"] or cells.is_empty():
+		return fallback
+	var direction: Vector3 = _world(_at(cells[0])) - pawn.destination
+	return fallback if direction.length_squared() < 0.0001 else _yaw(direction)
 
 
 func _cancel_bow(pawn: Bow) -> void:
@@ -1233,6 +1243,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 	var sting_misses := {}
 	var bone_hits := {}
 	var bone_misses := {}
+	var bolt_contacts := {}
 	var charges := {}
 	for event in events:
 		var kind: String = by_id.get(event.get("actor", ""), {}).get("kind", "")
@@ -1242,6 +1253,8 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			downs[event.actor] = event
 		elif event.type == "charge_move" and kind == "EN02":
 			charges[event.action_id] = event
+		elif event.type == "hit" and event.get("action") == "EN20-A":
+			bolt_contacts[_attack_key(event)] = true
 		elif event.type == "hit" and by_id.get(event.actor, {}).get("kind") == "S02":
 			melee_impacts[_attack_key(event)] = event.target
 		elif event.type == "hit" and kind in ["S03", "M03", "MG02"]:
@@ -1346,7 +1359,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		if general_skill and event.type == "windup" and _uses_general_casts(actor_node) \
 				and source_row.get("boss_pending", {}).get("id") == event.action_id:
 			_prepare_general_cast(actor_node, source_row, false)
-		if general_skill and event.type == "skill_miss" and event_move != "EN05-A":
+		if general_skill and event.type == "skill_miss" and event_move not in ["EN05-A", "EN19-A", "EN20-A"]:
 			_mark(event.actor, source_row.pos, "放空", false)
 		var hero_skill: bool = actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
 		if hero_skill:
@@ -1424,9 +1437,12 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 					contacts[key] = attacker.attack(yaw, contact)
 			elif _uses_general_casts(attacker):
 				if general_skill:
-					yaw = _intent_facing(event.get("facing"), int(source_row.facing))
+					var facing := _intent_facing(event.get("facing"), int(source_row.facing))
+					yaw = _general_cast_yaw(attacker, event_move, event.get("cells", []), facing)
 				contacts[key] = attacker.apply_boss_event("release" if general_skill else "attack",
 					event_move, str(event.get("action_id", "")), yaw, reduced)
+				if attacker is GoblinCrossbow and bolt_contacts.has(key):
+					contacts[key] = _goblin_bolt(attacker, event, contacts[key])
 			elif skill:
 				contacts[key] = attacker.release_gap(event.action_id, yaw, contact, reduced)
 			elif not reduced:
@@ -1615,19 +1631,44 @@ func _bone_arrow_shot(pawn: Node3D, event: Dictionary, by_id: Dictionary, hits: 
 func _launch_bone_arrow(pawn: Node3D, locked_origin: Vector3, landing: Vector3, duration: float) -> void:
 	if not is_instance_valid(pawn):
 		return
-	if bone_arrow_visual == null:
-		var material := StandardMaterial3D.new()
-		material.albedo_color = Color("e8d6a1")
-		bone_arrow_visual = CylinderMesh.new()
-		bone_arrow_visual.top_radius = 0.0
-		bone_arrow_visual.bottom_radius = 0.034
-		bone_arrow_visual.height = BONE_ARROW_NOSE * 2.0
-		bone_arrow_visual.radial_segments = 8
-		bone_arrow_visual.rings = 1
-		bone_arrow_visual.material = material
 	var start: Vector3 = pawn.arrow_origin() if locked_origin == Vector3.INF else locked_origin
 	audit.bone_arrow_flights += 1
-	_launch_projectile(bone_arrow_visual, start, landing, duration, BONE_ARROW_NOSE, true)
+	_launch_projectile(_small_arrow(), start, landing, duration, SMALL_ARROW_NOSE, true)
+
+
+func _small_arrow() -> CylinderMesh:
+	if small_arrow_visual == null:
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color("e8d6a1")
+		small_arrow_visual = CylinderMesh.new()
+		small_arrow_visual.top_radius = 0.0
+		small_arrow_visual.bottom_radius = 0.034
+		small_arrow_visual.height = SMALL_ARROW_NOSE * 2.0
+		small_arrow_visual.radial_segments = 8
+		small_arrow_visual.rings = 1
+		small_arrow_visual.material = material
+	return small_arrow_visual
+
+
+func _goblin_bolt(pawn: Node3D, event: Dictionary, release_delay: float) -> float:
+	var cells: Array = event.get("cells", [])
+	if reduced or cells.size() != 1 or pawn.bolt_origin() == Vector3.INF:
+		return release_delay
+	var landing := _world(_at(cells[0])) + Vector3.UP * 0.85
+	var duration := clampf(pawn.destination.distance_to(landing) / 23.0, 0.08, 0.20)
+	var delay: float = pawn.bolt_delay(release_delay)
+	_defer(delay, _launch_goblin_bolt.bind(pawn, event.action_id, cells[0], landing, duration))
+	return delay + duration
+
+
+func _launch_goblin_bolt(pawn: Node3D, cast_id: String, cell: Array, landing: Vector3, duration: float) -> void:
+	if not is_instance_valid(pawn):
+		return
+	var start: Vector3 = pawn.bolt_origin()
+	if start == Vector3.INF:
+		return
+	audit.goblin_bolts[cast_id] = {"cell": cell, "start": [start.x, start.y, start.z], "flight_seconds": duration}
+	_launch_projectile(_small_arrow(), start, landing, duration, SMALL_ARROW_NOSE, true)
 
 
 func _launch_projectile(mesh: Mesh, start: Vector3, landing: Vector3, duration: float, nose: float, local_y: bool) -> void:

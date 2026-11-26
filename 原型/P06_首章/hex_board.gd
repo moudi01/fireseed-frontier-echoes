@@ -1379,6 +1379,8 @@ func _sync_unit_markers() -> void:
 		var badge: String = "" if _show_deployment and enemy else actor.get("badge", str(int(entry.index) + 1))
 		if actor.has("concealment"):
 			badge += " 雾"
+		if actor.has("pin_until"):
+			badge += " 限移"
 		var label_style := {"enemy": enemy, "modelled": modelled or loading_model, "down": down, "sideways": _sideways,
 			"co_located": down and living_cells.has(cell), "radius": radius, "badge": badge,
 			"health": health, "badge_font_size": impact_font_size if (modelled or loading_model) else 14}
@@ -1537,6 +1539,9 @@ static func impact_text(row: Dictionary) -> String:
 		parts.append("盐弧落空")
 	if row.get("conceal_revealed", false):
 		parts.append("攻击显形")
+	var missed: String = row.get("goblin_miss", "")
+	if not missed.is_empty():
+		parts.append("侧袭落空" if missed == "EN19-A" else "钉脚弩落空")
 	if row.has("ward"):
 		parts.append("代受")
 	if int(row.get("damage", 0)) > 0:
@@ -1566,7 +1571,7 @@ func _draw_combat_impacts() -> void:
 			continue
 		var priority := 5 if actor.id == battle_focus_id else 3 if impact.get("down", false) else 1
 		if priority == 1 and (int(impact.get("choir_healed", 0)) > 0 or impact.get("salt_arc_missed", false)
-				or impact.get("conceal_revealed", false)):
+				or impact.get("conceal_revealed", false) or impact.has("goblin_miss")):
 			priority = 4
 		var protection := impact.has("ward") or impact.has("shared_shield") or impact.has("bone_guard")
 		var support: bool = protection or int(impact.get("healed", 0)) > 0 or int(impact.get("absorbed", 0)) > 0

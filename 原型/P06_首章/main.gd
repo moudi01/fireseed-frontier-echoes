@@ -856,6 +856,10 @@ func _set_danger() -> void:
 			elif conceal:
 				where = "锁定 %d 个结雾目标" % intent.get("locked_targets", []).size()
 				marker = "◇"
+			elif move_id == "EN19-A":
+				where = "锁定 1 格 · 侧后起手"
+			elif move_id == "EN20-A":
+				where = "锁定 1 格 · 射线可挡"
 			var move_name := _combat_move(move_id)
 			var remaining := maxi(0, int(intent.get("due", current["tick"])) - int(current["tick"]))
 			var timer := "%d 拍后" % remaining if remaining > 0 else "本拍释放"
@@ -3745,6 +3749,8 @@ func _battle_health(actor: Dictionary) -> String:
 	var protection := " · 自身盾 %d" % other_shield if other_shield > 0 else ""
 	if actor.has("shared_protection"):
 		protection += " · 共享盾"
+	if actor.has("pin_until"):
+		protection += " · 第 %d 拍限移" % int(actor.pin_until)
 	var concealment: Dictionary = actor.get("concealment", {})
 	var veil := " · " + _concealment_text(concealment) if not concealment.is_empty() else ""
 	return "%s   %s%s%s%s" % [_combatant_name(actor.id), health, phase, protection, veil]
@@ -3806,6 +3812,8 @@ func _update_battle_focus() -> void:
 			int(pool.amount), _combatant_name(pool.owner), int(pool.expires)]
 	if actor.has("concealment"):
 		_battle_detail.text += "\n" + _concealment_text(actor.concealment)
+	if actor.has("pin_until"):
+		_battle_detail.text += "\n钉脚弩 · 第 %d 拍仅限制移动" % int(actor.pin_until)
 	var battle: Dictionary = view.battle_view
 	var impact: Dictionary = battle.get("impacts", {}).get(actor.id, {})
 	if not impact.is_empty():
@@ -3877,6 +3885,9 @@ func _combat_log(snapshot: Dictionary) -> Array[Dictionary]:
 				detail = actor + (" 开始攻击，结雾解除" if event.get("reason") == "attack" else " 显形")
 			"concealment_expired":
 				detail = actor + " 的结雾消散"
+			"movement_block":
+				detail = "%s 的钉脚弩限制 %s 第 %d 拍移动" % [
+					actor, _combatant_name(event.target), int(event.until)]
 			"boss_memory_choice":
 				detail = "已记录阿铎的记忆选择"
 			"hit":
