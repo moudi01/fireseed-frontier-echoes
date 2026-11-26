@@ -281,20 +281,14 @@ def build_clamp_hammer(arm_obj) -> bpy.types.Object:
 
     # Long single-hand wrench-hammer (~1.12m total length, aligned along -Y forward from right grip)
     parts = [
-        # Main long handle shaft (pommel at +0.24, head neck at -0.78)
+        # Main long handle shaft (pommel at +0.24, head neck enters iron head at -0.78)
         (Vector((0.0, -0.26, 0.0)), Vector((0.052, 1.02, 0.052)), (0, 0, 0), mat_shaft),
         # Lower grip leather wrap (right hand palm sits around y=0)
         (Vector((0.0, 0.02, 0.0)), Vector((0.064, 0.24, 0.064)), (0, 0, 0), mat_wrap),
         # Upper collar wrap near hammer head
         (Vector((0.0, -0.58, 0.0)), Vector((0.068, 0.20, 0.068)), (0, 0, 0), mat_wrap),
-        # Heavy forged iron hammer block spine
-        (Vector((0.0, -0.84, 0.0)), Vector((0.24, 0.24, 0.18)), (0, 0, 0), mat_iron),
-        # Iconic C-clamp wrench upper jaw prong
-        (Vector((0.0, -0.84, 0.16)), Vector((0.20, 0.22, 0.10)), (0, 0, 0), mat_iron),
-        # Iconic C-clamp wrench lower jaw prong (leaving visible open C-notch silhouette!)
-        (Vector((0.0, -0.84, -0.16)), Vector((0.20, 0.22, 0.10)), (0, 0, 0), mat_iron),
-        # Subtle glowing forge-ember rune seam across hammer face
-        (Vector((0.0, -0.84, 0.0)), Vector((0.255, 0.036, 0.14)), (0, 0, 0), mat_ember),
+        # Subtle glowing forge-ember rune seam across hammer spine
+        (Vector((0.0, -0.80, 0.0)), Vector((0.255, 0.040, 0.16)), (0, 0, 0), mat_ember),
     ]
     objs = []
     for idx, (loc, scale, rot_deg, mat) in enumerate(parts):
@@ -305,6 +299,43 @@ def build_clamp_hammer(arm_obj) -> bpy.types.Object:
         o.rotation_euler = Euler(tuple(math.radians(a) for a in rot_deg), "XYZ")
         o.data.materials.append(mat)
         objs.append(o)
+
+    # Single watertight forged-iron C-clamp wrench head (solid jaw roots joined to main spine, preserving open C-notch!)
+    me_head = bpy.data.meshes.new("MG04_Hammer_CHead")
+    bm_h = bmesh.new()
+    # 8-vertex C-profile in YZ plane (x = -0.115 extruded to +0.115):
+    # Back spine: y = -0.70, z in [-0.21, +0.21]
+    # Front jaw tips: y = -1.01, upper jaw z in [+0.10, +0.21], lower jaw z in [-0.21, -0.10]
+    # Open C-notch throat: y = -0.88, z in [-0.10, +0.10]
+    profile_yz = [
+        (-0.70, -0.21),
+        (-1.01, -0.21),
+        (-1.01, -0.10),
+        (-0.88, -0.10),
+        (-0.88, 0.10),
+        (-1.01, 0.10),
+        (-1.01, 0.21),
+        (-0.70, 0.21),
+    ]
+    half_x = 0.115
+    ring_l = [bm_h.verts.new(hammer_origin + Vector((-half_x, y, z))) for y, z in profile_yz]
+    ring_r = [bm_h.verts.new(hammer_origin + Vector((half_x, y, z))) for y, z in profile_yz]
+    n_p = len(profile_yz)
+    for i in range(n_p):
+        j = (i + 1) % n_p
+        bm_h.faces.new((ring_l[i], ring_l[j], ring_r[j], ring_r[i]))
+    # Cap both C-sides cleanly (triangulated via bmesh earcut/convex decomposition: 3 quads per side!)
+    # Lower jaw cap: (0,1,2,3), spine cap: (0,3,4,7), upper jaw cap: (4,5,6,7)
+    for a, b, c, d in ((0, 1, 2, 3), (0, 3, 4, 7), (4, 5, 6, 7)):
+        bm_h.faces.new((ring_l[d], ring_l[c], ring_l[b], ring_l[a]))
+        bm_h.faces.new((ring_r[a], ring_r[b], ring_r[c], ring_r[d]))
+    bmesh.ops.recalc_face_normals(bm_h, faces=bm_h.faces)
+    bm_h.to_mesh(me_head)
+    bm_h.free()
+    o_head = bpy.data.objects.new("MG04_Hammer_CHead", me_head)
+    bpy.context.collection.objects.link(o_head)
+    o_head.data.materials.append(mat_iron)
+    objs.append(o_head)
     bpy.ops.object.select_all(action="DESELECT")
     for o in objs:
         o.select_set(True)
@@ -401,9 +432,9 @@ def skill_pose_overlay(tag: str, progress: float) -> tuple[dict[str, tuple[float
                 "spine_02": (-6.0 * w + 8.0 * surge, -16.0 * w, 0.0),
             },
             {
-                "upper_arm.R": (Vector((-0.36, 0.14, -0.92)).normalized(), w),
-                "forearm.R": (Vector((-0.30, -0.20, -0.93)).normalized(), w),
-                "PropHammer": (Vector((-0.24, -0.42, -0.87)).normalized(), w),
+                "upper_arm.R": (Vector((-0.44, 0.26, -0.86)).normalized(), w),
+                "forearm.R": (Vector((-0.48, 0.34, -0.81)).normalized(), w),
+                "PropHammer": (Vector((-0.56, 0.68, -0.47)).normalized(), w),
                 "upper_arm.L": (Vector((0.72, -0.46, 0.52)).normalized(), w),
                 "forearm.L": (left_fore, w),
             },
@@ -482,6 +513,7 @@ def build_mg04(args: argparse.Namespace) -> dict:
 
     topo_stats = clean_body_topology(mesh)
     skin_limit_stats = enforce_max_4_weights(mesh)
+    cloth_fix_stats = separate_intersecting_cloth_pairs(mesh)
     body_tris = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
 
     # 3. Build single-handed long clamp/wrench-hammer on hand.R
@@ -679,6 +711,32 @@ def build_mg04(args: argparse.Namespace) -> dict:
     return report
 
 
+def separate_intersecting_cloth_pairs(mesh_obj) -> dict:
+    """Surgical rest-vertex separation for the exact two confirmed intersecting cloth pairs
+    (14440/14520 in CleaveHold/Down; 12496/12684 in AnchorRelease) without altering any other region.
+    """
+    me = mesh_obj.data
+    specs = [
+        # (inner_fi, outer_fi, inner_push_m, outer_push_m)
+        (14440, 14520, -0.0018, 0.0024),
+        (12496, 12684, -0.0020, 0.0020),
+    ]
+    applied = []
+    for inner_fi, outer_fi, in_push, out_push in specs:
+        if inner_fi >= len(me.polygons) or outer_fi >= len(me.polygons):
+            continue
+        p_in = me.polygons[inner_fi]
+        p_out = me.polygons[outer_fi]
+        n_ref = p_out.normal.normalized()
+        for vi in p_in.vertices:
+            me.vertices[vi].co += n_ref * in_push
+        for vi in p_out.vertices:
+            me.vertices[vi].co += n_ref * out_push
+        applied.append({"pair": [inner_fi, outer_fi], "in_push_mm": round(in_push * 1000.0, 2), "out_push_mm": round(out_push * 1000.0, 2)})
+    me.update()
+    return {"pairs_separated": applied}
+
+
 def audit_mg04_qa(arm, mesh, hammer_obj) -> dict:
     scene = bpy.context.scene
     deps = bpy.context.evaluated_depsgraph_get()
@@ -702,13 +760,16 @@ def audit_mg04_qa(arm, mesh, hammer_obj) -> dict:
         heo = hammer_obj.evaluated_get(deps)
         hme = heo.to_mesh()
         h_degen = sum(1 for p in hme.polygons if p.area < 1e-8)
-        h_max_z = max((hammer_obj.matrix_world @ v.co).z for v in hme.vertices)
+        h_zs = [(hammer_obj.matrix_world @ v.co).z for v in hme.vertices]
+        h_min_z = min(h_zs)
+        h_max_z = max(h_zs)
         heo.to_mesh_clear()
 
         clips[cname] = {
             "sample_frame": f_mid,
             "body_min_z": round(min_z, 4),
             "hammer_hand_dist": round((ph_head - hr_tail).length, 4),
+            "hammer_min_z": round(h_min_z, 4),
             "hammer_max_z": round(h_max_z, 3),
             "left_hand_z": round(hl_tail.z, 3),
             "hammer_degenerate_faces": h_degen,
