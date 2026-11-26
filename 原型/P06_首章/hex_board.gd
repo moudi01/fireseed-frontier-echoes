@@ -22,6 +22,8 @@ const CitadelRing = preload("res://citadel_ring_board.gd")
 const DualFlankRegional = preload("res://dual_flank_regional_art.gd")
 const MIRROR_COVER_PROPS := {"LOW_OBSTACLE": "mirror-plinth", "HIGH_OBSTACLE": "mirror-stele"}
 const SALT_TERRAIN_PROPS := {"LOW_OBSTACLE": "salt-bollard", "HIGH_GROUND": "salt-dais"}
+const RG04_LAKESHORE_ART := "res://assets/salt_crossing/rg04_lakeshore_ink.png"
+const RG04_LAKESHORE_BOARDS := ["SALT_CROSSING", "DRY_ISLAND", "MIRROR_COURT", "OPEN"]
 const FORGE_TERRAIN_PROPS := {
 	"HIGH_OBSTACLE": "forge-pillar", "LOW_OBSTACLE": "forge-anvil", "HIGH_GROUND": "forge-gantry",
 }
@@ -87,6 +89,7 @@ var _pressed_battle_actor := ""
 var _field_art: Texture2D
 var _mirror_court := false
 var _salt_crossing := false
+var _rg04_lakeshore := false
 var _forge_crossing := false
 var _citadel_ring := false
 var _route_art: Texture2D
@@ -344,6 +347,8 @@ func _refresh() -> void:
 	if _route_art != null and (_town or _route_art.resource_path != route_path):
 		_route_art = null
 	var current_site := str(slice.get("site", ""))
+	_rg04_lakeshore = _battle_mode and not _town and slice.get("region") == "RG04" \
+		and current_site != "G" and map_data.get("board_id") in RG04_LAKESHORE_BOARDS
 	_mirror_court = _battle_mode and not _town and map_data.get("board_id") == MirrorCourt.BOARD_ID \
 		and not MirrorCourt.field_art_path(str(slice.get("region", "")), current_site).is_empty()
 	_salt_crossing = _battle_mode and not _town and map_data.get("board_id") == SaltCrossing.BOARD_ID \
@@ -377,7 +382,7 @@ func _refresh() -> void:
 	var terrain_state := [size, _town, _battle_mode, _sideways, art_path, slice.get("region"), slice.get("site"),
 		phase == "MISSING_SEARCH", _show_deployment, _gray_oak_field, _layout_cells, _deployment_cells(),
 		_overlook_width, overlook_path, impact_font_size, _mirror_court, _salt_crossing, _forge_crossing, _citadel_ring,
-		map_data.get("forge_anchors", [])]
+		_rg04_lakeshore, map_data.get("forge_anchors", [])]
 	var terrain_changed := terrain_state != _terrain_state
 	var same_ado_field: bool = not terrain_changed and phase == "BATTLE" \
 		and snapshot.get("encounter") == "BATTLE-MG01" and snapshot.id == stage.battle_id
@@ -421,6 +426,8 @@ func _refresh() -> void:
 				prefix = "salt"
 			stage.set_scenery(_court_scenery(props, prefix) if show_models else {})
 			terrain_changed = terrain_changed or previous_props != stage.scenery.keys()
+		elif _rg04_lakeshore:
+			stage.set_scenery({})
 		elif slice.get("region", "") == "RG02":
 			stage.set_scenery(_fortress_scenery())
 		else:
@@ -749,6 +756,9 @@ func _draw_terrain() -> void:
 		if _citadel_ring and _field_art != null:
 			var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "HIGH_OBSTACLE": []}, "citadel")
 			CitadelRing.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
+		elif _rg04_lakeshore:
+			_draw_water_and_bridges()
+			_draw_lakeshore_terrain()
 		elif _mirror_court and _field_art != null:
 			_draw_mirror_terrain()
 		elif _salt_crossing:
@@ -778,6 +788,8 @@ func _field_art_path(site: String) -> String:
 	if _mirror_court:
 		var mirror_art := MirrorCourt.field_art_path(str(slice.get("region", "")), site)
 		return mirror_art if not mirror_art.is_empty() and ResourceLoader.exists(mirror_art, "Texture2D") else ""
+	if _rg04_lakeshore and site != "G":
+		return RG04_LAKESHORE_ART if ResourceLoader.exists(RG04_LAKESHORE_ART, "Texture2D") else ""
 	var regional := DualFlankRegional.field_art_path(str(slice.get("region", "")), str(map_data.get("board_id", "")))
 	if not regional.is_empty() and ResourceLoader.exists(regional, "Texture2D"):
 		return regional
@@ -864,6 +876,15 @@ func _court_scenery(assets: Dictionary, prefix: String) -> Dictionary:
 
 func _court_prop_id(prefix: String, grid: Vector2i) -> String:
 	return "%s-cover-%d-%d" % [prefix, grid.x, grid.y]
+
+
+func _draw_lakeshore_terrain() -> void:
+	var terrain := {"HIGH_GROUND": [], "LOW_OBSTACLE": [], "HIGH_OBSTACLE": []}
+	for row: Dictionary in _layout_cells:
+		var tag: String = row.get("terrain_id", "")
+		if terrain.has(tag):
+			terrain[tag].append(Vector2i(int(row.q), int(row.r)))
+	MirrorCourt.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
 
 
 func _draw_mirror_terrain() -> void:

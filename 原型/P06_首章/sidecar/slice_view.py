@@ -63,6 +63,7 @@ GENERAL_CAST_MOVES = {
 }
 CONCEAL_EVENTS = {'conceal_ready', 'conceal_miss', 'conceal_revealed', 'concealment_expired'}
 HUNT_BOARD_ART = {'MIRROR_COURT', 'SALT_CROSSING', 'FORGE_CROSSING'}
+RG04_LAKESHORE_BOARDS = {'SALT_CROSSING', 'DRY_ISLAND', 'MIRROR_COURT', 'OPEN'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
 HERO_MOVES = {
     'H01-A', 'H01-B', 'H02-A', 'H02-B', 'H03-A', 'H03-B',
@@ -2359,6 +2360,10 @@ def is_regional_dual_flank(region, board_id):
     return region in ('RG06', 'RG08') and board_id == 'DUAL_FLANK'
 
 
+def is_rg04_lakeshore(region, site, board_id):
+    return region == 'RG04' and site != 'G' and board_id in RG04_LAKESHORE_BOARDS
+
+
 def general_cast_move(kind, move):
     return (move in GENERAL_CAST_MOVES.get(kind, ())
             or (kind == 'DEMON' and isinstance(move, str) and move.startswith('MIMIC-')))
@@ -2409,19 +2414,27 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
         # Live and terminal battle views use this geometry. Exploration is
         # projected again when the battle ends, with the current fog and contacts.
         space = region_space.current(game)
-        if space is not None:
-            binding = space['boards'].get(game.s['site'])
-            if binding and battle_board and battle and battle['battle_id'] == battle_board:
-                # Both grids come from the frozen catalog throughout this battle.
+        region, site = game.s.get('region'), game.s.get('site')
+        rg04_battle = battle is not None and region == 'RG04'
+        if space is not None or rg04_battle:
+            binding = space['boards'].get(site) if space is not None else None
+            board_id = binding['board_id'] if binding else None
+            if rg04_battle:
+                # A hunt or alternate encounter can use a different grid from the route binding.
+                board_id = battle['board_id']
+            if board_id and battle_board and battle and battle['battle_id'] == battle_board:
+                # The cached grids are stable for this battle.
                 board = {'battle_board_ref': battle_board}
                 del slice_view['town_board_cells'], slice_view['town_deploy_cells']
+            elif rg04_battle:
+                board = {'battle_cells': battle['board_cells']}
             else:
-                board = {'battle_cells': game.cat.boards[binding['board_id']]['cells'] if binding else []}
-            if binding and binding['board_id'] in HUNT_BOARD_ART:
-                board['board_id'] = binding['board_id']
-                if binding['board_id'] == 'FORGE_CROSSING' and battle:
+                board = {'battle_cells': game.cat.boards[board_id]['cells'] if board_id else []}
+            if board_id in HUNT_BOARD_ART or is_rg04_lakeshore(region, site, board_id):
+                board['board_id'] = board_id
+                if board_id == 'FORGE_CROSSING' and battle:
                     board['forge_anchors'] = forge_anchors(battle['actors'])
-            if battle and is_regional_dual_flank(game.s.get('region'), battle['board_id']):
+            if battle and is_regional_dual_flank(region, battle['board_id']):
                 board['board_id'] = battle['board_id']
     else:
         field = region_space.public(game)
@@ -2431,7 +2444,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
             board = {key: field[key] for key in map_fields}
             binding = field['battle_binding']
             if field['battle_cells'] and binding and (binding['board_id'] in HUNT_BOARD_ART
-                    or is_regional_dual_flank(game.s.get('region'), binding['board_id'])):
+                    or is_regional_dual_flank(game.s.get('region'), binding['board_id'])
+                    or is_rg04_lakeshore(game.s.get('region'), game.s.get('site'), binding['board_id'])):
                 board['board_id'] = binding['board_id']
                 if binding['board_id'] == 'FORGE_CROSSING':
                     board['forge_anchors'] = forge_anchors(field['preview'])
