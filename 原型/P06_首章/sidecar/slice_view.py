@@ -52,10 +52,12 @@ GENERAL_CAST_MOVES = {
     'ADMIN': {'ADMIN-A', 'ADMIN-B', 'ADMIN-C', 'ADMIN-D'},
     'EN02': {'EN02-A'},
     'EN05': {'EN05-A'},
+    'EN08': {'EN08-A'},
     'EN15': {'EN15-A'},
     'EN16': {'EN16-A'},
     'EN18': {'EN18-A'},
 }
+CONCEAL_EVENTS = {'conceal_ready', 'conceal_miss', 'conceal_revealed', 'concealment_expired'}
 HUNT_BOARD_ART = {'MIRROR_COURT', 'SALT_CROSSING', 'FORGE_CROSSING'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
 HERO_MOVES = {
@@ -954,6 +956,8 @@ def record_impact(impacts, event):
             row['choir_healed'] = row.get('choir_healed', 0) + event['effective']
     elif kind == 'skill_miss' and event.get('move') == 'EN05-A':
         impacts.setdefault(event['actor'], {})['salt_arc_missed'] = True
+    elif kind == 'conceal_revealed' and event.get('reason') == 'attack':
+        impacts.setdefault(event['actor'], {})['conceal_revealed'] = True
     elif kind == 'down':
         impacts.setdefault(event['actor'], {})['down'] = True
     elif kind == 'cast_delayed':
@@ -999,6 +1003,7 @@ def bone_arrow_path(game, battle, archer, locked):
 def battle_view(game):
     from campaign import NAMES
     from book_combat import _private as private_shield
+    from veil import active as concealment_active
 
     state = game.s
     battle = state.get('battle')
@@ -1079,9 +1084,12 @@ def battle_view(game):
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
                 or general_event or mimic_started or skill_heal or mist_delay or enemy_event or bone_guard
-                or edge_event or law_event or formatting_event or summon_event or charge_moved):
+                or edge_event or law_event or formatting_event or summon_event or charge_moved
+                or name in CONCEAL_EVENTS):
             continue
         row = {key: event[key] for key in fields if key in event}
+        if name in CONCEAL_EVENTS:
+            row.update({key: event[key] for key in ('starts', 'expires', 'reason') if key in event})
         if mimic_started:
             row.update({key: event[key] for key in ('source_hero', 'source_move', 'source_action_id')})
         if edge_event:
@@ -1130,6 +1138,9 @@ def battle_view(game):
                 row['private_shield'] = own_shield
             if actor['id'] in shared_by_member:
                 row['shared_protection'] = shared_by_member[actor['id']]
+            concealment = actor.get('concealment')
+            if not battle.get('result') and concealment_active(concealment, tick):
+                row['concealment'] = {key: concealment[key] for key in ('starts', 'expires', 'distance')}
         side, kind = actor['side'], actor['kind']
         ordinals[side] += 1
         row['badge'] = f"{'我' if side == 'player' else '敌'}{ordinals[side]}"
@@ -1199,7 +1210,7 @@ def battle_view(game):
         if (actor['hp'] > 0 and general_cast_move(kind, pending.get('move_id'))
                 and not battle.get('result')):
             row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing', 'cells', 'due')}
-            if kind == 'EN15':
+            if kind in ('EN08', 'EN15'):
                 row['boss_pending']['targets'] = pending.get('targets', [])
         if kind == 'MG01':
             row['memory_pose'] = bool(battle['boss_dialogue_queue'])
@@ -1233,7 +1244,8 @@ def combat_notes(events, by_id):
         if kind == 'hit' and last_hit is None:
             last_hit = event
         bone_guard = kind == 'private_shield' and by_id.get(event['actor'], {}).get('kind') == 'EN21'
-        if ((not bone_guard and kind not in ('release', 'heal', 'down', 'boss_phase', 'boss_private_shield', 'skill_miss',
+        if ((not bone_guard and kind not in CONCEAL_EVENTS
+             and kind not in ('release', 'heal', 'down', 'boss_phase', 'boss_private_shield', 'skill_miss',
                                            'boss_memory_choice', 'cast_delayed', 'guard_redirect', 'shared_shield'))
                 or (kind == 'release' and (not event.get('move') or event['move'] == 'BASIC'))
                 or (kind == 'heal' and not event['effective'])):
@@ -1244,6 +1256,7 @@ def combat_notes(events, by_id):
     fields = ('id', 'event_id', 'tick', 'type', 'actor', 'target', 'move', 'phase', 'amount',
               'actual_hp_damage', 'absorbed', 'effective', 'release_tick', 'ward', 'members', 'expires')
     return [{key: event[key] for key in fields if key in event}
+            | ({'reason': event['reason']} if event['type'] == 'conceal_revealed' and 'reason' in event else {})
             for event in (notes or ([last_hit] if last_hit is not None else []))]
 
 
@@ -2403,7 +2416,7 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                                 **{key: pending.get(key) for key in
                                    ('move_id', 'kind', 'target', 'origin', 'facing', 'due')},
                                 locked_cells=pending.get('cells', []), geometry_complete=False))
-            if actor['kind'] == 'EN15' and pending['move_id'] == 'EN15-A':
+            if (actor['kind'], pending['move_id']) in (('EN08', 'EN08-A'), ('EN15', 'EN15-A')):
                 actions[-1]['locked_targets'] = pending.get('targets', [])
             if pending['move_id'] == 'EN18-A' and pending.get('edge'):
                 actions[-1]['edge'] = pending['edge']

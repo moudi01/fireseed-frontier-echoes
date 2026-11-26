@@ -1018,7 +1018,7 @@ func _draw_overlay() -> void:
 	_draw_locked_edges()
 	_draw_law_target()
 	_draw_weak_points()
-	_draw_choir_targets()
+	_draw_support_targets()
 	_draw_warning_keys()
 	if _battle_mode and not impacts.is_empty() and slice.get("battle_memory", {}).is_empty():
 		_draw_combat_impacts()
@@ -1376,9 +1376,11 @@ func _sync_unit_markers() -> void:
 		var appearance := {"modelled": modelled, "loading": loading_model, "down": down, "enemy": enemy, "sideways": _sideways,
 			"focused": id == focus, "barrier": not down and int(actor.get("private_shield", actor.get("boss_barrier", 0))) > 0,
 			"shared_shield": not down and actor.has("shared_protection"), "radius": radius}
+		var badge: String = "" if _show_deployment and enemy else actor.get("badge", str(int(entry.index) + 1))
+		if actor.has("concealment"):
+			badge += " 雾"
 		var label_style := {"enemy": enemy, "modelled": modelled or loading_model, "down": down, "sideways": _sideways,
-			"co_located": down and living_cells.has(cell), "radius": radius,
-			"badge": "" if _show_deployment and enemy else actor.get("badge", str(int(entry.index) + 1)),
+			"co_located": down and living_cells.has(cell), "radius": radius, "badge": badge,
 			"health": health, "badge_font_size": impact_font_size if (modelled or loading_model) else 14}
 		if marker.appearance != appearance:
 			marker.appearance = appearance
@@ -1533,6 +1535,8 @@ static func impact_text(row: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	if row.get("salt_arc_missed", false):
 		parts.append("盐弧落空")
+	if row.get("conceal_revealed", false):
+		parts.append("攻击显形")
 	if row.has("ward"):
 		parts.append("代受")
 	if int(row.get("damage", 0)) > 0:
@@ -1561,7 +1565,8 @@ func _draw_combat_impacts() -> void:
 		if impact.is_empty() or not coordinate_map.has(cell_index(actor.pos)):
 			continue
 		var priority := 5 if actor.id == battle_focus_id else 3 if impact.get("down", false) else 1
-		if priority == 1 and (int(impact.get("choir_healed", 0)) > 0 or impact.get("salt_arc_missed", false)):
+		if priority == 1 and (int(impact.get("choir_healed", 0)) > 0 or impact.get("salt_arc_missed", false)
+				or impact.get("conceal_revealed", false)):
 			priority = 4
 		var protection := impact.has("ward") or impact.has("shared_shield") or impact.has("bone_guard")
 		var support: bool = protection or int(impact.get("healed", 0)) > 0 or int(impact.get("absorbed", 0)) > 0
@@ -1637,10 +1642,15 @@ static func _choir_support(intent: Dictionary) -> bool:
 	return intent.get("move_id") == "EN15-A" and intent.get("kind") == "heal"
 
 
+static func conceal_support(intent: Dictionary) -> bool:
+	return intent.get("move_id") == "EN08-A" and intent.get("kind") == "conceal"
+
+
 static func warning_numbers(current: Dictionary) -> Dictionary:
 	var numbers := {}
 	for action in current.get("actions", []):
-		if action.get("side") == "enemy" and not _choir_support(action) and not action.get("locked_cells", []).is_empty():
+		if action.get("side") == "enemy" and not _choir_support(action) and not conceal_support(action) \
+				and not action.get("locked_cells", []).is_empty():
 			numbers[action.action_id] = numbers.size() + 1
 	return numbers if numbers.size() > 1 else {}
 
@@ -1651,7 +1661,7 @@ func _layout_danger_cells() -> void:
 	_danger_areas.clear()
 	var numbers := warning_numbers(danger)
 	for action in danger.get("actions", []):
-		if action["side"] != "enemy" or _choir_support(action):
+		if action["side"] != "enemy" or _choir_support(action) or conceal_support(action):
 			continue
 		var cells := {}
 		var roll_call: bool = action.get("move_id") == "MG01-C"
@@ -1791,20 +1801,27 @@ func _draw_locked_edge(edge: Array, closed: bool) -> void:
 		_overlay.draw_dashed_line(ends[0], ends[1], ink, 3.0, 6.0)
 
 
-func _draw_choir_targets() -> void:
-	var ink := Color("9fe7c6")
+func _draw_support_targets() -> void:
 	for action: Dictionary in danger.get("actions", []):
-		if not _choir_support(action):
+		var choir := _choir_support(action)
+		if not choir and not conceal_support(action):
 			continue
+		var ink := Color("9fe7c6") if choir else Color("d9c4fa")
 		for raw_cell in action.get("locked_cells", []):
 			var cell := cell_index(raw_cell)
 			if not coordinate_map.has(cell):
 				continue
 			_draw_hex_highlight(_overlay, cell, Color(ink, 0.10), ink, 2.8)
 			var point: Vector2 = coordinate_map[cell] + Vector2(_scale * 0.6, -_scale * 0.24)
-			_overlay.draw_circle(point, 8.0, Color("20443c"), true, -1.0, true)
-			_overlay.draw_line(point - Vector2(4.0, 0.0), point + Vector2(4.0, 0.0), ink, 2.0, true)
-			_overlay.draw_line(point - Vector2(0.0, 4.0), point + Vector2(0.0, 4.0), ink, 2.0, true)
+			if choir:
+				_overlay.draw_circle(point, 8.0, Color("20443c"), true, -1.0, true)
+				_overlay.draw_line(point - Vector2(4.0, 0.0), point + Vector2(4.0, 0.0), ink, 2.0, true)
+				_overlay.draw_line(point - Vector2(0.0, 4.0), point + Vector2(0.0, 4.0), ink, 2.0, true)
+			else:
+				var diamond := _enemy_base(point, 8.0)
+				_overlay.draw_colored_polygon(diamond, Color("383048"))
+				diamond.append(diamond[0])
+				_overlay.draw_polyline(diamond, ink, 1.8, true)
 
 
 func _draw_weak_points() -> void:

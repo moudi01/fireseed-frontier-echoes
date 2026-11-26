@@ -25,8 +25,8 @@ const Admin = Profiles.Admin
 const En02 = Profiles.En02
 const GENERAL_CAST_MOVES := {
 	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
-	"EN02": [En02.MOVE_ID], "EN05": [Profiles.En05Profile.PROFILE.move], "EN15": [Profiles.En15Profile.PROFILE.move],
-	"EN16": ["EN16-A"], "EN18": ["EN18-A"],
+	"EN02": [En02.MOVE_ID], "EN05": [Profiles.En05Profile.PROFILE.move], "EN08": [Profiles.En08Profile.PROFILE.move],
+	"EN15": [Profiles.En15Profile.PROFILE.move], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
 }
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")

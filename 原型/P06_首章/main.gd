@@ -846,16 +846,21 @@ func _set_danger() -> void:
 				where = "自身" if target == intent.actor_id else "目标 " + _combatant_name(str(target))
 			var move_id: String = intent.get("move_id", "预警")
 			var choir: bool = move_id == "EN15-A" and intent.get("kind") == "heal"
+			var conceal := Board.conceal_support(intent)
+			var marker := "[%d]" % numbers[intent.action_id] if numbers.has(intent.action_id) else "△"
 			if move_id == "MG01-B":
 				where = "蓄势护盾"
 			elif choir:
 				where = "锁定 %d 个治疗目标" % intent.get("locked_targets", []).size()
+				marker = "+"
+			elif conceal:
+				where = "锁定 %d 个结雾目标" % intent.get("locked_targets", []).size()
+				marker = "◇"
 			var move_name := _combat_move(move_id)
 			var remaining := maxi(0, int(intent.get("due", current["tick"])) - int(current["tick"]))
 			var timer := "%d 拍后" % remaining if remaining > 0 else "本拍释放"
-			var marker := "+" if choir else ("[%d]" % numbers[intent.action_id] if numbers.has(intent.action_id) else "△")
 			var line := "%s  %s   ·   %s   ·   %s   ·   %s" % [marker, move_name, timer, _combatant_name(intent.actor_id), where]
-			if choir:
+			if choir or conceal:
 				support_lines.append(line)
 			else:
 				lines.append(line)
@@ -3740,7 +3745,13 @@ func _battle_health(actor: Dictionary) -> String:
 	var protection := " · 自身盾 %d" % other_shield if other_shield > 0 else ""
 	if actor.has("shared_protection"):
 		protection += " · 共享盾"
-	return "%s   %s%s%s" % [_combatant_name(actor.id), health, phase, protection]
+	var concealment: Dictionary = actor.get("concealment", {})
+	var veil := " · " + _concealment_text(concealment) if not concealment.is_empty() else ""
+	return "%s   %s%s%s%s" % [_combatant_name(actor.id), health, phase, protection, veil]
+
+
+static func _concealment_text(concealment: Dictionary) -> String:
+	return "结雾至第 %d 拍 · %d 格外新选目标受限，起攻时显形" % [int(concealment.expires), int(concealment.distance)]
 
 
 func _combatant_name(id: String) -> String:
@@ -3793,6 +3804,8 @@ func _update_battle_focus() -> void:
 	for pool in actor.get("shared_protection", []):
 		_battle_detail.text += "\n共享盾池 %d · %s · 至第 %d 拍" % [
 			int(pool.amount), _combatant_name(pool.owner), int(pool.expires)]
+	if actor.has("concealment"):
+		_battle_detail.text += "\n" + _concealment_text(actor.concealment)
 	var battle: Dictionary = view.battle_view
 	var impact: Dictionary = battle.get("impacts", {}).get(actor.id, {})
 	if not impact.is_empty():
@@ -3856,6 +3869,14 @@ func _combat_log(snapshot: Dictionary) -> Array[Dictionary]:
 				detail = "%s 获得 %s 护盾" % [actor, str(event.amount).trim_suffix(".0")]
 			"private_shield":
 				detail = "%s 架刀获得 %d 点自身护盾，持续至第 %d 拍" % [actor, int(event.amount), int(event.expires)]
+			"conceal_ready":
+				detail = "%s 为 %s 结雾，持续至第 %d 拍" % [actor, _combatant_name(event.target), int(event.expires)]
+			"conceal_miss":
+				detail = "%s 的结雾未能覆盖 %s" % [actor, _combatant_name(event.target)]
+			"conceal_revealed":
+				detail = actor + (" 开始攻击，结雾解除" if event.get("reason") == "attack" else " 显形")
+			"concealment_expired":
+				detail = actor + " 的结雾消散"
 			"boss_memory_choice":
 				detail = "已记录阿铎的记忆选择"
 			"hit":
