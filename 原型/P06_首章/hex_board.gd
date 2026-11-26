@@ -1017,7 +1017,7 @@ func _draw_overlay() -> void:
 	_draw_danger_ranges(_overlay, true)
 	_draw_locked_edges()
 	_draw_law_target()
-	_draw_shell_seams()
+	_draw_weak_points()
 	_draw_choir_targets()
 	_draw_warning_keys()
 	if _battle_mode and not impacts.is_empty() and slice.get("battle_memory", {}).is_empty():
@@ -1531,6 +1531,8 @@ func _draw_unit_label(id: String) -> void:
 
 static func impact_text(row: Dictionary) -> String:
 	var parts: PackedStringArray = []
+	if row.get("salt_arc_missed", false):
+		parts.append("盐弧落空")
 	if row.has("ward"):
 		parts.append("代受")
 	if int(row.get("damage", 0)) > 0:
@@ -1559,7 +1561,7 @@ func _draw_combat_impacts() -> void:
 		if impact.is_empty() or not coordinate_map.has(cell_index(actor.pos)):
 			continue
 		var priority := 5 if actor.id == battle_focus_id else 3 if impact.get("down", false) else 1
-		if priority == 1 and int(impact.get("choir_healed", 0)) > 0:
+		if priority == 1 and (int(impact.get("choir_healed", 0)) > 0 or impact.get("salt_arc_missed", false)):
 			priority = 4
 		var protection := impact.has("ward") or impact.has("shared_shield") or impact.has("bone_guard")
 		var support: bool = protection or int(impact.get("healed", 0)) > 0 or int(impact.get("absorbed", 0)) > 0
@@ -1665,7 +1667,8 @@ func _layout_danger_cells() -> void:
 			mark.roll_call = mark.roll_call or roll_call
 		if not cells.is_empty():
 			_danger_areas.append({"id": action.action_id, "source": action.actor_id, "cells": cells,
-				"roll_call": roll_call, "due": int(action.get("due", danger.tick)), "paths": _warning_boundary(cells),
+				"roll_call": roll_call, "salt_arc": action.get("move_id") == "EN05-A",
+				"due": int(action.get("due", danger.tick)), "paths": _warning_boundary(cells),
 				"number": numbers.get(action.action_id, 0)})
 
 
@@ -1700,6 +1703,9 @@ func _draw_danger_ranges(canvas: CanvasItem, foreground: bool) -> void:
 		var urgent: bool = area.due - int(danger.tick) <= 1
 		var shadow := Color("432930") if area.roll_call else Color("54291f")
 		var ink := Color("e0b8dc") if area.roll_call else Color("ef9e6e")
+		if area.salt_arc:
+			shadow = Color("253749")
+			ink = Color("afe4ef")
 		if focused or urgent:
 			ink = ink.lerp(Color("fff0c9"), 0.52)
 		var width := 3.0 if focused or urgent else 2.2
@@ -1801,17 +1807,23 @@ func _draw_choir_targets() -> void:
 			_overlay.draw_line(point - Vector2(0.0, 4.0), point + Vector2(0.0, 4.0), ink, 2.0, true)
 
 
-func _draw_shell_seams() -> void:
+func _draw_weak_points() -> void:
 	if font == null:
 		return
 	for actor: Dictionary in slice.get("actors", []):
-		if not actor.has("shell_seam"):
+		var seam: Dictionary = actor.get("shell_seam", {})
+		var gland: Dictionary = actor.get("salt_gland", {})
+		if seam.is_empty() and gland.is_empty():
 			continue
 		var cell := cell_index(actor.pos)
 		if not coordinate_map.has(cell):
 			continue
-		var text := "壳缝 · 侧后物理" if actor.shell_seam.requires_side_or_rear else "壳缝"
+		var text := "壳缝 · 侧后物理" if seam.get("requires_side_or_rear", false) else "壳缝"
 		var ink := Color("ffe6a9")
+		if not gland.is_empty():
+			var defense := "侧后魔防" if gland.requires_side_or_rear else "魔防"
+			text = "盐腺 · %s %s" % [defense, str(int(gland.magic_defense_modifier)).replace("-", "−")]
+			ink = Color("afe4ef")
 		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size).x + 16.0
 		var point: Vector2 = coordinate_map[cell]
 		var label_pos := Vector2(clampf(point.x - width * 0.5, 7.0, size.x - width - 7.0),

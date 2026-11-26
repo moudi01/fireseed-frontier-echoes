@@ -25,7 +25,8 @@ const Admin = Profiles.Admin
 const En02 = Profiles.En02
 const GENERAL_CAST_MOVES := {
 	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
-	"EN02": [En02.MOVE_ID], "EN15": [Profiles.En15Profile.PROFILE.move], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
+	"EN02": [En02.MOVE_ID], "EN05": [Profiles.En05Profile.PROFILE.move], "EN15": [Profiles.En15Profile.PROFILE.move],
+	"EN16": ["EN16-A"], "EN18": ["EN18-A"],
 }
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
@@ -1345,7 +1346,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		if general_skill and event.type == "windup" and _uses_general_casts(actor_node) \
 				and source_row.get("boss_pending", {}).get("id") == event.action_id:
 			_prepare_general_cast(actor_node, source_row, false)
-		if general_skill and event.type == "skill_miss":
+		if general_skill and event.type == "skill_miss" and event_move != "EN05-A":
 			_mark(event.actor, source_row.pos, "放空", false)
 		var hero_skill: bool = actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
 		if hero_skill:

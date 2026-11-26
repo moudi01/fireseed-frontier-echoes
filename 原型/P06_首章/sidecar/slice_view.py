@@ -51,6 +51,7 @@ GENERAL_CAST_MOVES = {
     'DEMON': {'DEMON-A', 'DEMON-B', 'DEMON-C', 'DEMON-D'},
     'ADMIN': {'ADMIN-A', 'ADMIN-B', 'ADMIN-C', 'ADMIN-D'},
     'EN02': {'EN02-A'},
+    'EN05': {'EN05-A'},
     'EN15': {'EN15-A'},
     'EN16': {'EN16-A'},
     'EN18': {'EN18-A'},
@@ -951,6 +952,8 @@ def record_impact(impacts, event):
         row['healed'] = row.get('healed', 0) + event['effective']
         if event.get('move') == 'EN15-A':
             row['choir_healed'] = row.get('choir_healed', 0) + event['effective']
+    elif kind == 'skill_miss' and event.get('move') == 'EN05-A':
+        impacts.setdefault(event['actor'], {})['salt_arc_missed'] = True
     elif kind == 'down':
         impacts.setdefault(event['actor'], {})['down'] = True
     elif kind == 'cast_delayed':
@@ -1182,13 +1185,17 @@ def battle_view(game):
                 row['admin_pose'] = 'formatting'
             elif active_law_id:
                 row['admin_pose'] = 'law_named'
-        if kind == 'EN02' and actor['hp'] > 0 and not battle.get('result') and actor['weak_from'] > 0:
+        if kind in ('EN02', 'EN05') and actor['hp'] > 0 and not battle.get('result') and actor['weak_from'] > 0:
             from mechanics import weak_active
 
             if weak_active(actor, battle['tick']):
                 point = actor['weak_point']
-                row['shell_seam'] = dict(start=actor['weak_from'], end=actor['weak_until'],
-                                         requires_side_or_rear=point['requires_side_or_rear'])
+                window = dict(start=actor['weak_from'], end=actor['weak_until'],
+                              requires_side_or_rear=point['requires_side_or_rear'])
+                if kind == 'EN02':
+                    row['shell_seam'] = window
+                else:
+                    row['salt_gland'] = {**window, 'magic_defense_modifier': point['magic_defense_modifier']}
         if (actor['hp'] > 0 and general_cast_move(kind, pending.get('move_id'))
                 and not battle.get('result')):
             row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing', 'cells', 'due')}
