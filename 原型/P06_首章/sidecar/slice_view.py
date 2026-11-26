@@ -45,6 +45,8 @@ SEARCH_ACTIONS = {('investigate', 'inspect', 'tracks'), ('investigate', 'inspect
                   ('investigate', 'return', 'CONFIRM')}
 ADO_MOVES = {'MG01-A', 'MG01-B', 'MG01-C'}
 SEV_MOVES = {'MG02-A', 'MG02-B', 'MG02-C'}
+YILEI_MOVES = {'MG03-A', 'MG03-B', 'MG03-C'}
+HUNT_BOARD_ART = {'MIRROR_COURT', 'SALT_CROSSING'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
 HERO_MOVES = {
     'H01-A', 'H01-B', 'H02-A', 'H02-B', 'H03-A', 'H03-B',
@@ -870,7 +872,7 @@ def battle_view(game):
     for event in ([] if from_history else battle['events']):
         if event['type'] == 'windup' and (event.get('move') in ADO_MOVES or event.get('move') in INFANTRY_MOVES
                                            or event.get('move') in ENEMY_MOVES or event.get('move') in HERO_MOVES
-                                           or event.get('move') in SEV_MOVES):
+                                           or event.get('move') in SEV_MOVES or event.get('move') in YILEI_MOVES):
             locks[event['action_id']] = event
         if event.get('tick') != battle['tick']:
             continue
@@ -891,19 +893,26 @@ def battle_view(game):
         enemy_event = event.get('move') in ENEMY_MOVES and name in ('windup', 'release', 'skill_miss')
         ado_event = (by_id.get(event.get('actor'), {}).get('kind') == 'MG01'
                      and name in ('boss_phase', 'windup', 'release', 'skill_miss', 'boss_private_shield'))
-        sev_actor = by_id.get(event.get('target' if name == 'hero_interrupt' else 'actor'), {})
-        sev_event = sev_actor.get('kind') == 'MG02' and (
-            name in ('hero_interrupt', 'hero_stun_cancel')
-            or (event.get('move') in SEV_MOVES and name in ('windup', 'release', 'boss_private_shield')))
+        boss_actor = by_id.get(event.get('target' if name == 'hero_interrupt' else 'actor'), {})
+        cancel_cast = name in ('hero_interrupt', 'hero_stun_cancel')
+        sev_event = boss_actor.get('kind') == 'MG02' and (
+            cancel_cast or (event.get('move') in SEV_MOVES and name in ('windup', 'release', 'boss_private_shield')))
+        yilei_event = boss_actor.get('kind') == 'MG03' and (
+            cancel_cast or name == 'boss_phase'
+            or (event.get('move') in YILEI_MOVES and name in ('windup', 'release', 'skill_miss', 'boss_private_shield')))
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
-                or aid_heal or mist_delay or enemy_event or bone_guard):
+                or yilei_event or aid_heal or mist_delay or enemy_event or bone_guard):
             continue
         row = {key: event[key] for key in fields if key in event}
-        if (ado_event or sev_event) and name == 'release':
+        if (ado_event or sev_event or yilei_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['cells'] = windup.get('cells', [])
             row['facing'] = windup.get('facing')
+        if yilei_event and name in ('windup', 'release'):
+            lock = event if name == 'windup' else locks.get(event['action_id'], {})
+            row.update({key: lock[key] for key in ('origin', 'facing', 'target', 'interruptible', 'delayable_cast')
+                        if key in lock})
         if (infantry_event or enemy_event or hero_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['target'] = windup.get('target')
@@ -980,6 +989,8 @@ def battle_view(game):
             row['town_defense_bonus'] = actor['town_defense_bonus']
         if kind in HUNT_GENERALS:
             row['boss_phase'] = actor['boss_phase']
+        if kind == 'MG03' and actor['hp'] > 0 and pending.get('move_id') in YILEI_MOVES and not battle.get('result'):
+            row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing', 'cells', 'due')}
         if kind == 'MG01':
             row['memory_pose'] = bool(battle['boss_dialogue_queue'])
             if pending.get('move_id') in ADO_MOVES and not battle.get('result'):
@@ -2128,7 +2139,7 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                 del slice_view['town_board_cells'], slice_view['town_deploy_cells']
             else:
                 board = {'battle_cells': game.cat.boards[binding['board_id']]['cells'] if binding else []}
-            if binding and binding['board_id'] == 'MIRROR_COURT':
+            if binding and binding['board_id'] in HUNT_BOARD_ART:
                 board['board_id'] = binding['board_id']
     else:
         field = region_space.public(game)
@@ -2137,7 +2148,7 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                           'contact', 'deploy_cells', 'battle_cells', 'summary')
             board = {key: field[key] for key in map_fields}
             binding = field['battle_binding']
-            if field['battle_cells'] and binding and binding['board_id'] == 'MIRROR_COURT':
+            if field['battle_cells'] and binding and binding['board_id'] in HUNT_BOARD_ART:
                 board['board_id'] = binding['board_id']
             if field['preview']:
                 from combat import enemy_actor

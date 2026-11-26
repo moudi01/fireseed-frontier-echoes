@@ -16,7 +16,9 @@ const TownGround = preload("res://town_ground.gd")
 const OverlookGround = preload("res://overlook_ground.gd")
 const WetlandBoard = preload("res://wetland_board.gd")
 const MirrorCourt = preload("res://mirror_court_board.gd")
+const SaltCrossing = preload("res://salt_crossing_board.gd")
 const MIRROR_COVER_PROPS := {"LOW_OBSTACLE": "mirror-plinth", "HIGH_OBSTACLE": "mirror-stele"}
+const SALT_TERRAIN_PROPS := {"LOW_OBSTACLE": "salt-bollard", "HIGH_GROUND": "salt-dais"}
 const FORTRESS_COURT_ART := {
 	"B1": "res://assets/fortress/watch_ink_court.png",
 	"B2": "res://assets/fortress/flank_ink_court.png",
@@ -78,6 +80,7 @@ var _drawn_warning_keys: Array[Dictionary] = []
 var _pressed_battle_actor := ""
 var _field_art: Texture2D
 var _mirror_court := false
+var _salt_crossing := false
 var _route_art: Texture2D
 var _prepared_field_art := ""
 var field_art_timings: Array[Dictionary] = []
@@ -328,6 +331,8 @@ func _refresh() -> void:
 	var current_site := str(slice.get("site", ""))
 	_mirror_court = _battle_mode and not _town and map_data.get("board_id") == MirrorCourt.BOARD_ID \
 		and not MirrorCourt.field_art_path(str(slice.get("region", "")), current_site).is_empty()
+	_salt_crossing = _battle_mode and not _town and map_data.get("board_id") == SaltCrossing.BOARD_ID \
+		and not SaltCrossing.field_art_path(str(slice.get("region", "")), current_site).is_empty()
 	var art_path := _field_art_path(current_site) if _battle_mode and not _town else ""
 	if _town_yard:
 		art_path = TOWN_YARD_ART
@@ -352,7 +357,7 @@ func _refresh() -> void:
 		_deploy_hover_cell = Vector2i(999, 999)
 	var terrain_state := [size, _town, _battle_mode, _sideways, art_path, slice.get("region"), slice.get("site"),
 		phase == "MISSING_SEARCH", _show_deployment, _gray_oak_field, _layout_cells, _deployment_cells(),
-		_overlook_width, overlook_path, impact_font_size, _mirror_court]
+		_overlook_width, overlook_path, impact_font_size, _mirror_court, _salt_crossing]
 	var terrain_changed := terrain_state != _terrain_state
 	var same_ado_field: bool = not terrain_changed and phase == "BATTLE" \
 		and snapshot.get("encounter") == "BATTLE-MG01" and snapshot.id == stage.battle_id
@@ -381,9 +386,10 @@ func _refresh() -> void:
 		if _town_yard:
 			_town_landmarks = _town_scenery()
 			stage.set_scenery(_town_landmarks)
-		elif _mirror_court and _field_art != null:
+		elif (_mirror_court or _salt_crossing) and _field_art != null:
 			var previous_props: Array = stage.scenery.keys()
-			stage.set_scenery(_mirror_scenery() if show_models else {})
+			var props := SALT_TERRAIN_PROPS if _salt_crossing else MIRROR_COVER_PROPS
+			stage.set_scenery(_court_scenery(props, "salt" if _salt_crossing else "mirror") if show_models else {})
 			terrain_changed = terrain_changed or previous_props != stage.scenery.keys()
 		elif slice.get("region", "") == "RG02":
 			stage.set_scenery(_fortress_scenery())
@@ -712,6 +718,9 @@ func _draw_terrain() -> void:
 			_draw_water_and_bridges()
 		if _mirror_court and _field_art != null:
 			_draw_mirror_terrain()
+		elif _salt_crossing:
+			var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "SHALLOW_WATER": []}, "salt")
+			SaltCrossing.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
 		else:
 			_draw_ground_obstacles(fortress)
 	if _show_deployment:
@@ -722,6 +731,9 @@ func _draw_terrain() -> void:
 
 
 func _field_art_path(site: String) -> String:
+	if _salt_crossing:
+		var salt_art := SaltCrossing.field_art_path(str(slice.get("region", "")), site)
+		return salt_art if not salt_art.is_empty() and ResourceLoader.exists(salt_art, "Texture2D") else ""
 	if _mirror_court:
 		var mirror_art := MirrorCourt.field_art_path(str(slice.get("region", "")), site)
 		return mirror_art if not mirror_art.is_empty() and ResourceLoader.exists(mirror_art, "Texture2D") else ""
@@ -796,29 +808,33 @@ func _draw_board_legend(text: String, font_px := 15) -> void:
 		_terrain.draw_string(font, Vector2(30, size.y - 22), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_px, TEXT)
 
 
-func _mirror_scenery() -> Dictionary:
+func _court_scenery(assets: Dictionary, prefix: String) -> Dictionary:
 	var props := {}
 	for row in _layout_cells:
-		var asset: String = MIRROR_COVER_PROPS.get(row.get("terrain_id"), "")
+		var asset: String = assets.get(row.get("terrain_id"), "")
 		var grid := Vector2i(int(row.q), int(row.r))
 		if not asset.is_empty() and coordinate_map.has(grid):
-			props[_mirror_cover_id(grid)] = _field_prop(asset, coordinate_map[grid], 0.0)
+			props[_court_prop_id(prefix, grid)] = _field_prop(asset, coordinate_map[grid], 0.0)
 	return props
 
 
-func _mirror_cover_id(grid: Vector2i) -> String:
-	return "mirror-cover-%d-%d" % [grid.x, grid.y]
+func _court_prop_id(prefix: String, grid: Vector2i) -> String:
+	return "%s-cover-%d-%d" % [prefix, grid.x, grid.y]
 
 
 func _draw_mirror_terrain() -> void:
-	# Supply explicit empty groups so the standalone preview's defaults cannot enter the live board.
-	var terrain := {"HIGH_GROUND": [], "LOW_OBSTACLE": [], "HIGH_OBSTACLE": []}
+	var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "HIGH_OBSTACLE": []}, "mirror")
+	MirrorCourt.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
+
+
+func _terrain_without_props(terrain: Dictionary, prefix: String) -> Dictionary:
+	# Explicit groups prevent standalone preview coordinates from entering the live board.
 	for row in _layout_cells:
 		var tag: String = row.get("terrain_id", "")
 		var grid := Vector2i(int(row.q), int(row.r))
-		if terrain.has(tag) and not stage.scenery.has(_mirror_cover_id(grid)):
+		if terrain.has(tag) and not stage.scenery.has(_court_prop_id(prefix, grid)):
 			terrain[tag].append(grid)
-	MirrorCourt.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
+	return terrain
 
 
 func _draw_ground_obstacles(fortress: bool) -> void:

@@ -18,7 +18,9 @@ const RingGuard = Profiles.RingGuard
 const SkeletonEnemy = Profiles.SkeletonEnemy
 const Ado = Profiles.Ado
 const Mg02 = Profiles.Mg02
+const Mg03 = Profiles.Mg03
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
+const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
 const FortressKit = preload("res://fortress_kit.gd")
 const MODEL_PATH := Profiles.SHIELD_MODEL
 const ADO_PATH := Profiles.ADO_MODEL
@@ -377,6 +379,8 @@ func set_scenery(placements: Dictionary) -> void:
 				part = FortressKit.piece(row.asset)
 			elif MirrorCourtKit.supports(row.asset):
 				part = MirrorCourtKit.piece(row.asset)
+			elif SaltCrossingKit.supports(row.asset):
+				part = SaltCrossingKit.piece(row.asset)
 			else:
 				var resource := _scene(row.asset)
 				if resource != null:
@@ -822,6 +826,9 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 		if pawn is Melee and not pawn.gap_cast.is_empty() and float(row.hp) > 0 \
 				and pawn.gap_cast != row.get("melee_pending", {}).get("id", ""):
 			pawn.cancel_gap(reduced)
+		if pawn is Mg03 and not pawn.active_cast.is_empty() and float(row.hp) > 0 \
+				and pawn.active_cast != row.get("boss_pending", {}).get("id", ""):
+			pawn.apply_boss_event("cancel", pawn.active_move, pawn.active_cast, pawn.heading, reduced)
 		if pawn is Bow and not pawn.bow_cast.is_empty() and float(row.hp) > 0 \
 				and pawn.bow_cast != row.get("bow_pending", {}).get("id", ""):
 			_cancel_bow(pawn)
@@ -1048,6 +1055,8 @@ func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Di
 			return pawn.assemble_targeted(scene, travel, profile)
 		"hero":
 			return pawn.assemble_hero(scene, travel, kind, profile)
+		"mg03":
+			return pawn.assemble_mg03(scene, travel, profile)
 		"enemy_spear":
 			return pawn.assemble(scene, true)
 		"skeleton":
@@ -1098,6 +1107,8 @@ func _sync_pose(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 		var action: Dictionary = row.get("boss_pending", {})
 		var yaw := _intent_facing(action.get("facing"), int(row.facing))
 		pawn.show_state(action, yaw, row.get("memory_pose", false), restore)
+	elif pawn is Mg03 and restore and row.get("boss_pending") is Dictionary:
+		_prepare_yilei(pawn, row, true)
 
 
 func _prepare_gap(pawn: Node3D, row: Dictionary, restore: bool) -> void:
@@ -1117,6 +1128,12 @@ func _prepare_bow(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 		pawn.apply_boss_event("prepare", str(pending.id), yaw, reduced, restore)
 	else:
 		pawn.prepare_arrow(str(pending.id), yaw, reduced, restore)
+
+
+func _prepare_yilei(pawn: Mg03, row: Dictionary, restore: bool) -> void:
+	var pending: Dictionary = row.boss_pending
+	var yaw := _intent_facing(pending.get("facing"), int(row.facing))
+	pawn.apply_boss_event("prepare", str(pending.move_id), str(pending.id), yaw, reduced, restore)
 
 
 func _cancel_bow(pawn: Bow) -> void:
@@ -1274,13 +1291,21 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		var actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
 		var event_move := str(event.get("move", ""))
 		var sev_skill: bool = actor_node is Mg02 and event_move in Mg02.MG02_MOVES
+		var yilei_skill: bool = source_row.get("kind") == "MG03" and event_move in Mg03.MG03_MOVES
 		if event.type in ["hero_interrupt", "hero_stun_cancel"]:
 			var cancelled_id: String = event.target if event.type == "hero_interrupt" else event.actor
 			var cancelled = actors.get(cancelled_id, {}).get("node")
 			if cancelled is Mg02 and cancelled.bow_cast == event.get("cast_id", ""):
 				_cancel_bow(cancelled)
-		if sev_skill and event.type == "boss_private_shield" and not downs.has(event.actor):
+			elif cancelled is Mg03 and not cancelled.active_cast.is_empty() and cancelled.active_cast == event.get("cast_id", ""):
+				cancelled.apply_boss_event("cancel", cancelled.active_move, cancelled.active_cast, cancelled.heading, reduced)
+		if (sev_skill or yilei_skill) and event.type == "boss_private_shield" and not downs.has(event.actor):
 			_mark(event.actor, source_row.pos, "护盾 +%d" % int(event.amount), true)
+		if yilei_skill and event.type == "windup" and actor_node is Mg03 \
+				and source_row.get("boss_pending", {}).get("id") == event.action_id:
+			_prepare_yilei(actor_node, source_row, false)
+		if yilei_skill and event.type == "skill_miss":
+			_mark(event.actor, source_row.pos, "放空", false)
 		var hero_skill: bool = actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
 		if hero_skill:
 			if event.type == "windup" and by_id[event.actor].get("hero_pending", {}).get("id") == event.action_id:
@@ -1306,7 +1331,8 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				_prepare_targeted(actor_node, pending, false)
 			elif actor_node.effect == "mist" and event.type == "skill_miss":
 				_mark(event.actor, source_row.pos, "放空", false)
-		var attack: bool = event.type == "basic_start" or ((skill or piercing or targeted_skill or hero_skill or sev_skill) and event.type == "release")
+		var skill_release: bool = event.type == "release" and (skill or piercing or targeted_skill or hero_skill or sev_skill or yilei_skill)
+		var attack: bool = event.type == "basic_start" or skill_release
 		if attack and actors.has(event.actor) and actors[event.actor].node is Actor:
 			var attacker = actors[event.actor].node
 			var key := _attack_key(event)
@@ -1346,7 +1372,12 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			var direction: Vector3 = Vector3.ZERO if target.is_empty() else _world(_at(target.pos)) - attacker.destination
 			var yaw: float = attacker.heading if direction.length_squared() < 0.0001 else _yaw(direction)
 			var contact := _emit_attack_contact if not attacker is Melee or melee_impacts.has(key) else Callable()
-			if skill:
+			if attacker is Mg03:
+				if yilei_skill:
+					yaw = _intent_facing(event.get("facing"), int(source_row.facing))
+				contacts[key] = attacker.apply_boss_event("release" if yilei_skill else "attack",
+					event_move, str(event.get("action_id", "")), yaw, reduced)
+			elif skill:
 				contacts[key] = attacker.release_gap(event.action_id, yaw, contact, reduced)
 			elif not reduced:
 				contacts[key] = attacker.attack(yaw, contact)
@@ -1406,11 +1437,23 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			else:
 				show_delay.call()
 	for id in reactions:
-		actors[id].node.react(reactions[id].clip, reactions[id].lag, reduced)
+		var pawn: Node3D = actors[id].node
+		var lag: float = reactions[id].lag
+		if pawn is Mg03:
+			var hit: Callable = pawn.apply_boss_event.bind("hit", "", "", pawn.heading, reduced)
+			if lag > 0.0:
+				_defer(lag, hit)
+			else:
+				hit.call()
+		else:
+			pawn.react(reactions[id].clip, lag, reduced)
 	for id in downs:
 		if actors.has(id):
 			var pawn = actors[id].node
 			var delay := float(downs[id].get("lag", 0.0))
+			if pawn is Mg03:
+				pawn.active_cast = ""
+				pawn.active_move = ""
 			if pawn is Actor:
 				pawn.react(Actor.DOWN, delay, reduced)
 			else:
