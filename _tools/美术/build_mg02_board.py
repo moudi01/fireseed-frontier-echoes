@@ -54,6 +54,22 @@ COAT_BONES = [
 ]
 
 WEAPON_BONES = ["Weapon", "StringTop", "StringBottom", "HeldArrow", "FlightArrow"]
+# Distinct rest-pose offsets above Z=0 so unmodified rest meshes have zero z-fighting and ground_z=0.
+# Animated keyframes subtract each bone's rest head so runtime world transforms are 100% preserved.
+WEAPON_REST_OFFSETS = {
+    "Weapon": Vector((0.0, 0.0, 1.18)),
+    "StringTop": Vector((0.0, 0.08, 1.36)),
+    "StringBottom": Vector((0.0, 0.08, 0.96)),
+    "HeldArrow": Vector((0.12, 0.0, 1.18)),
+    "FlightArrow": Vector((-0.12, 0.0, 1.18)),
+}
+WEAPON_MESH_BONE = {
+    "Combat_bow": "Weapon",
+    "Combat_String_0": "StringTop",
+    "Combat_String_1": "StringBottom",
+    "Combat_arrow": "HeldArrow",
+    "Combat_flying_arrow": "FlightArrow",
+}
 WEAPON_MESHES = [
     "Combat_bow",
     "Combat_arrow",
@@ -219,6 +235,46 @@ def style_weapon_materials() -> None:
             obj.data.materials.append(bone_mat)
 
 
+def enforce_max_4_weights(mesh_obj) -> dict:
+    """Explicitly keep top-4 strongest bone weights per vertex and normalize to 1.0."""
+    vgroups = mesh_obj.vertex_groups
+    before_over4 = 0
+    after_over4 = 0
+    unweighted = 0
+    for v in mesh_obj.data.vertices:
+        weights = [(g.group, float(g.weight)) for g in v.groups if g.weight > 1e-6]
+        if len(weights) > 4:
+            before_over4 += 1
+        if not weights:
+            unweighted += 1
+            continue
+        weights.sort(key=lambda item: item[1], reverse=True)
+        kept = weights[:4]
+        dropped = weights[4:]
+        total = sum(w for _, w in kept)
+        if total <= 1e-8:
+            unweighted += 1
+            continue
+        for g_idx, _ in dropped:
+            vgroups[g_idx].remove([v.index])
+        for g_idx, w in kept:
+            vgroups[g_idx].add([v.index], w / total, "REPLACE")
+        # Remove any tiny residual entries <= 1e-6
+        kept_ids = {g_idx for g_idx, _ in kept}
+        for g in list(v.groups):
+            if g.group not in kept_ids:
+                vgroups[g.group].remove([v.index])
+    for v in mesh_obj.data.vertices:
+        if sum(1 for g in v.groups if g.weight > 1e-6) > 4:
+            after_over4 += 1
+    return {
+        "verts": len(mesh_obj.data.vertices),
+        "before_over_4": before_over4,
+        "after_over_4": after_over4,
+        "unweighted": unweighted,
+    }
+
+
 def build_mg02(args: argparse.Namespace) -> dict:
     donor = sample_donor(args.donor)
 
@@ -267,7 +323,8 @@ def build_mg02(args: argparse.Namespace) -> dict:
     mod.use_collapse_triangulate = True
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
-    # Ensure vertex normals / smooth shading clean
+    # Ensure vertex normals / smooth shading clean and cap skinning to top-4 normalized weights
+    skin_limit_stats = enforce_max_4_weights(mesh)
     mesh_tris = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
 
     # 3. Append weapon meshes from donor and add weapon bones to RIG_MG02
@@ -279,7 +336,7 @@ def build_mg02(args: argparse.Namespace) -> dict:
             scene.collection.objects.link(obj)
             weapon_objs.append(obj)
 
-    # Add 5 weapon bones under root in Edit Mode (matching donor rest origin (0,0,0)->(0,0.1,0))
+    # Add 5 weapon bones under root in Edit Mode at distinct non-overlapping rest offsets above Z=0
     bpy.ops.object.select_all(action="DESELECT")
     arm.select_set(True)
     bpy.context.view_layer.objects.active = arm
@@ -287,26 +344,28 @@ def build_mg02(args: argparse.Namespace) -> dict:
     eb_root = arm.data.edit_bones["root"]
     for wb in WEAPON_BONES:
         eb = arm.data.edit_bones.new(wb)
-        eb.head = Vector((0.0, 0.0, 0.0))
-        eb.tail = Vector((0.0, 0.1, 0.0))
+        off = WEAPON_REST_OFFSETS[wb]
+        eb.head = off.copy()
+        eb.tail = off + Vector((0.0, 0.1, 0.0))
         eb.parent = eb_root
         eb.use_connect = False
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Rebind appended weapon meshes to RIG_MG02
+    # Rebind appended weapon meshes to RIG_MG02, translating rest vertices to match each bone's rest head
     weapon_scale = TARGET_HEIGHT / 1.72
     for wobj in weapon_objs:
         wobj.parent = arm
         wobj.parent_type = "OBJECT"
         wobj.matrix_parent_inverse = Matrix.Identity(4)
-        wobj.location = Vector((0.0, 0.0, 0.0))
+        off = WEAPON_REST_OFFSETS[WEAPON_MESH_BONE[wobj.name]]
+        wobj.location = off.copy()
         wobj.rotation_euler = (0.0, 0.0, 0.0)
         wobj.scale = (weapon_scale, weapon_scale, weapon_scale)
-        # Apply scale to mesh data so bone skinning matches 1:1
+        # Apply location & scale to mesh data so rest pose has zero overlap and bone skinning matches 1:1
         bpy.ops.object.select_all(action="DESELECT")
         wobj.select_set(True)
         bpy.context.view_layer.objects.active = wobj
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        bpy.ops.object.transform_apply(location=True, rotation=False, scale=True)
         # Point existing armature modifier to RIG_MG02
         found_arm_mod = False
         for m in wobj.modifiers:
@@ -393,14 +452,16 @@ def build_mg02(args: argparse.Namespace) -> dict:
 
                 bpy.context.view_layer.update()
 
-            # Clamp feet Z so MG02 stays grounded on non-down clips
+            # Clamp SK_MG02 evaluated mesh lowest vertex to Z>=0 on non-down clips (prevents claw sink)
             if out_name != "BowDown":
-                fl_z = (arm.matrix_world @ arm.pose.bones["foot.L"].tail).z
-                fr_z = (arm.matrix_world @ arm.pose.bones["foot.R"].tail).z
-                min_foot_z = min(fl_z, fr_z)
-                if min_foot_z < 0.02:
+                deps = bpy.context.evaluated_depsgraph_get()
+                eo = mesh.evaluated_get(deps)
+                me = eo.to_mesh()
+                min_mesh_z = min((mesh.matrix_world @ v.co).z for v in me.vertices)
+                eo.to_mesh_clear()
+                if min_mesh_z < 0.0:
                     pb_p = arm.pose.bones["pelvis"]
-                    lift_w = Vector((0.0, 0.0, 0.02 - min_foot_z))
+                    lift_w = Vector((0.0, 0.0, -min_mesh_z))
                     parent_pose_w = (arm.matrix_world @ pb_p.parent.matrix).to_3x3().normalized()
                     inherited_w = parent_pose_w @ t_rest_rot["root"].inverted() @ t_rest_rot["pelvis"]
                     pb_p.location += inherited_w.inverted() @ lift_w
@@ -414,7 +475,7 @@ def build_mg02(args: argparse.Namespace) -> dict:
                     if cpb:
                         cpb.rotation_quaternion = Quaternion((1, 0, 0), th.x * sign)
 
-            # Position weapon bones relative to posed hand.L so bow sits directly in Sev's left grip!
+            # Position weapon bones relative to posed hand.L, subtracting rest head so world pose is exact!
             d_hand_l_pos = sample["bones"]["LeftHand"][0]
             t_hand_l_pos = arm.matrix_world @ arm.pose.bones["hand.L"].head
             for wb in WEAPON_BONES:
@@ -422,9 +483,8 @@ def build_mg02(args: argparse.Namespace) -> dict:
                 rel = (w_pos - d_hand_l_pos) * weapon_scale
                 target_w_pos = t_hand_l_pos + rel
                 pb_w = arm.pose.bones[wb]
-                # Weapon bone rest is at origin with +Y tail -> matrix_local maps local +Y to world +Y
                 w_rest_w = t_rest_rot[wb]
-                pb_w.location = w_rest_w.inverted() @ target_w_pos
+                pb_w.location = w_rest_w.inverted() @ (target_w_pos - t_rest_head[wb])
                 pb_w.rotation_quaternion = (w_rest_w.inverted() @ w_quat.to_matrix()).to_quaternion().normalized()
                 pb_w.scale = w_scale
 
@@ -451,6 +511,9 @@ def build_mg02(args: argparse.Namespace) -> dict:
         strip = tr.strips.new(out_name, int(clip_data["f0"]), act)
         strip.action_frame_start = clip_data["f0"]
         strip.action_frame_end = clip_data["f1"]
+
+    # 5b. Audit prepare/hold/release/cancel/guard/attack frames for arrow & string integrity
+    bow_state_audit = audit_bow_states(arm)
 
     # Set default active pose to BowGuard frame 1
     activate_action(arm, bpy.data.actions["BowGuard"])
@@ -481,7 +544,7 @@ def build_mg02(args: argparse.Namespace) -> dict:
         export_yup=True,
     )
 
-    # 8. Optional pose proof render (4 poses in Workbench headless)
+    # 8. Optional pose proof render
     if args.out_proof:
         render_pose_proof(arm, Path(args.out_proof))
 
@@ -493,6 +556,9 @@ def build_mg02(args: argparse.Namespace) -> dict:
     re_tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in re_meshes)
     re_actions = {a.name: [round(a.frame_range[0], 1), round(a.frame_range[1], 1)] for a in bpy.data.actions}
     re_bones = [b.name for b in re_arm.data.bones] if re_arm else []
+    re_over4 = {}
+    for o in re_meshes:
+        re_over4[o.name] = sum(1 for v in o.data.vertices if sum(1 for g in v.groups if g.weight > 1e-6) > 4)
     report = {
         "source_blend": args.source,
         "source_blend_sha256": sha256_file(Path(args.source)),
@@ -503,8 +569,11 @@ def build_mg02(args: argparse.Namespace) -> dict:
         "out_glb_sha256": sha256_file(out_glb),
         "out_blend": str(out_blend),
         "out_blend_bytes": out_blend.stat().st_size,
+        "out_blend_sha256": sha256_file(out_blend),
         "target_height": TARGET_HEIGHT,
         "decimated_body_tris": mesh_tris,
+        "skin_limit_4": skin_limit_stats,
+        "bow_state_audit": bow_state_audit,
         "roundtrip": {
             "armature": re_arm.name if re_arm else None,
             "bone_count": len(re_bones),
@@ -513,6 +582,7 @@ def build_mg02(args: argparse.Namespace) -> dict:
             "has_combat_flying_arrow": any("Combat_flying_arrow" in o.name for o in re_meshes),
             "has_combat_arrow": any(o.name == "Combat_arrow" for o in re_meshes),
             "total_tris": re_tris,
+            "verts_over_4_influences": re_over4,
             "material_count": len(bpy.data.materials),
             "image_count": len(bpy.data.images),
             "action_count": len(re_actions),
@@ -525,6 +595,73 @@ def build_mg02(args: argparse.Namespace) -> dict:
     out_report.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print("MG02_BUILD_OK:", json.dumps(report["roundtrip"], ensure_ascii=False))
     return report
+
+
+def audit_bow_states(arm) -> dict:
+    """Check visible vs intentionally hidden arrow & string geometry across all bow combat clips."""
+    scene = bpy.context.scene
+    deps = bpy.context.evaluated_depsgraph_get()
+    clips_to_check = ["BowLoad", "BowAim", "BowRelease", "BowCancelLoaded", "BowGuard", "BowAttack"]
+    out = {}
+    for cname in clips_to_check:
+        act = bpy.data.actions[cname]
+        activate_action(arm, act)
+        f0, f1 = int(round(act.frame_range[0])), int(round(act.frame_range[1]))
+        held_vis, held_hid, fly_vis, fly_hid = [], [], [], []
+        both_visible = 0
+        visible_degen = 0
+        string_degen = 0
+        held_transitions = 0
+        prev_held = None
+        for f in range(f0, f1 + 1):
+            scene.frame_set(f)
+            bpy.context.view_layer.update()
+            h_sc = arm.pose.bones["HeldArrow"].scale.length
+            f_sc = arm.pose.bones["FlightArrow"].scale.length
+            h_on = h_sc > 0.1
+            f_on = f_sc > 0.1
+            if h_on:
+                held_vis.append(f)
+            else:
+                held_hid.append(f)
+            if f_on:
+                fly_vis.append(f)
+            else:
+                fly_hid.append(f)
+            if h_on and f_on:
+                both_visible += 1
+            if prev_held is not None and h_on != prev_held:
+                held_transitions += 1
+            prev_held = h_on
+
+            # Check geometry non-degeneracy on every visible arrow and on both strings
+            checks = [("Combat_String_0", True), ("Combat_String_1", True)]
+            if h_on:
+                checks.append(("Combat_arrow", False))
+            if f_on:
+                checks.append(("Combat_flying_arrow", False))
+            for oname, is_str in checks:
+                eo = bpy.data.objects[oname].evaluated_get(deps)
+                me = eo.to_mesh()
+                degen = sum(1 for p in me.polygons if p.area < 1e-8)
+                eo.to_mesh_clear()
+                if degen > 0:
+                    if is_str:
+                        string_degen += degen
+                    else:
+                        visible_degen += degen
+        out[cname] = {
+            "frames": [f0, f1],
+            "held_visible_count": len(held_vis),
+            "held_hidden_count": len(held_hid),
+            "flight_visible_count": len(fly_vis),
+            "flight_hidden_count": len(fly_hid),
+            "both_arrows_visible_frames": both_visible,
+            "held_visibility_transitions": held_transitions,
+            "visible_arrow_degenerate_faces": visible_degen,
+            "string_degenerate_faces": string_degen,
+        }
+    return out
 
 
 def render_pose_proof(arm, out_path: Path) -> None:
