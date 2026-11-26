@@ -484,18 +484,18 @@ def build_demon(args: argparse.Namespace) -> dict:
                     apply_world_dir_target(arm, bn, target_dir_w, blend, t_rest_rot)
             bpy.context.view_layer.update()
 
-            if out_name != "DemonDown":
-                eo = mesh.evaluated_get(deps)
-                me = eo.to_mesh()
-                min_z = min((mesh.matrix_world @ v.co).z for v in me.vertices)
-                eo.to_mesh_clear()
-                if min_z < 0.0:
-                    pb_p = arm.pose.bones["pelvis"]
-                    lift_w = Vector((0.0, 0.0, -min_z))
-                    parent_pose_w = (arm.matrix_world @ pb_p.parent.matrix).to_3x3().normalized()
-                    inherited_w = parent_pose_w @ t_rest_rot["root"].inverted() @ t_rest_rot["pelvis"]
-                    pb_p.location += inherited_w.inverted() @ lift_w
-                    bpy.context.view_layer.update()
+            eo = mesh.evaluated_get(deps)
+            me = eo.to_mesh()
+            min_z = min((mesh.matrix_world @ v.co).z for v in me.vertices)
+            eo.to_mesh_clear()
+            # Clamp floor contact on EVERY clip including DemonDown (fall contact & resting pose)
+            if min_z < 0.0:
+                pb_p = arm.pose.bones["pelvis"]
+                lift_w = Vector((0.0, 0.0, -min_z))
+                parent_pose_w = (arm.matrix_world @ pb_p.parent.matrix).to_3x3().normalized()
+                inherited_w = parent_pose_w @ t_rest_rot["root"].inverted() @ t_rest_rot["pelvis"]
+                pb_p.location += inherited_w.inverted() @ lift_w
+                bpy.context.view_layer.update()
 
             for t_bn, _, _ in BONE_MAP:
                 pb = arm.pose.bones[t_bn]
@@ -620,7 +620,7 @@ def audit_demon_qa(arm, mesh) -> dict:
 
         hr_z = (arm.matrix_world @ arm.pose.bones["hand.R"].tail).z
         hl_z = (arm.matrix_world @ arm.pose.bones["hand.L"].tail).z
-        clips[cname] = {
+        row = {
             "sample_frame": f_mid,
             "body_min_z": round(min_z, 4),
             "body_max_z": round(max_z, 3),
@@ -628,6 +628,30 @@ def audit_demon_qa(arm, mesh) -> dict:
             "left_hand_z": round(hl_z, 3),
             "degenerate_faces": degen,
         }
+        if cname == "DemonDown":
+            f0, f1 = int(round(act.frame_range[0])), int(round(act.frame_range[1]))
+            hf_min = 999.0
+            hf_worst = float(f0)
+            sub_3cm = 0
+            cur = float(f0)
+            while cur <= float(f1) + 1e-4:
+                fi = int(math.floor(cur))
+                scene.frame_set(fi, subframe=cur - fi)
+                bpy.context.view_layer.update()
+                heo = mesh.evaluated_get(deps)
+                hme = heo.to_mesh()
+                mz = min((mesh.matrix_world @ v.co).z for v in hme.vertices)
+                heo.to_mesh_clear()
+                if mz < hf_min:
+                    hf_min = mz
+                    hf_worst = cur
+                if mz < -0.03:
+                    sub_3cm += 1
+                cur += 0.5
+            row["half_frame_min_z"] = round(hf_min, 5)
+            row["half_frame_worst"] = round(hf_worst, 1)
+            row["samples_below_neg_3cm"] = sub_3cm
+        clips[cname] = row
     return {"clips": clips}
 
 
@@ -652,6 +676,9 @@ def render_pose_proof(arm, out_dir: Path) -> None:
     scene.camera = cam
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    down_act = bpy.data.actions["DemonDown"]
+    down_f0 = int(round(down_act.frame_range[0]))
+    down_f1 = int(round(down_act.frame_range[1]))
     for suffix, cname, fr in [
         ("0_idle", "DemonIdle", 10),
         ("1_A_order", "DemonOrderHold", 20),
@@ -659,6 +686,8 @@ def render_pose_proof(arm, out_dir: Path) -> None:
         ("3_C_shield", "DemonShieldHold", 20),
         ("4_D_collapse", "DemonCollapseHold", 20),
         ("5_M_mimic", "DemonMimicHold", 20),
+        ("6_down_start", "DemonDown", down_f0),
+        ("7_down_end", "DemonDown", down_f1),
     ]:
         activate_action(arm, bpy.data.actions[cname])
         scene.frame_set(fr)
