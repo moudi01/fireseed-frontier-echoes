@@ -20,6 +20,8 @@ const Mg04 = preload("res://mg04_actor.gd")
 const Demon = preload("res://demon_actor.gd")
 const Admin = preload("res://admin_actor.gd")
 const AdminGuards = preload("res://admin_guard_profiles.gd")
+const En02 = preload("res://en02_actor.gd")
+const En02Profile = preload("res://en02_profile.gd")
 
 const ASSETS := "res://assets/"
 const ENEMIES := ASSETS + "enemies/"
@@ -95,6 +97,9 @@ static var entries: Dictionary = _build_entries()
 
 static func _build_entries() -> Dictionary:
 	var result := STANDARD.duplicate()
+	var charger := En02Profile.entry(En02)
+	charger["assembly"] = "charge"
+	result["EN02"] = charger
 	var sev := Mg02.profile_entry(Mg02)
 	sev["optional"] = true
 	result["MG02"] = sev

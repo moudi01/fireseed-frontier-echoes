@@ -1017,6 +1017,7 @@ func _draw_overlay() -> void:
 	_draw_danger_ranges(_overlay, true)
 	_draw_locked_edges()
 	_draw_law_target()
+	_draw_shell_seams()
 	_draw_warning_keys()
 	if _battle_mode and not impacts.is_empty() and slice.get("battle_memory", {}).is_empty():
 		_draw_combat_impacts()
@@ -1775,6 +1776,28 @@ func _draw_locked_edge(edge: Array, closed: bool) -> void:
 	else:
 		_overlay.draw_dashed_line(ends[0], ends[1], dark, 7.0, 6.0)
 		_overlay.draw_dashed_line(ends[0], ends[1], ink, 3.0, 6.0)
+
+
+func _draw_shell_seams() -> void:
+	if font == null:
+		return
+	for actor: Dictionary in slice.get("actors", []):
+		if not actor.has("shell_seam"):
+			continue
+		var cell := cell_index(actor.pos)
+		if not coordinate_map.has(cell):
+			continue
+		var text := "壳缝 · 侧后物理" if actor.shell_seam.requires_side_or_rear else "壳缝"
+		var ink := Color("ffe6a9")
+		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size).x + 16.0
+		var point: Vector2 = coordinate_map[cell]
+		var label_pos := Vector2(clampf(point.x - width * 0.5, 7.0, size.x - width - 7.0),
+			maxf(7.0, point.y - 58.0))
+		var badge := Rect2(label_pos, Vector2(width, impact_font_size + 9.0))
+		_overlay.draw_rect(badge, Color("3e2924", 0.94))
+		_overlay.draw_rect(badge, ink, false, 1.5)
+		_overlay.draw_string(font, label_pos + Vector2(8.0, impact_font_size + 2.0),
+			text, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size, ink)
 
 
 func _draw_law_target() -> void:

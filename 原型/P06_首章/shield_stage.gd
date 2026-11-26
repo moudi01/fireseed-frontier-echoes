@@ -22,9 +22,10 @@ const Mg03 = Profiles.Mg03
 const Mg04 = Profiles.Mg04
 const Demon = Profiles.Demon
 const Admin = Profiles.Admin
+const En02 = Profiles.En02
 const GENERAL_CAST_MOVES := {
 	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
-	"EN16": ["EN16-A"], "EN18": ["EN18-A"],
+	"EN02": [En02.MOVE_ID], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
 }
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
@@ -844,6 +845,8 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 			pawn.apply_boss_event("cancel", pawn.active_move, pawn.active_cast, pawn.heading, reduced)
 		if pawn is Admin and row.kind == "ADMIN" and float(row.hp) > 0:
 			pawn.apply_state_pose(str(row.get("admin_pose", "")), pawn.heading, reduced, restore)
+		if pawn is En02 and float(row.hp) > 0:
+			pawn.apply_shell_seam(row.has("shell_seam"), reduced, restore)
 		if pawn is Bow and not pawn.bow_cast.is_empty() and float(row.hp) > 0 \
 				and pawn.bow_cast != row.get("bow_pending", {}).get("id", ""):
 			_cancel_bow(pawn)
@@ -1080,6 +1083,8 @@ func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Di
 			return pawn.assemble_admin(scene, travel, profile)
 		"admin_guard":
 			return pawn.assemble_guard(scene, travel, profile)
+		"charge":
+			return pawn.assemble_charge(scene, travel, profile)
 		"enemy_spear":
 			return pawn.assemble(scene, true)
 		"skeleton":
@@ -1154,7 +1159,7 @@ func _prepare_bow(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 
 
 func _uses_general_casts(pawn: Variant) -> bool:
-	return pawn is Mg03 or pawn is Mg04 or pawn is Demon or pawn is Admin
+	return pawn is Mg03 or pawn is Mg04 or pawn is Demon or pawn is Admin or pawn is En02
 
 
 func _prepare_general_cast(pawn: Node3D, row: Dictionary, restore: bool) -> void:
@@ -1227,12 +1232,15 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 	var sting_misses := {}
 	var bone_hits := {}
 	var bone_misses := {}
+	var charges := {}
 	for event in events:
 		var kind: String = by_id.get(event.get("actor", ""), {}).get("kind", "")
 		var profile: Dictionary = Profiles.TARGETED.get(kind, {})
 		var effect: String = profile.get("effect", "")
 		if event.type == "down":
 			downs[event.actor] = event
+		elif event.type == "charge_move" and kind == "EN02":
+			charges[event.action_id] = event
 		elif event.type == "hit" and by_id.get(event.actor, {}).get("kind") == "S02":
 			melee_impacts[_attack_key(event)] = event.target
 		elif event.type == "hit" and kind in ["S03", "M03", "MG02"]:
@@ -1255,6 +1263,8 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				bone_hits[key] = []
 			bone_hits[key].append(event.target)
 	var moved := {}
+	for charge in charges.values():
+		moved[charge.actor] = true
 	for event in events:
 		if event.type == "move" and actors.has(event.actor) and not downs.has(event.actor):
 			moved[event.actor] = true
@@ -1403,7 +1413,15 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			var direction: Vector3 = Vector3.ZERO if target.is_empty() else _world(_at(target.pos)) - attacker.destination
 			var yaw: float = attacker.heading if direction.length_squared() < 0.0001 else _yaw(direction)
 			var contact := _emit_attack_contact if not attacker is Melee or melee_impacts.has(key) else Callable()
-			if _uses_general_casts(attacker):
+			if attacker is En02:
+				if general_skill:
+					var movement: Dictionary = charges.get(event.action_id, {})
+					var landing: Vector3 = attacker.position if movement.is_empty() else _world(_at(movement.position))
+					var charge_yaw := _intent_facing(event.get("facing"), int(source_row.facing))
+					contacts[key] = attacker.release_charge(charge_yaw, landing, reduced)
+				elif not reduced and attacker.active_cast.is_empty() and not attacker.shell_seam:
+					contacts[key] = attacker.attack(yaw, contact)
+			elif _uses_general_casts(attacker):
 				if general_skill:
 					yaw = _intent_facing(event.get("facing"), int(source_row.facing))
 				contacts[key] = attacker.apply_boss_event("release" if general_skill else "attack",
