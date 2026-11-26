@@ -14,6 +14,7 @@ const Wasp = preload("res://wasp_actor.gd")
 const RingGuard = preload("res://ring_guard_actor.gd")
 const SkeletonEnemy = preload("res://skeleton_actor.gd")
 const Ado = preload("res://ado_actor.gd")
+const Mg02 = preload("res://mg02_actor.gd")
 
 const ASSETS := "res://assets/"
 const ENEMIES := ASSETS + "enemies/"
@@ -89,6 +90,9 @@ static var entries: Dictionary = _build_entries()
 
 static func _build_entries() -> Dictionary:
 	var result := STANDARD.duplicate()
+	var sev := Mg02.profile_entry(Mg02)
+	sev["optional"] = true
+	result["MG02"] = sev
 	for kind in TARGETED:
 		var row: Dictionary = TARGETED[kind].duplicate()
 		row.merge({"script": Targeted, "side": "player", "assembly": "targeted",

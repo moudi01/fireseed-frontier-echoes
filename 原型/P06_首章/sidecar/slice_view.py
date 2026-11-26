@@ -44,6 +44,7 @@ BATCH_ID = r'CAP-[0-9]{4,10}'
 SEARCH_ACTIONS = {('investigate', 'inspect', 'tracks'), ('investigate', 'inspect', 'marker'),
                   ('investigate', 'return', 'CONFIRM')}
 ADO_MOVES = {'MG01-A', 'MG01-B', 'MG01-C'}
+SEV_MOVES = {'MG02-A', 'MG02-B', 'MG02-C'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
 HERO_MOVES = {
     'H01-A', 'H01-B', 'H02-A', 'H02-B', 'H03-A', 'H03-B',
@@ -868,7 +869,8 @@ def battle_view(game):
               'ward', 'attacker', 'members', 'amount', 'expires')
     for event in ([] if from_history else battle['events']):
         if event['type'] == 'windup' and (event.get('move') in ADO_MOVES or event.get('move') in INFANTRY_MOVES
-                                           or event.get('move') in ENEMY_MOVES or event.get('move') in HERO_MOVES):
+                                           or event.get('move') in ENEMY_MOVES or event.get('move') in HERO_MOVES
+                                           or event.get('move') in SEV_MOVES):
             locks[event['action_id']] = event
         if event.get('tick') != battle['tick']:
             continue
@@ -889,11 +891,16 @@ def battle_view(game):
         enemy_event = event.get('move') in ENEMY_MOVES and name in ('windup', 'release', 'skill_miss')
         ado_event = (by_id.get(event.get('actor'), {}).get('kind') == 'MG01'
                      and name in ('boss_phase', 'windup', 'release', 'skill_miss', 'boss_private_shield'))
+        sev_actor = by_id.get(event.get('target' if name == 'hero_interrupt' else 'actor'), {})
+        sev_event = sev_actor.get('kind') == 'MG02' and (
+            name in ('hero_interrupt', 'hero_stun_cancel')
+            or (event.get('move') in SEV_MOVES and name in ('windup', 'release', 'boss_private_shield')))
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
-                spear_event or en01_event or infantry_event or hero_event or ado_event or aid_heal or mist_delay or enemy_event or bone_guard):
+                spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
+                or aid_heal or mist_delay or enemy_event or bone_guard):
             continue
         row = {key: event[key] for key in fields if key in event}
-        if ado_event and name == 'release':
+        if (ado_event or sev_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['cells'] = windup.get('cells', [])
             row['facing'] = windup.get('facing')
@@ -938,7 +945,8 @@ def battle_view(game):
         pending = actor.get('pending') or {}
         if pending.get('move_id') == 'S02-A' and not battle.get('result'):
             row['melee_pending'] = {key: pending.get(key) for key in ('id', 'cells', 'facing')}
-        if pending.get('move_id') in ('S03-A', 'M03-A') and not battle.get('result'):
+        if (pending.get('move_id') in ('S03-A', 'M03-A') or
+                (kind == 'MG02' and pending.get('move_id') in SEV_MOVES)) and not battle.get('result'):
             row['bow_pending'] = {key: pending.get(key) for key in ('id', 'cells', 'facing')}
         if pending.get('move_id') == 'M02-A' and not battle.get('result'):
             row['aid_pending'] = {key: pending.get(key) for key in ('id', 'target', 'cells', 'facing')}
@@ -2120,12 +2128,17 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                 del slice_view['town_board_cells'], slice_view['town_deploy_cells']
             else:
                 board = {'battle_cells': game.cat.boards[binding['board_id']]['cells'] if binding else []}
+            if binding and binding['board_id'] == 'MIRROR_COURT':
+                board['board_id'] = binding['board_id']
     else:
         field = region_space.public(game)
         if field is not None:
             map_fields = ('version', 'position', 'facing', 'steps', 'cells', 'objects',
                           'contact', 'deploy_cells', 'battle_cells', 'summary')
             board = {key: field[key] for key in map_fields}
+            binding = field['battle_binding']
+            if field['battle_cells'] and binding and binding['board_id'] == 'MIRROR_COURT':
+                board['board_id'] = binding['board_id']
             if field['preview']:
                 from combat import enemy_actor
                 board['enemy_preview'] = [

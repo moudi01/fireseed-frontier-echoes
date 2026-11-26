@@ -17,6 +17,8 @@ const Wasp = Profiles.Wasp
 const RingGuard = Profiles.RingGuard
 const SkeletonEnemy = Profiles.SkeletonEnemy
 const Ado = Profiles.Ado
+const Mg02 = Profiles.Mg02
+const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const FortressKit = preload("res://fortress_kit.gd")
 const MODEL_PATH := Profiles.SHIELD_MODEL
 const ADO_PATH := Profiles.ADO_MODEL
@@ -55,6 +57,7 @@ var audit := {"clips": {}, "contacts": 0, "absorptions": 0, "events": 0, "peak_m
 	"wasp_peak": 0, "sting_windups": 0, "sting_releases": {}, "sting_flights": 0, "wasp_downs": 0,
 	"ado_seen": false, "ado_phases": [], "ado_releases": 0, "ado_downs": 0,
 	"ado_windups": {}, "ado_moves": {}, "ado_shields": 0, "ado_cues": [], "field_props": {},
+	"sev_shots": {},
 	"ado_prepared_before_battle": false, "viewport_resizes_in_battle": 0, "scenery_updates": 0,
 	"bone_arrows": {}, "bone_arrow_flights": 0,
 	"hero_peak": 0, "hero_kinds": {}, "hero_skills": {}}
@@ -372,6 +375,8 @@ func set_scenery(placements: Dictionary) -> void:
 			var part: Node3D
 			if row.asset.begins_with("fortress-") or row.asset.begins_with("town-"):
 				part = FortressKit.piece(row.asset)
+			elif MirrorCourtKit.supports(row.asset):
+				part = MirrorCourtKit.piece(row.asset)
 			else:
 				var resource := _scene(row.asset)
 				if resource != null:
@@ -819,7 +824,7 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 			pawn.cancel_gap(reduced)
 		if pawn is Bow and not pawn.bow_cast.is_empty() and float(row.hp) > 0 \
 				and pawn.bow_cast != row.get("bow_pending", {}).get("id", ""):
-			pawn.cancel_arrow(reduced)
+			_cancel_bow(pawn)
 		if pawn is Spear and pawn.enemy and not pawn.cast_id.is_empty() and float(row.hp) > 0 \
 				and pawn.cast_id != row.get("spear_pending", {}).get("id", ""):
 			pawn.resolve(pawn.cast_id, true)
@@ -843,7 +848,8 @@ func _supports_deployment(kind: String) -> bool:
 
 
 func _supports_enemy(kind: String) -> bool:
-	return Profiles.entries.get(kind, {}).get("side") == "enemy"
+	var profile: Dictionary = Profiles.entries.get(kind, {})
+	return profile.get("side") == "enemy" and _profile_available(kind, profile)
 
 
 func _apply_deployment(rows: Array, enemies: Array) -> void:
@@ -1107,7 +1113,17 @@ func _prepare_bow(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 	var locked: Array = pending.get("cells", [])
 	var yaw: float = _intent_facing(pending.get("facing"), int(row.facing)) \
 		if locked.is_empty() else pawn.aim_bearing(_world(_at(locked[-1])), true)
-	pawn.prepare_arrow(str(pending.id), yaw, reduced, restore)
+	if pawn is Mg02:
+		pawn.apply_boss_event("prepare", str(pending.id), yaw, reduced, restore)
+	else:
+		pawn.prepare_arrow(str(pending.id), yaw, reduced, restore)
+
+
+func _cancel_bow(pawn: Bow) -> void:
+	if pawn is Mg02:
+		pawn.apply_boss_event("cancel", pawn.bow_cast, pawn.heading, reduced)
+	else:
+		pawn.cancel_arrow(reduced)
 
 
 func _prepare_targeted(pawn: Node3D, pending: Dictionary, restore: bool) -> void:
@@ -1175,7 +1191,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			downs[event.actor] = event
 		elif event.type == "hit" and by_id.get(event.actor, {}).get("kind") == "S02":
 			melee_impacts[_attack_key(event)] = event.target
-		elif event.type == "hit" and by_id.get(event.actor, {}).get("kind") in ["S03", "M03"]:
+		elif event.type == "hit" and kind in ["S03", "M03", "MG02"]:
 			var key := _attack_key(event)
 			if not bow_impacts.has(key):
 				bow_impacts[key] = []
@@ -1257,6 +1273,14 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		var targeted_skill: bool = not profile.is_empty() and event.get("move") == profile.move
 		var actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
 		var event_move := str(event.get("move", ""))
+		var sev_skill: bool = actor_node is Mg02 and event_move in Mg02.MG02_MOVES
+		if event.type in ["hero_interrupt", "hero_stun_cancel"]:
+			var cancelled_id: String = event.target if event.type == "hero_interrupt" else event.actor
+			var cancelled = actors.get(cancelled_id, {}).get("node")
+			if cancelled is Mg02 and cancelled.bow_cast == event.get("cast_id", ""):
+				_cancel_bow(cancelled)
+		if sev_skill and event.type == "boss_private_shield" and not downs.has(event.actor):
+			_mark(event.actor, source_row.pos, "护盾 +%d" % int(event.amount), true)
 		var hero_skill: bool = actor_node is Hero and (event_move.begins_with("H") or event_move.begins_with("CMD-"))
 		if hero_skill:
 			if event.type == "windup" and by_id[event.actor].get("hero_pending", {}).get("id") == event.action_id:
@@ -1271,7 +1295,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			elif event.type == "skill_miss":
 				audit.melee_skill_misses += 1
 				_mark(event.actor, by_id[event.actor].pos, "放空", false)
-		if piercing and event.type == "windup" and actors.has(event.actor) \
+		if (piercing or sev_skill) and event.type == "windup" and actors.has(event.actor) \
 				and by_id[event.actor].get("bow_pending", {}).get("id") == event.action_id:
 			_prepare_bow(actors[event.actor].node, by_id[event.actor], false)
 		if event.type == "skill_miss" and event.get("move") == "M03-A" and actors.has(event.actor):
@@ -1282,12 +1306,18 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				_prepare_targeted(actor_node, pending, false)
 			elif actor_node.effect == "mist" and event.type == "skill_miss":
 				_mark(event.actor, source_row.pos, "放空", false)
-		var attack: bool = event.type == "basic_start" or ((skill or piercing or targeted_skill or hero_skill) and event.type == "release")
+		var attack: bool = event.type == "basic_start" or ((skill or piercing or targeted_skill or hero_skill or sev_skill) and event.type == "release")
 		if attack and actors.has(event.actor) and actors[event.actor].node is Actor:
 			var attacker = actors[event.actor].node
 			var key := _attack_key(event)
 			if attacker is Bow:
-				contacts[key] = _bow_shot(attacker, event, by_id, bow_impacts.get(key, []), piercing)
+				if sev_skill and event_move != "MG02-A":
+					var locked: Array = event.get("cells", [])
+					var bearing: float = _intent_facing(event.get("facing"), int(source_row.facing)) if locked.is_empty() \
+						else attacker.aim_bearing(_world(_at(locked[-1])), true)
+					contacts[key] = attacker.apply_boss_event("release", event.action_id, bearing, reduced)
+				else:
+					contacts[key] = _bow_shot(attacker, event, by_id, bow_impacts.get(key, []), piercing or sev_skill)
 				continue
 			if attacker is Targeted and attacker.effect == "aid":
 				contacts[key] = _aid_shot(attacker, event, by_id, aid_impacts.get(key, {}), targeted_skill)
@@ -1410,8 +1440,10 @@ func _bow_shot(pawn: Node3D, event: Dictionary, by_id: Dictionary, hit_targets: 
 	var has_endpoint: bool = grid is Array and cells.has(Vector2i(int(grid[0]), int(grid[1])))
 	var landing: Vector3 = _world(_at(grid)) + Vector3.UP * 1.0 if has_endpoint else pawn.destination
 	var bearing: float = pawn.aim_bearing(landing, piercing)
-	var release_lag: float = pawn.fire(bearing, piercing, reduced)
-	var shots: Dictionary = audit.crossbow_shots if crossbow else audit.bow_shots
+	var sev := pawn is Mg02
+	var release_lag: float = pawn.apply_boss_event("release" if piercing else "attack",
+		event.action_id, bearing, reduced) if sev else pawn.fire(bearing, piercing, reduced)
+	var shots: Dictionary = audit.sev_shots if sev else (audit.crossbow_shots if crossbow else audit.bow_shots)
 	shots[event.action_id] = {"actor": event.actor, "target": target, "hits": hit_targets, "cells": locked}
 	if not has_endpoint:
 		return release_lag
