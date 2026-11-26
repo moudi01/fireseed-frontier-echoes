@@ -3,18 +3,29 @@
 from engine import Game, require
 import region_space
 from expedition_peril import deployable
-from slice_view import (FIELD_EVENT_CHOICES, FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS,
-                        LOCAL_PROTECTION_ACTIONS, finale_retry_town)
+from slice_view import (FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS, LOCAL_PROTECTION_ACTIONS,
+                        REGIONAL_VARIANT_EVENT_IDS, REGIONAL_VARIANT_OPTIONS,
+                        finale_retry_town, regional_variant_event)
 
 
 class DeploymentGame(Game):
     def choose(self, option_id, target='01', plan=None):
         state = self.s
+        variant_event = regional_variant_event(self)
+        bound_selection = target in REGIONAL_VARIANT_EVENT_IDS
+        if bound_selection:
+            require(target == variant_event and option_id in REGIONAL_VARIANT_OPTIONS,
+                    '请选择当前区域 D 点的巡队方案。')
+            binding = self.manifest_region['events']['D']
+            require(option_id in binding['enabled_options'],
+                    '本趟远征清单未开放该选项。')
+            target = '01'
         if state['phase'] == 'EXPLORE' and state['mission'] == 'ORDINARY':
             site = state['site']
             event_id = self.manifest_region['events'].get(site, {}).get('event_id')
-            if option_id in FIELD_EVENT_CHOICES.get(event_id, ()):
-                # The text client returns success for a closed local visit.
+            variant_choice = variant_event and option_id in REGIONAL_VARIANT_OPTIONS
+            if variant_choice or (event_id == 'EV59' and option_id == 'RUSH'):
+                # The text client reports success even after a local visit closes.
                 require(self.current['events'][site]['state'] not in ('RESOLVED', 'DECLINED'),
                         '本现场已处理，不能再次选择。')
         return super().choose(option_id, target, plan)

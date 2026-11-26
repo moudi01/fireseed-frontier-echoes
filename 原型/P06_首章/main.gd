@@ -3918,7 +3918,8 @@ func _field_handbook_event() -> void:
 			if not option.blocker.is_empty() and not option.blocker in shown_blockers:
 				shown_blockers.append(option.blocker)
 				_label(actions, option.blocker, ALERT, 16)
-			_input_action(option.label, "choose", [option.id], option.confirmation, option.allowed)
+			var args: Array = option.get("args", [option.id])
+			_input_action(option.label, "choose", args, option.confirmation, option.allowed)
 			continue
 		var materials: bool = option.kind == "materials"
 		var description := "将一件装备放入行囊。"

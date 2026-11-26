@@ -117,8 +117,15 @@ TUTORIAL_PLANS = ('PL01', 'PL02', 'PL05')
 PLAN_ID = r'PL\d{2}'
 MEMORY = {(choice, f'{general}-W{number}') for general in HUNT_GENERALS
           for number, choices in ((1, ('evidence', 'skip')), (2, ('retain', 'skip'))) for choice in choices}
+REGIONAL_VARIANT_EVENTS = {
+    'RG01': 'EV31', 'RG02': 'EV43', 'RG03': 'EV46', 'RG04': 'EV49',
+    'RG05': 'EV52', 'RG06': 'EV34', 'RG07': 'EV37', 'RG08': 'EV40',
+}
+REGIONAL_VARIANT_EVENT_IDS = frozenset(REGIONAL_VARIANT_EVENTS.values())
+REGIONAL_VARIANT_OPTIONS = frozenset(('PRIMARY', 'SECONDARY', 'PASS'))
 FIXED_ACTIONS = {
-    'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',)},
+    'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',),
+               *((option, eid) for eid in REGIONAL_VARIANT_EVENT_IDS for option in REGIONAL_VARIANT_OPTIONS)},
     'agla': {('craft', 'CONFIRM')},
     **{command: {request[1:] for request in PROTECTION_REQUESTS if request[0] == command}
        for command in ('event', 'case', 'water', 'medicine')},
@@ -415,23 +422,46 @@ def field_book_rewards(game):
     return result
 
 
-FIELD_EVENT_CHOICES = {'EV40': frozenset(('PRIMARY', 'SECONDARY')), 'EV59': frozenset(('RUSH',))}
+def regional_variant_event(game):
+    state = game.s
+    if state['phase'] != 'EXPLORE' or state['mission'] != 'ORDINARY' or state['site'] != 'D':
+        return None
+    expected = REGIONAL_VARIANT_EVENTS.get(state['region'])
+    if expected and game.manifest_region['events'].get('D', {}).get('event_id') == expected:
+        return expected
+    return None
+
+
+def regional_variant_choice(game, event_id, option, binding):
+    key = option['option_id']
+    blocker = ''
+    if key not in binding['enabled_options']:
+        blocker = binding['disabled_options'].get(key) or '本趟远征清单未开放该选项。'
+    row = {'id': key, 'args': [key, event_id], 'label': option['label']}
+    if key == 'PASS':
+        confirmation = '暂离现场，保留现有进度。本区可以回访；前方巡队揭示后便不能更换。'
+    else:
+        candidate = next((effect['candidate_encounter_id'] for effect in option['effects']
+                          if effect['type'] == 'commit_prelocked_encounter_variant'), None)
+        encounter = game.manifest_region['encounters'].get('B1', {})
+        if not blocker and 'B1' in game.current['revealed_battles']:
+            blocker = '前方巡队已经揭示，不能更换。'
+        if candidate in encounter.get('candidate_ids', ()):
+            board = game.cat.boards[encounter['board_id']]
+            enemy = game.cat.encounters[candidate]
+            confirmation = (f"前方巡队 · {enemy.get('name', candidate)}\n"
+                            f"棋盘 · {board['name']}\n确认后，本趟在前方遇到这支巡队。本站只能选一次。")
+        else:
+            blocker = blocker or '本趟未锁定这支巡队。'
+            confirmation = '选择前方巡队。'
+    return dict(row, confirmation=confirmation, blocker=blocker, allowed=not blocker)
 
 
 def field_event_choice(game, event_id, option, binding, material_room):
     key = option['option_id']
-    if event_id == 'EV40' and key in ('PRIMARY', 'SECONDARY'):
-        candidate = next((effect['candidate_encounter_id'] for effect in option['effects']
-                          if effect['type'] == 'commit_prelocked_encounter_variant'), None)
-        encounters = game.manifest_region['encounters'].get('B1', {}).get('candidate_ids', ())
-        if 'B1' in game.current['revealed_battles']:
-            blocker = '前方巡队已经揭示，不能更换。'
-        elif candidate not in encounters:
-            blocker = '本趟未锁定这支巡队。'
-        else:
-            blocker = ''
-        confirmation = f"{option['label']}。这将锁定前方的巡队，本现场只能选择一次。"
-    elif event_id == 'EV59' and key == 'RUSH':
+    if event_id == regional_variant_event(game) and key in REGIONAL_VARIANT_OPTIONS:
+        return regional_variant_choice(game, event_id, option, binding)
+    if event_id == 'EV59' and key == 'RUSH':
         from event_conditions import SPECS
 
         material_cost, claim_cost = 2, 1
@@ -471,7 +501,7 @@ def handbook_event_view(game):
     binding = game.manifest_region['events'].get(state['site'], {})
     source = binding.get('book_offer')
     fixed = binding.get('material_commission') or {}
-    has_site_choices = binding.get('event_id') in FIELD_EVENT_CHOICES
+    has_site_choices = regional_variant_event(game) is not None or binding.get('event_id') == 'EV59'
     if not source and not fixed and not has_site_choices:
         return {}
     event, binding, visit = game.event_info()
