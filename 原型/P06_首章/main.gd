@@ -3751,7 +3751,7 @@ func _battle_health(actor: Dictionary) -> String:
 
 
 static func _concealment_text(concealment: Dictionary) -> String:
-	return "结雾至第 %d 拍 · %d 格外新选目标受限，起攻时显形" % [int(concealment.expires), int(concealment.distance)]
+	return "结雾至第 %d 拍 · %d 格外新选目标受限\n起攻时显形" % [int(concealment.expires), int(concealment.distance)]
 
 
 func _combatant_name(id: String) -> String:
