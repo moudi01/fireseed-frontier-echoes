@@ -189,16 +189,16 @@ def set_en15_pose(arm, clip: str, t: float) -> None:
         pbs["pipes"].rotation_euler = Euler((math.radians(-18.0 * s1), 0.0, math.radians(-10.0 * s2)), "XYZ")
         set_arms(-36.0, 36.0, -18.0 * s1, -18.0 * s1, 14.0)
     elif clip == "EN15Down":
-        # Knees buckle, ceramic shell & pipes tip forward-sideways cleanly to ground
+        # Knees buckle, ceramic shell & pipes settle stably onto back/heels on Z=0
         w = min(1.0, t * 1.15)
         w = w * w * (3.0 - 2.0 * w)
-        pbs["body"].rotation_euler = Euler((math.radians(52.0 * w), 0.0, math.radians(18.0 * w)), "XYZ")
-        pbs["pipes"].rotation_euler = Euler((math.radians(18.0 * w), 0.0, math.radians(12.0 * w)), "XYZ")
-        pbs["leg_01.L"].rotation_euler = Euler((math.radians(-42.0 * w), 0.0, math.radians(-16.0 * w)), "XYZ")
-        pbs["leg_01.R"].rotation_euler = Euler((math.radians(-42.0 * w), 0.0, math.radians(16.0 * w)), "XYZ")
-        pbs["leg_02.L"].rotation_euler = Euler((math.radians(28.0 * w), 0.0, 0.0), "XYZ")
-        pbs["leg_02.R"].rotation_euler = Euler((math.radians(28.0 * w), 0.0, 0.0), "XYZ")
-        set_arms(-22.0 * w - 52.0 * (1.0 - w), 22.0 * w + 52.0 * (1.0 - w), 24.0 * w, 24.0 * w, 16.0)
+        pbs["body"].rotation_euler = Euler((math.radians(76.0 * w), 0.0, math.radians(12.0 * w)), "XYZ")
+        pbs["pipes"].rotation_euler = Euler((math.radians(8.0 * w), 0.0, math.radians(8.0 * w)), "XYZ")
+        pbs["leg_01.L"].rotation_euler = Euler((math.radians(-18.0 * w), 0.0, math.radians(-14.0 * w)), "XYZ")
+        pbs["leg_01.R"].rotation_euler = Euler((math.radians(-18.0 * w), 0.0, math.radians(14.0 * w)), "XYZ")
+        pbs["leg_02.L"].rotation_euler = Euler((math.radians(16.0 * w), 0.0, 0.0), "XYZ")
+        pbs["leg_02.R"].rotation_euler = Euler((math.radians(16.0 * w), 0.0, 0.0), "XYZ")
+        set_arms(-20.0 * w - 52.0 * (1.0 - w), 20.0 * w + 52.0 * (1.0 - w), 18.0 * w, 18.0 * w, 14.0)
     elif clip == "EN15ChoirRaise":
         # EN15-A 同调蓄势: arms open wide framing the hollow chest cavity, pipes lift resonant
         w = min(1.0, t * 1.2)
@@ -299,7 +299,7 @@ def build_en15(args: argparse.Namespace) -> dict:
             me = eo.to_mesh()
             min_z = min((mesh.matrix_world @ v.co).z for v in me.vertices)
             eo.to_mesh_clear()
-            if min_z < 0.0:
+            if min_z < 0.0 or (cname == "EN15Down" and abs(min_z) > 1e-5):
                 pb_b = arm.pose.bones["body"]
                 parent_pose_w = (arm.matrix_world @ pb_b.parent.matrix).to_3x3().normalized()
                 inherited_w = parent_pose_w @ r_rest.inverted() @ b_rest
@@ -325,6 +325,7 @@ def build_en15(args: argparse.Namespace) -> dict:
         act = bpy.data.actions[cname]
         activate_action(arm, act)
         hf_min, hf_worst, sub_3cm, max_xy, degen = 999.0, 1.0, 0, 0.0, 0
+        last_z = 0.0
         cur = 1.0
         while cur <= float(n_frames) + 1e-4:
             fi = int(math.floor(cur))
@@ -343,6 +344,8 @@ def build_en15(args: argparse.Namespace) -> dict:
                 hf_min, hf_worst = mz, cur
             if mz < -0.03:
                 sub_3cm += 1
+            if abs(cur - float(n_frames)) < 1e-3:
+                last_z = mz
             cur += 0.5
         if hf_min < hf_summary["worst_min_z"]:
             hf_summary["worst_min_z"] = round(hf_min, 5)
@@ -353,6 +356,7 @@ def build_en15(args: argparse.Namespace) -> dict:
         clip_qa[cname] = {
             "half_frame_min_z": round(hf_min, 5),
             "half_frame_worst": round(hf_worst, 1),
+            "last_frame_z": round(last_z, 5),
             "samples_below_neg_3cm": sub_3cm,
             "max_root_xy_drift_m": round(max_xy, 6),
             "degenerate_faces": degen,
@@ -415,15 +419,56 @@ def build_en15(args: argparse.Namespace) -> dict:
     if args.out_proof:
         render_proofs(arm, Path(args.out_proof))
 
-    # 8. Clean-blend round-trip re-import verification
+    # 8. Clean-blend round-trip re-import verification (including half-frame & last-frame floor check)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(out_glb))
+    re_scene = bpy.context.scene
     re_arm = next((o for o in bpy.data.objects if o.type == "ARMATURE"), None)
     re_meshes = [o for o in bpy.data.objects if o.type == "MESH"]
     re_tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in re_meshes)
     re_actions = {a.name: [round(a.frame_range[0], 1), round(a.frame_range[1], 1)] for a in bpy.data.actions}
     re_over4 = {o.name: sum(1 for v in o.data.vertices if len([g for g in v.groups if g.weight > 1e-6]) > 4) for o in re_meshes}
     expected_names = {n for n, _ in CLIPS}
+    re_floor = {}
+    if re_arm and re_meshes:
+        re_deps = bpy.context.evaluated_depsgraph_get()
+        re_body_mesh = next((o for o in re_meshes if o.name == "SK_EN15"), re_meshes[0])
+        re_body_rest_head = re_arm.matrix_world @ re_arm.data.bones["body"].head_local
+        for a in sorted(bpy.data.actions, key=lambda x: x.name):
+            activate_action(re_arm, a)
+            f0, f1 = float(a.frame_range[0]), float(a.frame_range[1])
+            min_z, min_fr, sub3, max_xy, last_z = 999.0, f0, 0, 0.0, 0.0
+            cur = f0
+            while cur <= f1 + 1e-4:
+                fi = int(math.floor(cur))
+                re_scene.frame_set(fi, subframe=cur - fi)
+                bpy.context.view_layer.update()
+                eo = re_body_mesh.evaluated_get(re_deps)
+                me = eo.to_mesh()
+                mz = min((re_body_mesh.matrix_world @ v.co).z for v in me.vertices)
+                eo.to_mesh_clear()
+                bh_w = re_arm.matrix_world @ re_arm.pose.bones["body"].head
+                max_xy = max(max_xy, math.hypot(bh_w.x - re_body_rest_head.x, bh_w.y - re_body_rest_head.y))
+                if mz < min_z:
+                    min_z, min_fr = mz, cur
+                if mz < -0.03:
+                    sub3 += 1
+                cur += 0.5
+            fi_end = int(math.floor(f1))
+            re_scene.frame_set(fi_end, subframe=f1 - fi_end)
+            bpy.context.view_layer.update()
+            eo = re_body_mesh.evaluated_get(re_deps)
+            me = eo.to_mesh()
+            last_z = min((re_body_mesh.matrix_world @ v.co).z for v in me.vertices)
+            eo.to_mesh_clear()
+            re_floor[a.name] = {
+                "frame_range": [round(f0, 2), round(f1, 2)],
+                "half_frame_min_z": round(min_z, 6),
+                "half_frame_worst": round(min_fr, 2),
+                "last_frame_z": round(last_z, 6),
+                "samples_below_neg_3cm": sub3,
+                "max_root_xy_drift_m": round(max_xy, 6),
+            }
     roundtrip = {
         "armature": re_arm.name if re_arm else None,
         "bone_count": len(re_arm.data.bones) if re_arm else 0,
@@ -435,6 +480,7 @@ def build_en15(args: argparse.Namespace) -> dict:
         "action_count": len(re_actions),
         "expected_clips_present": expected_names.issubset(set(re_actions.keys())),
         "actions": dict(sorted(re_actions.items())),
+        "clip_floor": re_floor,
     }
 
     report = {
@@ -502,6 +548,34 @@ def render_proofs(arm, out_dir: Path) -> None:
     bpy.context.view_layer.update()
     scene.render.filepath = str(out_dir / "EN15_small_scale_readability.png")
     bpy.ops.render.render(write_still=True)
+
+    # Side-view ground-plane contact proof for EN15Down f30 (top surface strictly at Z=0.0)
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 0.0, -0.02))
+    floor_plane = bpy.context.active_object
+    floor_plane.scale = (4.0, 4.0, 0.04)
+    floor_plane.name = "ProofFloorZ0"
+    floor_mat = bpy.data.materials.new("ProofFloorMat")
+    floor_mat.diffuse_color = (0.32, 0.29, 0.25, 1.0)
+    floor_plane.data.materials.append(floor_mat)
+
+    scene.render.resolution_x = 720
+    scene.render.resolution_y = 400
+    cam_data.ortho_scale = 2.4
+    cam.location = Vector((3.2, 0.0, 0.52))
+    cam.rotation_euler = (Vector((0.0, 0.0, 0.42)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+    activate_action(arm, bpy.data.actions["EN15Down"])
+    scene.frame_set(30)
+    bpy.context.view_layer.update()
+    scene.render.filepath = str(out_dir / "EN15_down_ground_contact_side.png")
+    bpy.ops.render.render(write_still=True)
+
+    # Also render a low 3/4 ground-plane contact view for EN15Down f30
+    cam.location = Vector((2.2, -2.4, 0.68))
+    cam.rotation_euler = (Vector((0.0, 0.0, 0.36)) - cam.location).to_track_quat("-Z", "Y").to_euler()
+    scene.render.filepath = str(out_dir / "EN15_down_ground_contact_3q.png")
+    bpy.ops.render.render(write_still=True)
+
+    bpy.data.objects.remove(floor_plane, do_unlink=True)
 
 
 if __name__ == "__main__":
