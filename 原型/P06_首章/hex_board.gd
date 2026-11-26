@@ -1722,12 +1722,31 @@ func _draw_danger_ranges(canvas: CanvasItem, foreground: bool) -> void:
 
 
 func _draw_locked_edges() -> void:
+	var due := -1
 	for action: Dictionary in danger.get("actions", []):
 		if action.get("move_id") == "EN18-A" and action.has("edge"):
 			_draw_locked_edge(action.edge, false)
+			var at := int(action.due)
+			due = at if due < 0 else mini(due, at)
 	var closed: Variant = danger.get("closed_edge")
 	if closed is Dictionary:
 		_draw_locked_edge(closed.edge, true)
+		_draw_edge_status("封锁边 · 禁行中")
+	elif due >= 0:
+		var remaining := maxi(0, due - int(danger.tick))
+		_draw_edge_status("封锁边 · %d 拍后" % remaining if remaining > 0 else "封锁边 · 本拍生效")
+
+
+func _draw_edge_status(text: String) -> void:
+	if font == null:
+		return
+	var ink := Color("ffe6a9")
+	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size).x + 20.0
+	var card := Rect2(13.0, 13.0, width, impact_font_size + 13.0)
+	_overlay.draw_rect(card, Color("3e2924", 0.94))
+	_overlay.draw_rect(card, ink, false, 1.5)
+	_overlay.draw_string(font, card.position + Vector2(10.0, impact_font_size + 4.0),
+		text, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size, ink)
 
 
 func _draw_locked_edge(edge: Array, closed: bool) -> void:
