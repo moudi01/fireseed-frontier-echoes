@@ -1015,6 +1015,8 @@ func _draw() -> void:
 
 func _draw_overlay() -> void:
 	_draw_danger_ranges(_overlay, true)
+	_draw_locked_edges()
+	_draw_law_target()
 	_draw_warning_keys()
 	if _battle_mode and not impacts.is_empty() and slice.get("battle_memory", {}).is_empty():
 		_draw_combat_impacts()
@@ -1717,6 +1719,65 @@ func _draw_danger_ranges(canvas: CanvasItem, foreground: bool) -> void:
 			outline.append(outline[0])
 			canvas.draw_polyline(outline, shadow, width + 3.0, true)
 			canvas.draw_polyline(outline, ink, width, true)
+
+
+func _draw_locked_edges() -> void:
+	for action: Dictionary in danger.get("actions", []):
+		if action.get("move_id") == "EN18-A" and action.has("edge"):
+			_draw_locked_edge(action.edge, false)
+	var closed: Variant = danger.get("closed_edge")
+	if closed is Dictionary:
+		_draw_locked_edge(closed.edge, true)
+
+
+func _draw_locked_edge(edge: Array, closed: bool) -> void:
+	if edge.size() != 2:
+		return
+	var a := cell_index(edge[0])
+	var b := cell_index(edge[1])
+	var side := HEX_NEIGHBORS.find(b - a)
+	if side < 0 or not coordinate_map.has(a) or not coordinate_map.has(b):
+		return
+	var midpoint := Vector2i(2 * a.x + a.y, 3 * a.y)
+	var ends := PackedVector2Array()
+	for i: int in [side, (side + 1) % 6]:
+		var lattice: Vector2i = midpoint + HEX_VERTICES[i]
+		var world := Vector2(float(lattice.x) * sqrt(3.0) * 0.5, float(lattice.y) * 0.5)
+		ends.append(_center + ShieldStage.project_ground(world, _sideways) * _scale)
+	var dark := Color("3e2924")
+	var ink := Color("ffe6a9")
+	if closed:
+		_overlay.draw_line(ends[0], ends[1], dark, 9.0, true)
+		_overlay.draw_line(ends[0], ends[1], ink, 3.0, true)
+		var cap := (ends[1] - ends[0]).orthogonal().normalized() * 5.0
+		for end: Vector2 in ends:
+			_overlay.draw_line(end - cap, end + cap, dark, 6.0, true)
+			_overlay.draw_line(end - cap, end + cap, ink, 2.0, true)
+	else:
+		_overlay.draw_dashed_line(ends[0], ends[1], dark, 7.0, 6.0)
+		_overlay.draw_dashed_line(ends[0], ends[1], ink, 3.0, 6.0)
+
+
+func _draw_law_target() -> void:
+	if font == null:
+		return
+	for law: Dictionary in danger.get("laws", []):
+		var cell := _actor_cell(law.target)
+		if not coordinate_map.has(cell):
+			continue
+		var ink := Color("f7d4ef")
+		_draw_hex_highlight(_overlay, cell, Color(ink, 0.10), ink, 3.2)
+		var targets: Array = slice.get("actors", []).filter(func(actor: Dictionary) -> bool:
+			return actor.get("id") == law.target)
+		var name := str(targets[0].get("display_name", law.target)) if not targets.is_empty() else str(law.target)
+		var title := "法令点名 · %s · %d 拍 · 反制 %d/%d" % [name, maxi(0, int(law.due) - int(danger.tick)),
+			int(law.progress), int(law.threshold)]
+		var width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size).x + 20.0
+		var card := Rect2((size.x - width) * 0.5, 13.0, width, impact_font_size + 13.0)
+		_overlay.draw_rect(card, Color("291d2c", 0.94))
+		_overlay.draw_rect(card, ink, false, 1.5)
+		_overlay.draw_string(font, card.position + Vector2(10.0, impact_font_size + 4.0),
+			title, HORIZONTAL_ALIGNMENT_LEFT, -1, impact_font_size, ink)
 
 
 func _warning_key_layout() -> Array[Dictionary]:

@@ -49,6 +49,9 @@ GENERAL_CAST_MOVES = {
     'MG03': {'MG03-A', 'MG03-B', 'MG03-C'},
     'MG04': {'MG04-A', 'MG04-B', 'MG04-C'},
     'DEMON': {'DEMON-A', 'DEMON-B', 'DEMON-C', 'DEMON-D'},
+    'ADMIN': {'ADMIN-A', 'ADMIN-B', 'ADMIN-C', 'ADMIN-D'},
+    'EN16': {'EN16-A'},
+    'EN18': {'EN18-A'},
 }
 HUNT_BOARD_ART = {'MIRROR_COURT', 'SALT_CROSSING', 'FORGE_CROSSING'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
@@ -913,20 +916,37 @@ def battle_view(game):
             or (general_cast_move(boss_kind, event.get('move'))
                 and name in ('windup', 'release', 'skill_miss', 'boss_private_shield')))
         mimic_started = boss_kind == 'DEMON' and name == 'mimic_start'
+        edge_event = boss_kind == 'EN18' and name in ('edge_closed', 'edge_opened', 'edge_failed',
+                                                       'edge_reservation_cancelled')
+        law_event = boss_kind == 'ADMIN' and name in ('boss_law_named', 'boss_law_progress',
+                       'boss_law_broken', 'boss_law_execution', 'boss_law_cancelled')
+        formatting_event = battle['encounter_id'] == 'BATTLE-ADMIN' and name in ('formatting_started',
+                                                                               'interface_channel')
+        summon_event = boss_kind == 'ADMIN' and name == 'admin_minion_summoned'
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
-                or general_event or mimic_started or aid_heal or mist_delay or enemy_event or bone_guard):
+                or general_event or mimic_started or aid_heal or mist_delay or enemy_event or bone_guard
+                or edge_event or law_event or formatting_event or summon_event):
             continue
         row = {key: event[key] for key in fields if key in event}
         if mimic_started:
             row.update({key: event[key] for key in ('source_hero', 'source_move', 'source_action_id')})
+        if edge_event:
+            row.update({key: event[key] for key in ('edge', 'reason') if key in event})
+        if law_event:
+            row.update({key: event[key] for key in ('law_id', 'due', 'progress', 'required_hp_damage',
+                       'hp_lost', 'reason') if key in event})
+        if formatting_event:
+            row.update({key: event[key] for key in ('remaining', 'target_cell', 'progress', 'complete') if key in event})
+        if summon_event:
+            row.update({key: event[key] for key in ('minion', 'minion_kind', 'wave', 'active_from', 'reason')})
         if (ado_event or sev_event or general_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['cells'] = windup.get('cells', [])
             row['facing'] = windup.get('facing')
         if general_event and name in ('windup', 'release'):
             lock = event if name == 'windup' else locks.get(event['action_id'], {})
-            row.update({key: lock[key] for key in ('origin', 'facing', 'target', 'interruptible', 'delayable_cast', 'public_anchors')
+            row.update({key: lock[key] for key in ('origin', 'facing', 'target', 'interruptible', 'delayable_cast', 'public_anchors', 'edge')
                         if key in lock})
         if (infantry_event or enemy_event or hero_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
@@ -1002,8 +1022,16 @@ def battle_view(game):
             row['bone_pending'] = {key: pending.get(key) for key in ('id', 'cells', 'origin', 'due', 'facing')}
         if actor.get('town_defense_bonus', 0) > 0:
             row['town_defense_bonus'] = actor['town_defense_bonus']
-        if kind in HUNT_GENERALS or kind == 'DEMON':
+        if kind in HUNT_GENERALS or kind in ('DEMON', 'ADMIN'):
             row['boss_phase'] = actor['boss_phase']
+        if kind == 'ADMIN' and actor['hp'] > 0 and not battle.get('result'):
+            finale = battle.get('finale') or {}
+            threats = battle.get('boss_threats') or {}
+            active_law_id = threats.get('states', {}).get(actor['id'], {}).get('law')
+            if finale.get('started') is not None and finale['remaining'] > 0:
+                row['admin_pose'] = 'formatting'
+            elif active_law_id:
+                row['admin_pose'] = 'law_named'
         if (actor['hp'] > 0 and general_cast_move(kind, pending.get('move_id'))
                 and not battle.get('result')):
             row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing', 'cells', 'due')}
@@ -2209,6 +2237,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                                 **{key: pending.get(key) for key in
                                    ('move_id', 'kind', 'target', 'origin', 'facing', 'due')},
                                 locked_cells=pending.get('cells', []), geometry_complete=False))
+            if pending['move_id'] == 'EN18-A' and pending.get('edge'):
+                actions[-1]['edge'] = pending['edge']
         laws = []
         for row in boss_threats.public(battle)['bosses']:
             law = row['law']
@@ -2217,6 +2247,9 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                              ('id', 'boss', 'target', 'started', 'due', 'progress', 'threshold', 'status')})
         danger = dict(battle_id=battle['battle_id'], tick=battle['tick'], actions=actions, laws=laws,
                       coverage='PERSISTED_PENDING_AND_ACTIVE_LAWS', exhaustive=False)
+        closed = battle.get('closed_edge')
+        if closed and closed['starts'] <= battle['tick'] <= closed['expires']:
+            danger['closed_edge'] = closed
     return dict(narrative_enabled=public['enabled'], hint=public['hint'], history=public['history'],
                 active=None if active is None else dict(id=active['id'], title=active['title'], status=active['status'],
                     cursor=active['cursor'], line_count=len(active['lines']),

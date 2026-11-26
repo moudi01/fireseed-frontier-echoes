@@ -21,7 +21,11 @@ const Mg02 = Profiles.Mg02
 const Mg03 = Profiles.Mg03
 const Mg04 = Profiles.Mg04
 const Demon = Profiles.Demon
-const GENERAL_CAST_MOVES := {"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES}
+const Admin = Profiles.Admin
+const GENERAL_CAST_MOVES := {
+	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
+	"EN16": ["EN16-A"], "EN18": ["EN18-A"],
+}
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
 const ForgeCrossingKit = preload("res://forge_crossing_kit.gd")
@@ -838,6 +842,8 @@ func apply(snapshot: Dictionary, restore: bool, deployment: Array = [], enemies:
 		if _uses_general_casts(pawn) and not pawn.active_cast.is_empty() and float(row.hp) > 0 \
 				and pawn.active_cast != row.get("boss_pending", {}).get("id", ""):
 			pawn.apply_boss_event("cancel", pawn.active_move, pawn.active_cast, pawn.heading, reduced)
+		if pawn is Admin and row.kind == "ADMIN" and float(row.hp) > 0:
+			pawn.apply_state_pose(str(row.get("admin_pose", "")), pawn.heading, reduced, restore)
 		if pawn is Bow and not pawn.bow_cast.is_empty() and float(row.hp) > 0 \
 				and pawn.bow_cast != row.get("bow_pending", {}).get("id", ""):
 			_cancel_bow(pawn)
@@ -1070,6 +1076,10 @@ func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Di
 			return pawn.assemble_mg04(scene, travel, profile)
 		"demon":
 			return pawn.assemble_demon(scene, travel, profile)
+		"admin":
+			return pawn.assemble_admin(scene, travel, profile)
+		"admin_guard":
+			return pawn.assemble_guard(scene, travel, profile)
 		"enemy_spear":
 			return pawn.assemble(scene, true)
 		"skeleton":
@@ -1144,7 +1154,7 @@ func _prepare_bow(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 
 
 func _uses_general_casts(pawn: Variant) -> bool:
-	return pawn is Mg03 or pawn is Mg04 or pawn is Demon
+	return pawn is Mg03 or pawn is Mg04 or pawn is Demon or pawn is Admin
 
 
 func _prepare_general_cast(pawn: Node3D, row: Dictionary, restore: bool) -> void:

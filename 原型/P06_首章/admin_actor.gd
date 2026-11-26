@@ -4,7 +4,7 @@ extends "res://shield_actor.gd"
 ## Matches shield_actor.gd / shield_stage.gd general-cast contract with distinct
 ## non-color-dependent silhouettes for:
 ## - ADMIN-A (秩序抹除·扩域, 7-cell magic), ADMIN-B (维护权限, 48 self-shield),
-## - ADMIN-C (格式化脉冲·扩域, 15-cell magic), ADMIN-D (法令反噬, directed/定向 only — no A-line sample),
+## - ADMIN-C (格式化脉冲·扩域, 15-cell magic), ADMIN-D (法令反噬, enabled by the authority after breaking a law),
 ## - boss_law_named (点名 84->92 拍) and formatting_started (139 拍格式化) independent state poses.
 
 const ADMIN_MODEL := "res://assets/enemies/ADMIN_Board.glb"
@@ -67,7 +67,7 @@ const CAST_SPEED := 1.45
 var active_cast := ""
 var active_move := ""
 var active_state := ""
-var _rack_node: Node3D
+var _skill_clips: Dictionary
 
 
 static func is_available() -> bool:
@@ -85,17 +85,23 @@ static func profile_entry(script_ref: Script) -> Dictionary:
 
 
 func assemble_admin(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
-	var required: Array[String] = []
-	for move_id in ADMIN_MOVES:
-		for key in ["raise", "hold", "release", "cancel"]:
-			required.append(str(SKILL_CLIPS[move_id][key]))
-	for st in STATE_CLIPS.keys():
-		for key in ["raise", "hold"]:
-			required.append(str(STATE_CLIPS[st][key]))
-	if not super.assemble(scene, travel_library, profile, required):
-		return false
-	_rack_node = find_child("ADMIN_LawRack", true, false) as Node3D
-	return _rack_node != null
+	_skill_clips = SKILL_CLIPS
+	var required: Array[String] = _required_skill_clips()
+	for clips: Dictionary in STATE_CLIPS.values():
+		required.append_array(clips.values())
+	return super.assemble(scene, travel_library, profile, required) and find_child("ADMIN_LawRack", true, false) is Node3D
+
+
+func assemble_guard(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
+	_skill_clips = {profile.move: profile.skill_clips}
+	return super.assemble(scene, travel_library, profile, _required_skill_clips())
+
+
+func _required_skill_clips() -> Array[String]:
+	var names: Array[String] = []
+	for clips: Dictionary in _skill_clips.values():
+		names.append_array(clips.values())
+	return names
 
 
 func snap(point: Vector3, yaw: float, down: bool, still := false) -> void:
@@ -106,16 +112,18 @@ func snap(point: Vector3, yaw: float, down: bool, still := false) -> void:
 
 
 func apply_state_pose(state_key: String, yaw: float, reduced: bool, restore := false) -> void:
-	if fallen or not active_cast.is_empty():
+	if active_state == state_key and not restore:
+		return
+	var former: Dictionary = STATE_CLIPS.get(active_state, {})
+	var standing := str(player.assigned_animation) in former.values()
+	active_state = state_key
+	var clip := str(player.assigned_animation)
+	if fallen or not active_cast.is_empty() or clip.ends_with("Release") or clip.ends_with("Cancel"):
 		return
 	if not STATE_CLIPS.has(state_key):
-		active_state = ""
-		if reduced:
-			_pose(guard_clip, 0.0)
-		else:
-			_return_guard()
+		if standing:
+			_settle_pose(reduced)
 		return
-	active_state = state_key
 	var bank: Dictionary = STATE_CLIPS[state_key]
 	_cancel()
 	position = destination
@@ -130,21 +138,34 @@ func apply_state_pose(state_key: String, yaw: float, reduced: bool, restore := f
 	motion.tween_callback(_play.bind(bank.hold))
 
 
+func _settle_pose(reduced: bool) -> void:
+	rotation.y = heading
+	var state: Dictionary = STATE_CLIPS.get(active_state, {})
+	var idle: String = state.get("hold", guard_clip)
+	if reduced:
+		_pose(idle, 0.0)
+	else:
+		_play(idle)
+
+
+func _return_guard() -> void:
+	_settle_pose(false)
+
+
 func apply_boss_event(kind: String, move_id: String, cast_id: String, yaw: float,
 		reduced: bool, restore := false) -> float:
 	if fallen and kind != "down":
 		return 0.0
-	if kind in ["law_named", "formatting"]:
-		apply_state_pose(kind, yaw, reduced, restore)
+	var bank: Dictionary = _skill_clips.get(move_id, {})
+	if bank.is_empty() and kind in ["prepare", "release", "cancel"]:
 		return 0.0
-	var bank: Dictionary = SKILL_CLIPS.get(move_id, SKILL_CLIPS["ADMIN-A"])
 	match kind:
 		"prepare":
 			if cast_id.is_empty() or active_cast == cast_id:
 				return 0.0
 			_cancel()
 			active_cast = cast_id
-			active_move = move_id if SKILL_CLIPS.has(move_id) else "ADMIN-A"
+			active_move = move_id
 			position = destination
 			rotation.y = _closest_yaw(yaw)
 			if reduced or restore:
@@ -163,7 +184,7 @@ func apply_boss_event(kind: String, move_id: String, cast_id: String, yaw: float
 			position = destination
 			rotation.y = _closest_yaw(yaw)
 			if reduced:
-				_pose(guard_clip, 0.0)
+				_settle_pose(true)
 				return 0.0
 			var rel_clip: String = bank.release
 			_play(rel_clip, 0.0, CAST_SPEED)
@@ -179,7 +200,7 @@ func apply_boss_event(kind: String, move_id: String, cast_id: String, yaw: float
 			position = destination
 			rotation.y = _closest_yaw(yaw)
 			if reduced:
-				_pose(guard_clip, 0.0)
+				_settle_pose(true)
 				return 0.0
 			var can_clip: String = bank.cancel
 			_play(can_clip, 0.0, CAST_SPEED)
@@ -202,7 +223,10 @@ func apply_boss_event(kind: String, move_id: String, cast_id: String, yaw: float
 			motion.tween_callback(_return_guard)
 			return dur * 0.35
 		"hit":
-			if not active_cast.is_empty() or reduced:
+			var current := str(player.assigned_animation)
+			var state_raise: String = STATE_CLIPS.get(active_state, {}).get("raise", "")
+			if not active_cast.is_empty() or reduced or current.ends_with("Release") or current.ends_with("Cancel") \
+					or (not state_raise.is_empty() and current == state_raise):
 				return 0.0
 			_cancel()
 			_play(hit_clip, 0.0, 1.2)
