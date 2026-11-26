@@ -25,7 +25,7 @@ const Admin = Profiles.Admin
 const En02 = Profiles.En02
 const GENERAL_CAST_MOVES := {
 	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
-	"EN02": [En02.MOVE_ID], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
+	"EN02": [En02.MOVE_ID], "EN15": [Profiles.En15Profile.PROFILE.move], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
 }
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
@@ -1081,7 +1081,7 @@ func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Di
 			return pawn.assemble_demon(scene, travel, profile)
 		"admin":
 			return pawn.assemble_admin(scene, travel, profile)
-		"admin_guard":
+		"admin_guard", "enemy_cast":
 			return pawn.assemble_guard(scene, travel, profile)
 		"charge":
 			return pawn.assemble_charge(scene, travel, profile)

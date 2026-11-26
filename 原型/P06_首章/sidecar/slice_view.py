@@ -51,6 +51,7 @@ GENERAL_CAST_MOVES = {
     'DEMON': {'DEMON-A', 'DEMON-B', 'DEMON-C', 'DEMON-D'},
     'ADMIN': {'ADMIN-A', 'ADMIN-B', 'ADMIN-C', 'ADMIN-D'},
     'EN02': {'EN02-A'},
+    'EN15': {'EN15-A'},
     'EN16': {'EN16-A'},
     'EN18': {'EN18-A'},
 }
@@ -948,6 +949,8 @@ def record_impact(impacts, event):
         receiver = event['actor'] if kind == 'life_steal' else event['target']
         row = impacts.setdefault(receiver, {})
         row['healed'] = row.get('healed', 0) + event['effective']
+        if event.get('move') == 'EN15-A':
+            row['choir_healed'] = row.get('choir_healed', 0) + event['effective']
     elif kind == 'down':
         impacts.setdefault(event['actor'], {})['down'] = True
     elif kind == 'cast_delayed':
@@ -1047,7 +1050,7 @@ def battle_view(game):
                       and event.get('move') == 'EN01-A' and name == 'release')
         infantry_event = event.get('move') in INFANTRY_MOVES and name in ('windup', 'release', 'skill_miss')
         hero_event = event.get('move') in HERO_MOVES and name in ('windup', 'release', 'skill_miss')
-        aid_heal = name == 'heal' and event.get('move') == 'M02-A'
+        skill_heal = name == 'heal' and event.get('move') in ('M02-A', 'EN15-A')
         mist_delay = name == 'cast_delayed' and by_id.get(event.get('actor'), {}).get('kind') == 'M04'
         enemy_event = event.get('move') in ENEMY_MOVES and name in ('windup', 'release', 'skill_miss')
         ado_event = (by_id.get(event.get('actor'), {}).get('kind') == 'MG01'
@@ -1072,7 +1075,7 @@ def battle_view(game):
         charge_moved = boss_kind == 'EN02' and name == 'charge_move'
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
-                or general_event or mimic_started or aid_heal or mist_delay or enemy_event or bone_guard
+                or general_event or mimic_started or skill_heal or mist_delay or enemy_event or bone_guard
                 or edge_event or law_event or formatting_event or summon_event or charge_moved):
             continue
         row = {key: event[key] for key in fields if key in event}
@@ -1093,8 +1096,8 @@ def battle_view(game):
             row['facing'] = windup.get('facing')
         if general_event and name in ('windup', 'release'):
             lock = event if name == 'windup' else locks.get(event['action_id'], {})
-            row.update({key: lock[key] for key in ('origin', 'facing', 'target', 'interruptible', 'delayable_cast', 'public_anchors', 'edge')
-                        if key in lock})
+            row.update({key: lock[key] for key in ('origin', 'facing', 'target', 'interruptible', 'delayable_cast',
+                                                  'public_anchors', 'edge', 'targets') if key in lock})
         if (infantry_event or enemy_event or hero_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['target'] = windup.get('target')
@@ -1189,6 +1192,8 @@ def battle_view(game):
         if (actor['hp'] > 0 and general_cast_move(kind, pending.get('move_id'))
                 and not battle.get('result')):
             row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing', 'cells', 'due')}
+            if kind == 'EN15':
+                row['boss_pending']['targets'] = pending.get('targets', [])
         if kind == 'MG01':
             row['memory_pose'] = bool(battle['boss_dialogue_queue'])
             if pending.get('move_id') in ADO_MOVES and not battle.get('result'):
@@ -2391,6 +2396,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                                 **{key: pending.get(key) for key in
                                    ('move_id', 'kind', 'target', 'origin', 'facing', 'due')},
                                 locked_cells=pending.get('cells', []), geometry_complete=False))
+            if actor['kind'] == 'EN15' and pending['move_id'] == 'EN15-A':
+                actions[-1]['locked_targets'] = pending.get('targets', [])
             if pending['move_id'] == 'EN18-A' and pending.get('edge'):
                 actions[-1]['edge'] = pending['edge']
         laws = []

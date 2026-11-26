@@ -807,6 +807,7 @@ func _refresh(row: Dictionary) -> void:
 
 func _set_danger() -> void:
 	var current: Variant = model.get("danger")
+	var support_lines: Array[String] = []
 	var lines: Array[String] = []
 	var location_details: Array[String] = []
 	var unsounded := false
@@ -825,18 +826,26 @@ func _set_danger() -> void:
 			if target != null and locked.is_empty():
 				where = "自身" if target == intent.actor_id else "目标 " + _combatant_name(str(target))
 			var move_id: String = intent.get("move_id", "预警")
+			var choir: bool = move_id == "EN15-A" and intent.get("kind") == "heal"
 			if move_id == "MG01-B":
 				where = "蓄势护盾"
+			elif choir:
+				where = "锁定 %d 个治疗目标" % intent.get("locked_targets", []).size()
 			var move_name := _combat_move(move_id)
 			var remaining := maxi(0, int(intent.get("due", current["tick"])) - int(current["tick"]))
 			var timer := "%d 拍后" % remaining if remaining > 0 else "本拍释放"
-			var marker := "[%d]" % numbers[intent.action_id] if numbers.has(intent.action_id) else "△"
-			lines.append("%s  %s   ·   %s   ·   %s   ·   %s" % [marker, move_name, timer, _combatant_name(intent.actor_id), where])
+			var marker := "+" if choir else ("[%d]" % numbers[intent.action_id] if numbers.has(intent.action_id) else "△")
+			var line := "%s  %s   ·   %s   ·   %s   ·   %s" % [marker, move_name, timer, _combatant_name(intent.actor_id), where]
+			if choir:
+				support_lines.append(line)
+			else:
+				lines.append(line)
 			if not locked.is_empty():
 				var cells: Array[String] = []
 				for point in locked:
 					cells.append("%d,%d" % [int(point[0]), int(point[1])])
 				location_details.append("%s · %s" % [move_name, " / ".join(cells)])
+	lines = support_lines + lines
 	warning.text = "\n".join(lines)
 	warning.tooltip_text = "\n".join(location_details)
 	warning.visible = not lines.is_empty()

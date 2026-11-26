@@ -22,6 +22,7 @@ const Admin = preload("res://admin_actor.gd")
 const AdminGuards = preload("res://admin_guard_profiles.gd")
 const En02 = preload("res://en02_actor.gd")
 const En02Profile = preload("res://en02_profile.gd")
+const En15Profile = preload("res://en15_profile.gd")
 
 const ASSETS := "res://assets/"
 const ENEMIES := ASSETS + "enemies/"
@@ -100,6 +101,9 @@ static func _build_entries() -> Dictionary:
 	var charger := En02Profile.entry(En02)
 	charger["assembly"] = "charge"
 	result["EN02"] = charger
+	var choir := En15Profile.entry(Admin)
+	choir["assembly"] = "enemy_cast"
+	result["EN15"] = choir
 	var sev := Mg02.profile_entry(Mg02)
 	sev["optional"] = true
 	result["MG02"] = sev
