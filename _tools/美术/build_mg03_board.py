@@ -450,10 +450,37 @@ def repair_body_mesh_qa(mesh_obj) -> dict:
             vg_chest.add([v_idx], w_chest, "REPLACE")
             vg_horns.add([v_idx], w_horns, "REPLACE")
 
+    # 4. Narrow fix for the 2 measured animated cloth-crossing pairs (6 outer-layer verts only):
+    #    - Chest outer flap (face ~12732, rest center ~(0.179, -0.123, 1.323)) crossing 10733 in Mg03Idle f=46
+    #    - Waist-back outer shroud (face ~7612, rest center ~(0.034, 0.087, 0.765)) crossing 7171 in Mg03Walk f=17
+    cloth_patches_fixed = []
+    vg_cl_l = mesh_obj.vertex_groups.get("clavicle.L")
+    vg_ua_l = mesh_obj.vertex_groups.get("upper_arm.L")
+    for tag, target_c, offset_m, strip_arm_l in [
+        ("chest_outer_12732", Vector((0.1794, -0.1230, 1.3231)), 0.010, True),
+        ("waist_outer_7612", Vector((0.0341, 0.0873, 0.7645)), 0.011, False),
+    ]:
+        best_p = min(mesh_obj.data.polygons, key=lambda p: (p.center - target_c).length)
+        if (best_p.center - target_c).length < 0.025:
+            out_n = best_p.normal.normalized()
+            v_indices = list(best_p.vertices)
+            for vi in v_indices:
+                mesh_obj.data.vertices[vi].co += out_n * offset_m
+                if strip_arm_l and vg_ua_l and vg_cl_l:
+                    # Move upper_arm.L pull on this chest-flap face onto clavicle.L so lowering arm cannot drag it inward
+                    w_ua = next((g.weight for g in mesh_obj.data.vertices[vi].groups if g.group == vg_ua_l.index), 0.0)
+                    if w_ua > 1e-6:
+                        w_cl = next((g.weight for g in mesh_obj.data.vertices[vi].groups if g.group == vg_cl_l.index), 0.0)
+                        vg_ua_l.remove([vi])
+                        vg_cl_l.add([vi], w_cl + w_ua, "REPLACE")
+            cloth_patches_fixed.append({"tag": tag, "face": best_p.index, "verts": v_indices, "offset_m": offset_m})
+    mesh_obj.data.update()
+
     return {
         "wire_edges_removed": wire_removed,
         "horn_root_verts_seated": seated_verts,
         "coplanar_pairs_separated": coplanar_fixed,
+        "cloth_crossing_patches": cloth_patches_fixed,
     }
 
 
