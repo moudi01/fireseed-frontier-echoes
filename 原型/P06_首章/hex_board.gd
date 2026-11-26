@@ -17,8 +17,12 @@ const OverlookGround = preload("res://overlook_ground.gd")
 const WetlandBoard = preload("res://wetland_board.gd")
 const MirrorCourt = preload("res://mirror_court_board.gd")
 const SaltCrossing = preload("res://salt_crossing_board.gd")
+const ForgeCrossing = preload("res://forge_crossing_board.gd")
 const MIRROR_COVER_PROPS := {"LOW_OBSTACLE": "mirror-plinth", "HIGH_OBSTACLE": "mirror-stele"}
 const SALT_TERRAIN_PROPS := {"LOW_OBSTACLE": "salt-bollard", "HIGH_GROUND": "salt-dais"}
+const FORGE_TERRAIN_PROPS := {
+	"HIGH_OBSTACLE": "forge-pillar", "LOW_OBSTACLE": "forge-anvil", "HIGH_GROUND": "forge-gantry",
+}
 const FORTRESS_COURT_ART := {
 	"B1": "res://assets/fortress/watch_ink_court.png",
 	"B2": "res://assets/fortress/flank_ink_court.png",
@@ -81,6 +85,7 @@ var _pressed_battle_actor := ""
 var _field_art: Texture2D
 var _mirror_court := false
 var _salt_crossing := false
+var _forge_crossing := false
 var _route_art: Texture2D
 var _prepared_field_art := ""
 var field_art_timings: Array[Dictionary] = []
@@ -333,6 +338,8 @@ func _refresh() -> void:
 		and not MirrorCourt.field_art_path(str(slice.get("region", "")), current_site).is_empty()
 	_salt_crossing = _battle_mode and not _town and map_data.get("board_id") == SaltCrossing.BOARD_ID \
 		and not SaltCrossing.field_art_path(str(slice.get("region", "")), current_site).is_empty()
+	_forge_crossing = _battle_mode and not _town and map_data.get("board_id") == ForgeCrossing.BOARD_ID \
+		and not ForgeCrossing.field_art_path(str(slice.get("region", "")), current_site).is_empty()
 	var art_path := _field_art_path(current_site) if _battle_mode and not _town else ""
 	if _town_yard:
 		art_path = TOWN_YARD_ART
@@ -357,7 +364,8 @@ func _refresh() -> void:
 		_deploy_hover_cell = Vector2i(999, 999)
 	var terrain_state := [size, _town, _battle_mode, _sideways, art_path, slice.get("region"), slice.get("site"),
 		phase == "MISSING_SEARCH", _show_deployment, _gray_oak_field, _layout_cells, _deployment_cells(),
-		_overlook_width, overlook_path, impact_font_size, _mirror_court, _salt_crossing]
+		_overlook_width, overlook_path, impact_font_size, _mirror_court, _salt_crossing, _forge_crossing,
+		map_data.get("forge_anchors", [])]
 	var terrain_changed := terrain_state != _terrain_state
 	var same_ado_field: bool = not terrain_changed and phase == "BATTLE" \
 		and snapshot.get("encounter") == "BATTLE-MG01" and snapshot.id == stage.battle_id
@@ -386,10 +394,17 @@ func _refresh() -> void:
 		if _town_yard:
 			_town_landmarks = _town_scenery()
 			stage.set_scenery(_town_landmarks)
-		elif (_mirror_court or _salt_crossing) and _field_art != null:
+		elif (_mirror_court or _salt_crossing or _forge_crossing) and _field_art != null:
 			var previous_props: Array = stage.scenery.keys()
-			var props := SALT_TERRAIN_PROPS if _salt_crossing else MIRROR_COVER_PROPS
-			stage.set_scenery(_court_scenery(props, "salt" if _salt_crossing else "mirror") if show_models else {})
+			var props := MIRROR_COVER_PROPS
+			var prefix := "mirror"
+			if _forge_crossing:
+				props = FORGE_TERRAIN_PROPS
+				prefix = "forge"
+			elif _salt_crossing:
+				props = SALT_TERRAIN_PROPS
+				prefix = "salt"
+			stage.set_scenery(_court_scenery(props, prefix) if show_models else {})
 			terrain_changed = terrain_changed or previous_props != stage.scenery.keys()
 		elif slice.get("region", "") == "RG02":
 			stage.set_scenery(_fortress_scenery())
@@ -721,6 +736,9 @@ func _draw_terrain() -> void:
 		elif _salt_crossing:
 			var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "SHALLOW_WATER": []}, "salt")
 			SaltCrossing.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
+		elif _forge_crossing:
+			var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "HIGH_OBSTACLE": []}, "forge")
+			ForgeCrossing.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways, map_data.get("forge_anchors", []))
 		else:
 			_draw_ground_obstacles(fortress)
 	if _show_deployment:
@@ -731,6 +749,9 @@ func _draw_terrain() -> void:
 
 
 func _field_art_path(site: String) -> String:
+	if _forge_crossing:
+		var forge_art := ForgeCrossing.field_art_path(str(slice.get("region", "")), site)
+		return forge_art if not forge_art.is_empty() and ResourceLoader.exists(forge_art, "Texture2D") else ""
 	if _salt_crossing:
 		var salt_art := SaltCrossing.field_art_path(str(slice.get("region", "")), site)
 		return salt_art if not salt_art.is_empty() and ResourceLoader.exists(salt_art, "Texture2D") else ""

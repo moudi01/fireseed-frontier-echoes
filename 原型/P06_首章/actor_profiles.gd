@@ -16,6 +16,7 @@ const SkeletonEnemy = preload("res://skeleton_actor.gd")
 const Ado = preload("res://ado_actor.gd")
 const Mg02 = preload("res://mg02_actor.gd")
 const Mg03 = preload("res://mg03_actor.gd")
+const Mg04 = preload("res://mg04_actor.gd")
 
 const ASSETS := "res://assets/"
 const ENEMIES := ASSETS + "enemies/"
@@ -95,6 +96,7 @@ static func _build_entries() -> Dictionary:
 	sev["optional"] = true
 	result["MG02"] = sev
 	result["MG03"] = Mg03.profile_entry(Mg03)
+	result["MG04"] = Mg04.profile_entry(Mg04)
 	for kind in TARGETED:
 		var row: Dictionary = TARGETED[kind].duplicate()
 		row.merge({"script": Targeted, "side": "player", "assembly": "targeted",
