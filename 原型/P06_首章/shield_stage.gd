@@ -27,6 +27,7 @@ const GoblinCrossbow = Profiles.GoblinCrossbow
 const GENERAL_CAST_MOVES := {
 	"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES, "ADMIN": Admin.ADMIN_MOVES,
 	"EN02": [En02.MOVE_ID], "EN05": [Profiles.En05Profile.PROFILE.move], "EN08": [Profiles.En08Profile.PROFILE.move],
+	"EN07": [Profiles.En07Profile.PROFILE.move], "EL04": ["EL04-B", Profiles.El04Profile.PROFILE.move],
 	"EN15": [Profiles.En15Profile.PROFILE.move], "EN16": ["EN16-A"], "EN18": ["EN18-A"],
 	"EN19": [Profiles.En19Profile.PROFILE.move], "EN20": [Profiles.En20Profile.PROFILE.move],
 }
@@ -1245,6 +1246,8 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 	var bone_misses := {}
 	var bolt_contacts := {}
 	var charges := {}
+	var pushed := {}
+	var side_steps := {}
 	for event in events:
 		var kind: String = by_id.get(event.get("actor", ""), {}).get("kind", "")
 		var profile: Dictionary = Profiles.TARGETED.get(kind, {})
@@ -1253,6 +1256,10 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 			downs[event.actor] = event
 		elif event.type == "charge_move" and kind == "EN02":
 			charges[event.action_id] = event
+		elif event.type == "push" and event.get("move") == "EN07-A":
+			pushed[event.target] = true
+		elif event.type == "side_step" and event.get("move") == "EL04-B":
+			side_steps[event.action_id] = event
 		elif event.type == "hit" and event.get("action") == "EN20-A":
 			bolt_contacts[_attack_key(event)] = true
 		elif event.type == "hit" and by_id.get(event.actor, {}).get("kind") == "S02":
@@ -1279,8 +1286,11 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 	var moved := {}
 	for charge in charges.values():
 		moved[charge.actor] = true
+	for step in side_steps.values():
+		if actors.get(step.actor, {}).get("node") is Admin:
+			moved[step.actor] = true
 	for event in events:
-		if event.type == "move" and actors.has(event.actor) and not downs.has(event.actor):
+		if event.type == "move" and actors.has(event.actor) and not downs.has(event.actor) and not pushed.has(event.actor):
 			moved[event.actor] = true
 			var mover = actors[event.actor].node
 			if reduced:
@@ -1439,8 +1449,15 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				if general_skill:
 					var facing := _intent_facing(event.get("facing"), int(source_row.facing))
 					yaw = _general_cast_yaw(attacker, event_move, event.get("cells", []), facing)
-				contacts[key] = attacker.apply_boss_event("release" if general_skill else "attack",
-					event_move, str(event.get("action_id", "")), yaw, reduced)
+				var cast_id := str(event.get("action_id", ""))
+				if event_move == "EL04-B" and side_steps.has(cast_id) and attacker is Admin:
+					var landing := _world(_at(side_steps[cast_id].position))
+					var sideways: Vector3 = landing - attacker.position
+					var step_yaw := yaw if sideways.length_squared() < 0.0001 else _yaw(sideways)
+					contacts[key] = attacker.release_side_step(event_move, cast_id, step_yaw, landing, reduced)
+				else:
+					contacts[key] = attacker.apply_boss_event("release" if general_skill else "attack",
+						event_move, cast_id, yaw, reduced)
 				if attacker is GoblinCrossbow and bolt_contacts.has(key):
 					contacts[key] = _goblin_bolt(attacker, event, contacts[key])
 			elif skill:

@@ -93,8 +93,26 @@ func assemble_admin(scene: PackedScene, travel_library: AnimationLibrary, profil
 
 
 func assemble_guard(scene: PackedScene, travel_library: AnimationLibrary, profile: Dictionary) -> bool:
-	_skill_clips = {profile.move: profile.skill_clips}
+	if profile.has("move_clips"):
+		_skill_clips = profile.move_clips
+	else:
+		_skill_clips = {profile.move: profile.skill_clips}
 	return super.assemble(scene, travel_library, profile, _required_skill_clips())
+
+
+func release_side_step(move_id: String, cast_id: String, yaw: float, landing: Vector3, reduced: bool) -> float:
+	var start := position
+	var lag := apply_boss_event("release", move_id, cast_id, yaw, reduced)
+	if reduced or lag <= 0.0 or not landing.is_equal_approx(destination) or start.is_equal_approx(landing):
+		return lag
+	var duration := player.get_animation(player.assigned_animation).length / CAST_SPEED
+	_cancel()
+	position = start
+	motion = create_tween()
+	motion.tween_property(self, "position", landing, duration * 0.60).set_trans(Tween.TRANS_SINE)
+	motion.tween_interval(duration * 0.40)
+	motion.tween_callback(_return_guard)
+	return lag
 
 
 func _required_skill_clips() -> Array[String]:

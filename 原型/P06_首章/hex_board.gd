@@ -1019,6 +1019,7 @@ func _draw_overlay() -> void:
 	_draw_law_target()
 	_draw_weak_points()
 	_draw_support_targets()
+	_draw_movement_previews()
 	_draw_warning_keys()
 	if _battle_mode and not impacts.is_empty() and slice.get("battle_memory", {}).is_empty():
 		_draw_combat_impacts()
@@ -1542,6 +1543,10 @@ static func impact_text(row: Dictionary) -> String:
 	var missed: String = row.get("goblin_miss", "")
 	if not missed.is_empty():
 		parts.append("侧袭落空" if missed == "EN19-A" else "钉脚弩落空")
+	if row.has("sweep_push"):
+		parts.append("被推移" if row.sweep_push else "未推移")
+	if row.get("side_step_blocked", false):
+		parts.append("侧步受阻")
 	if row.has("ward"):
 		parts.append("代受")
 	if int(row.get("damage", 0)) > 0:
@@ -1571,7 +1576,8 @@ func _draw_combat_impacts() -> void:
 			continue
 		var priority := 5 if actor.id == battle_focus_id else 3 if impact.get("down", false) else 1
 		if priority == 1 and (int(impact.get("choir_healed", 0)) > 0 or impact.get("salt_arc_missed", false)
-				or impact.get("conceal_revealed", false) or impact.has("goblin_miss")):
+				or impact.get("conceal_revealed", false) or impact.has("goblin_miss")
+				or impact.has("sweep_push") or impact.get("side_step_blocked", false)):
 			priority = 4
 		var protection := impact.has("ward") or impact.has("shared_shield") or impact.has("bone_guard")
 		var support: bool = protection or int(impact.get("healed", 0)) > 0 or int(impact.get("absorbed", 0)) > 0
@@ -1651,11 +1657,15 @@ static func conceal_support(intent: Dictionary) -> bool:
 	return intent.get("move_id") == "EN08-A" and intent.get("kind") == "conceal"
 
 
+static func side_step_intent(intent: Dictionary) -> bool:
+	return intent.get("move_id") == "EL04-B"
+
+
 static func warning_numbers(current: Dictionary) -> Dictionary:
 	var numbers := {}
 	for action in current.get("actions", []):
 		if action.get("side") == "enemy" and not _choir_support(action) and not conceal_support(action) \
-				and not action.get("locked_cells", []).is_empty():
+				and not side_step_intent(action) and not action.get("locked_cells", []).is_empty():
 			numbers[action.action_id] = numbers.size() + 1
 	return numbers if numbers.size() > 1 else {}
 
@@ -1666,7 +1676,7 @@ func _layout_danger_cells() -> void:
 	_danger_areas.clear()
 	var numbers := warning_numbers(danger)
 	for action in danger.get("actions", []):
-		if action["side"] != "enemy" or _choir_support(action) or conceal_support(action):
+		if action["side"] != "enemy" or _choir_support(action) or conceal_support(action) or side_step_intent(action):
 			continue
 		var cells := {}
 		var roll_call: bool = action.get("move_id") == "MG01-C"
@@ -1827,6 +1837,37 @@ func _draw_support_targets() -> void:
 				_overlay.draw_colored_polygon(diamond, Color("383048"))
 				diamond.append(diamond[0])
 				_overlay.draw_polyline(diamond, ink, 1.8, true)
+
+
+func _draw_movement_previews() -> void:
+	for action: Dictionary in danger.get("actions", []):
+		if action.get("side") != "enemy":
+			continue
+		if side_step_intent(action) and not action.get("locked_cells", []).is_empty():
+			_draw_movement_arrow(action.get("origin"), action.locked_cells[0], Color("b7d7ef"), false)
+		for plan: Dictionary in action.get("push_destinations", []):
+			_draw_movement_arrow(plan.get("from"), plan.get("to"), Color("ffe6ac"), true)
+
+
+func _draw_movement_arrow(origin: Variant, destination: Variant, ink: Color, dashed: bool) -> void:
+	if not origin is Array or origin.size() != 2 or not destination is Array or destination.size() != 2:
+		return
+	var first := cell_index(origin)
+	var last := cell_index(destination)
+	if not coordinate_map.has(first) or not coordinate_map.has(last) or first == last:
+		return
+	var start: Vector2 = coordinate_map[first]
+	var stop: Vector2 = coordinate_map[last]
+	var tail := start.lerp(stop, 0.23)
+	var tip := start.lerp(stop, 0.77)
+	var back := (tail - tip).normalized() * clampf(_scale * 0.30, 6.0, 10.0)
+	_overlay.draw_line(tail, tip, Color("252d32"), 4.8, true)
+	if dashed:
+		_overlay.draw_dashed_line(tail, tip, ink, 2.4, 5.0)
+	else:
+		_overlay.draw_line(tail, tip, ink, 2.4, true)
+	for angle: float in [-0.55, 0.55]:
+		_overlay.draw_line(tip, tip + back.rotated(angle), ink, 2.4, true)
 
 
 func _draw_weak_points() -> void:

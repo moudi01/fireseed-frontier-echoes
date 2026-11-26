@@ -847,6 +847,7 @@ func _set_danger() -> void:
 			var move_id: String = intent.get("move_id", "预警")
 			var choir: bool = move_id == "EN15-A" and intent.get("kind") == "heal"
 			var conceal := Board.conceal_support(intent)
+			var sidestep := Board.side_step_intent(intent)
 			var marker := "[%d]" % numbers[intent.action_id] if numbers.has(intent.action_id) else "△"
 			if move_id == "MG01-B":
 				where = "蓄势护盾"
@@ -856,6 +857,11 @@ func _set_danger() -> void:
 			elif conceal:
 				where = "锁定 %d 个结雾目标" % intent.get("locked_targets", []).size()
 				marker = "◇"
+			elif sidestep:
+				where = "侧步落点"
+				marker = "→"
+			elif move_id == "EN07-A":
+				where = "%d 个攻击格 · 箭头示推挤落点" % locked.size()
 			elif move_id == "EN19-A":
 				where = "锁定 1 格 · 侧后起手"
 			elif move_id == "EN20-A":
@@ -864,7 +870,7 @@ func _set_danger() -> void:
 			var remaining := maxi(0, int(intent.get("due", current["tick"])) - int(current["tick"]))
 			var timer := "%d 拍后" % remaining if remaining > 0 else "本拍释放"
 			var line := "%s  %s   ·   %s   ·   %s   ·   %s" % [marker, move_name, timer, _combatant_name(intent.actor_id), where]
-			if choir or conceal:
+			if choir or conceal or sidestep:
 				support_lines.append(line)
 			else:
 				lines.append(line)
@@ -3885,6 +3891,17 @@ func _combat_log(snapshot: Dictionary) -> Array[Dictionary]:
 				detail = actor + (" 开始攻击，结雾解除" if event.get("reason") == "attack" else " 显形")
 			"concealment_expired":
 				detail = actor + " 的结雾消散"
+			"side_step":
+				detail = "%s 完成侧步" % actor
+			"side_step_skipped":
+				detail = "%s 无可用落点，跳过侧步" % actor
+			"move_blocked":
+				detail = "%s 的侧步受阻" % actor
+			"push":
+				detail = "%s 将 %s 推至 %d,%d" % [
+					actor, _combatant_name(event.target), int(event.position[0]), int(event.position[1])]
+			"push_blocked":
+				detail = "%s 的扫喙未能推移 %s" % [actor, _combatant_name(event.target)]
 			"movement_block":
 				detail = "%s 的钉脚弩限制 %s 第 %d 拍移动" % [
 					actor, _combatant_name(event.target), int(event.until)]

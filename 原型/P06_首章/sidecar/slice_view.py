@@ -52,6 +52,8 @@ GENERAL_CAST_MOVES = {
     'ADMIN': {'ADMIN-A', 'ADMIN-B', 'ADMIN-C', 'ADMIN-D'},
     'EN02': {'EN02-A'},
     'EN05': {'EN05-A'},
+    'EN07': {'EN07-A'},
+    'EL04': {'EL04-B', 'EN07-A'},
     'EN08': {'EN08-A'},
     'EN15': {'EN15-A'},
     'EN16': {'EN16-A'},
@@ -942,6 +944,16 @@ def _save_version(ledger, primary):
                 and row['before']['files']['save.json'] != primary), default=0)
 
 
+def heron_move(event, kind):
+    name = event['type']
+    if kind in ('EN07', 'EL04') and name in ('push', 'push_blocked'):
+        return 'EN07-A'
+    if kind == 'EL04' and (name in ('side_step', 'side_step_skipped')
+                           or (name == 'move_blocked' and event.get('move') == 'EL04-B')):
+        return 'EL04-B'
+    return None
+
+
 def record_impact(impacts, event):
     kind = event['type']
     if kind == 'hit':
@@ -960,6 +972,10 @@ def record_impact(impacts, event):
         impacts.setdefault(event['actor'], {})['salt_arc_missed'] = True
     elif kind == 'skill_miss' and event.get('move') in ('EN19-A', 'EN20-A'):
         impacts.setdefault(event['actor'], {})['goblin_miss'] = event['move']
+    elif kind in ('push', 'push_blocked') and event.get('move') == 'EN07-A':
+        impacts.setdefault(event['target'], {})['sweep_push'] = kind == 'push'
+    elif kind == 'move_blocked' and event.get('move') == 'EL04-B':
+        impacts.setdefault(event['actor'], {})['side_step_blocked'] = True
     elif kind == 'conceal_revealed' and event.get('reason') == 'attack':
         impacts.setdefault(event['actor'], {})['conceal_revealed'] = True
     elif kind == 'down':
@@ -1059,6 +1075,9 @@ def battle_view(game):
         bone_guard = name == 'private_shield' and by_id.get(event.get('actor'), {}).get('kind') == 'EN21'
         if bone_guard:
             event = {**event, 'move': BONE_GUARD}
+        movement = heron_move(event, by_id.get(event.get('actor'), {}).get('kind'))
+        if movement:
+            event = {**event, 'move': movement}
         record_impact(impacts, event)
         spear = by_id.get(event.get('target' if name == 'hero_interrupt' else 'actor'), {}).get('kind') == 'M01'
         spear_event = (spear and (name in ('hero_interrupt', 'hero_stun_cancel', 'movement_block')
@@ -1094,11 +1113,13 @@ def battle_view(game):
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
                 or general_event or mimic_started or skill_heal or mist_delay or enemy_event or bone_guard
                 or edge_event or law_event or formatting_event or summon_event or charge_moved
-                or pin or name in CONCEAL_EVENTS):
+                or pin or movement or name in CONCEAL_EVENTS):
             continue
         row = {key: event[key] for key in fields if key in event}
         if name in CONCEAL_EVENTS:
             row.update({key: event[key] for key in ('starts', 'expires', 'reason') if key in event})
+        if movement:
+            row.update({key: event[key] for key in ('origin', 'reason') if key in event})
         if mimic_started:
             row.update({key: event[key] for key in ('source_hero', 'source_move', 'source_action_id')})
         if edge_event:
@@ -1117,7 +1138,7 @@ def battle_view(game):
         if general_event and name in ('windup', 'release'):
             lock = event if name == 'windup' else locks.get(event['action_id'], {})
             row.update({key: lock[key] for key in ('origin', 'facing', 'target', 'interruptible', 'delayable_cast',
-                                                  'public_anchors', 'edge', 'targets') if key in lock})
+                                                  'public_anchors', 'edge', 'targets', 'push_destinations') if key in lock})
         if (infantry_event or enemy_event or hero_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['target'] = windup.get('target')
@@ -1258,7 +1279,10 @@ def combat_notes(events, by_id):
             last_hit = event
         bone_guard = kind == 'private_shield' and by_id.get(event['actor'], {}).get('kind') == 'EN21'
         pin = kind == 'movement_block' and event.get('move') == 'EN20-A'
-        if ((not bone_guard and not pin and kind not in CONCEAL_EVENTS
+        movement = heron_move(event, by_id.get(event.get('actor'), {}).get('kind'))
+        if movement:
+            event = {**event, 'move': movement}
+        if ((not bone_guard and not pin and not movement and kind not in CONCEAL_EVENTS
              and kind not in ('release', 'heal', 'down', 'boss_phase', 'boss_private_shield', 'skill_miss',
                                            'boss_memory_choice', 'cast_delayed', 'guard_redirect', 'shared_shield'))
                 or (kind == 'release' and (not event.get('move') or event['move'] == 'BASIC'))
@@ -1268,7 +1292,7 @@ def combat_notes(events, by_id):
         if len(notes) >= 8:
             break
     fields = ('id', 'event_id', 'tick', 'type', 'actor', 'target', 'move', 'phase', 'amount',
-              'actual_hp_damage', 'absorbed', 'effective', 'release_tick', 'ward', 'members', 'expires', 'until')
+              'actual_hp_damage', 'absorbed', 'effective', 'release_tick', 'ward', 'members', 'expires', 'until', 'position')
     return [{key: event[key] for key in fields if key in event}
             | ({'reason': event['reason']} if event['type'] == 'conceal_revealed' and 'reason' in event else {})
             for event in (notes or ([last_hit] if last_hit is not None else []))]
@@ -2434,6 +2458,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                 actions[-1]['locked_targets'] = pending.get('targets', [])
             if pending['move_id'] == 'EN18-A' and pending.get('edge'):
                 actions[-1]['edge'] = pending['edge']
+            if pending['move_id'] == 'EN07-A' and 'push_destinations' in pending:
+                actions[-1]['push_destinations'] = pending['push_destinations']
         laws = []
         for row in boss_threats.public(battle)['bosses']:
             law = row['law']
