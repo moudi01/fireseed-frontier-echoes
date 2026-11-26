@@ -19,6 +19,7 @@ const MirrorCourt = preload("res://mirror_court_board.gd")
 const SaltCrossing = preload("res://salt_crossing_board.gd")
 const ForgeCrossing = preload("res://forge_crossing_board.gd")
 const CitadelRing = preload("res://citadel_ring_board.gd")
+const DualFlankRegional = preload("res://dual_flank_regional_art.gd")
 const MIRROR_COVER_PROPS := {"LOW_OBSTACLE": "mirror-plinth", "HIGH_OBSTACLE": "mirror-stele"}
 const SALT_TERRAIN_PROPS := {"LOW_OBSTACLE": "salt-bollard", "HIGH_GROUND": "salt-dais"}
 const FORGE_TERRAIN_PROPS := {
@@ -777,6 +778,9 @@ func _field_art_path(site: String) -> String:
 	if _mirror_court:
 		var mirror_art := MirrorCourt.field_art_path(str(slice.get("region", "")), site)
 		return mirror_art if not mirror_art.is_empty() and ResourceLoader.exists(mirror_art, "Texture2D") else ""
+	var regional := DualFlankRegional.field_art_path(str(slice.get("region", "")), str(map_data.get("board_id", "")))
+	if not regional.is_empty() and ResourceLoader.exists(regional, "Texture2D"):
+		return regional
 	if site == "RESCUE":
 		return TRANSFER_YARD_ART
 	if slice.get("region") == "RG02":

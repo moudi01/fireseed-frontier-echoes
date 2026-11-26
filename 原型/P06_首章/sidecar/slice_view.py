@@ -2110,6 +2110,10 @@ def ready_contact_model_kinds(game, ledger, verified):
     return sorted(kinds, key=lambda kind: kind != 'MG01')
 
 
+def is_regional_dual_flank(region, board_id):
+    return region in ('RG06', 'RG08') and board_id == 'DUAL_FLANK'
+
+
 def general_cast_move(kind, move):
     return (move in GENERAL_CAST_MOVES.get(kind, ())
             or (kind == 'DEMON' and isinstance(move, str) and move.startswith('MIMIC-')))
@@ -2172,6 +2176,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                 board['board_id'] = binding['board_id']
                 if binding['board_id'] == 'FORGE_CROSSING' and battle:
                     board['forge_anchors'] = forge_anchors(battle['actors'])
+            if battle and is_regional_dual_flank(game.s.get('region'), battle['board_id']):
+                board['board_id'] = battle['board_id']
     else:
         field = region_space.public(game)
         if field is not None:
@@ -2179,7 +2185,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
                           'contact', 'deploy_cells', 'battle_cells', 'summary')
             board = {key: field[key] for key in map_fields}
             binding = field['battle_binding']
-            if field['battle_cells'] and binding and binding['board_id'] in HUNT_BOARD_ART:
+            if field['battle_cells'] and binding and (binding['board_id'] in HUNT_BOARD_ART
+                    or is_regional_dual_flank(game.s.get('region'), binding['board_id'])):
                 board['board_id'] = binding['board_id']
                 if binding['board_id'] == 'FORGE_CROSSING':
                     board['forge_anchors'] = forge_anchors(field['preview'])
