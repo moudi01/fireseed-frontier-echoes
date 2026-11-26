@@ -22,6 +22,7 @@ import math
 import sys
 from pathlib import Path
 
+import bmesh
 import bpy
 from mathutils import Euler, Matrix, Quaternion, Vector
 
@@ -319,7 +320,141 @@ def build_held_props(arm_obj) -> tuple[bpy.types.Object, bpy.types.Object]:
         (Vector((0.0, 0.12, -0.05)), Vector((0.022, 0.08, 0.010)), (-35, 0, 0), mat_crimson),
     ]
     ledger = add_box_mesh("MG03_Ledger", book_parts, arm_obj, "PropBook", book_origin)
-    return needle, ledger
+
+    # Physical leather/rope shoulder-root harness collars anchoring both crescent bone plates (v4 SHOULDER ROOT DETAIL)
+    # Skinned 100% to chest so the mount stays seated against torso/shoulders across all poses
+    mount_origin = Vector((0.0, 0.068, 1.425))
+    mount_parts = [
+        # Right shoulder bone-plate socket collar + crossed lashing straps
+        (Vector((-0.098, 0.002, -0.004)), Vector((0.078, 0.072, 0.056)), (12, 16, -8), mat_leather),
+        (Vector((-0.096, 0.008, 0.014)), Vector((0.084, 0.076, 0.022)), (18, 22, 14), mat_bronze),
+        (Vector((-0.078, 0.010, -0.022)), Vector((0.088, 0.048, 0.024)), (8, -24, 0), mat_crimson),
+        # Left shoulder bone-plate socket collar + crossed lashing straps (symmetric reinforcement)
+        (Vector((0.098, 0.002, -0.004)), Vector((0.078, 0.072, 0.056)), (12, -16, 8), mat_leather),
+        (Vector((0.096, 0.008, 0.014)), Vector((0.084, 0.076, 0.022)), (18, -22, -14), mat_bronze),
+        (Vector((0.078, 0.010, -0.022)), Vector((0.088, 0.048, 0.024)), (8, 24, 0), mat_crimson),
+    ]
+    horn_mount = add_box_mesh("MG03_HornMount", mount_parts, arm_obj, "chest", mount_origin)
+    return needle, ledger, horn_mount
+
+
+def repair_body_mesh_qa(mesh_obj) -> dict:
+    """Fix QA findings on SK_MG03 after decimation:
+    1. Remove wire edges (edges with 0 linked faces).
+    2. Seat the detached 64-vert right back_horns island root cleanly into the right shoulder/back
+       socket (preserving the upper crescent silhouette) and blend its root weights to chest+back_horns
+       so it never gaps during Idle/A/B/C motion.
+    3. Separate any non-adjacent same-normal coplanar tri pairs (cloth-fold z-fighting) by 2.5mm.
+    """
+    bm = bmesh.new()
+    bm.from_mesh(mesh_obj.data)
+    bm.verts.ensure_lookup_table()
+    bm.edges.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
+
+    # 1. Remove wire edges and any resulting loose vertices (0 linked faces)
+    wires = [e for e in bm.edges if len(e.link_faces) == 0]
+    wire_removed = len(wires)
+    if wires:
+        bmesh.ops.delete(bm, geom=wires, context="EDGES_FACES")
+    loose = [v for v in bm.verts if len(v.link_faces) == 0]
+    if loose:
+        bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    if wires or loose:
+        bm.verts.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
+
+    # 2. Identify islands and seat the smaller back_horns island root into main shoulder surface
+    visited = set()
+    islands = []
+    for v in bm.verts:
+        if v.index in visited:
+            continue
+        stack = [v]
+        comp = []
+        visited.add(v.index)
+        while stack:
+            cur = stack.pop()
+            comp.append(cur)
+            for e in cur.link_edges:
+                o = e.other_vert(cur)
+                if o.index not in visited:
+                    visited.add(o.index)
+                    stack.append(o)
+        islands.append(comp)
+    islands.sort(key=len, reverse=True)
+
+    seated_verts = 0
+    root_blend_verts = []
+    if len(islands) >= 2:
+        main_island = islands[0]
+        for small in islands[1:]:
+            small_sorted = sorted(small, key=lambda v: v.co.z)
+            low_v = small_sorted[0]
+            min_z = low_v.co.z
+            # Find nearest vertex on main body island
+            best_v = min(main_island, key=lambda mv: (mv.co - low_v.co).length)
+            # Push root smoothly into shoulder socket (+1.4cm past surface) over bottom 16cm of horn
+            seat_vec = (best_v.co - low_v.co) + Vector((0.010, -0.012, -0.014))
+            for sv in small:
+                dz = sv.co.z - min_z
+                if dz < 0.16:
+                    t = (1.0 - dz / 0.16) ** 1.6
+                    sv.co += seat_vec * t
+                    seated_verts += 1
+                    root_blend_verts.append((sv.index, t))
+
+    # 3. Micro-separate any non-adjacent same-normal coplanar tri pairs (<1.8mm plane dist, <1.8cm centroid dist)
+    bm.normal_update()
+    grid = {}
+    for f in bm.faces:
+        c = f.calc_center_median()
+        key = (round(c.x, 2), round(c.y, 2), round(c.z, 2))
+        grid.setdefault(key, []).append(f)
+    nudged_verts = set()
+    coplanar_fixed = 0
+    for flist in grid.values():
+        if len(flist) < 2:
+            continue
+        for i in range(len(flist)):
+            f1 = flist[i]
+            n1 = f1.normal
+            c1 = f1.calc_center_median()
+            v1_ids = {v.index for v in f1.verts}
+            for j in range(i + 1, len(flist)):
+                f2 = flist[j]
+                if v1_ids & {v.index for v in f2.verts}:
+                    continue
+                if n1.dot(f2.normal) > 0.992:
+                    c2 = f2.calc_center_median()
+                    if abs((c2 - c1).dot(n1)) < 0.0020 and (c2 - c1).length < 0.018:
+                        for v in f2.verts:
+                            if v.index not in nudged_verts:
+                                v.co += f2.normal * 0.0028
+                                nudged_verts.add(v.index)
+                        coplanar_fixed += 1
+
+    bm.normal_update()
+    bm.to_mesh(mesh_obj.data)
+    bm.free()
+    mesh_obj.data.update()
+
+    # Smoothly anchor horn-root weights toward chest (preserves upper back_horns sway while locking root seam)
+    vg_chest = mesh_obj.vertex_groups.get("chest")
+    vg_horns = mesh_obj.vertex_groups.get("back_horns")
+    if vg_chest and vg_horns and root_blend_verts:
+        for v_idx, t in root_blend_verts:
+            w_chest = 0.72 * t
+            w_horns = max(0.05, 1.0 - w_chest)
+            vg_chest.add([v_idx], w_chest, "REPLACE")
+            vg_horns.add([v_idx], w_horns, "REPLACE")
+
+    return {
+        "wire_edges_removed": wire_removed,
+        "horn_root_verts_seated": seated_verts,
+        "coplanar_pairs_separated": coplanar_fixed,
+    }
 
 
 def skill_pose_overlay(tag: str, progress: float) -> dict[str, tuple[float, float, float]]:
@@ -435,11 +570,13 @@ def build_mg03(args: argparse.Namespace) -> dict:
     mod.use_collapse_triangulate = True
     bpy.ops.object.modifier_apply(modifier=mod.name)
 
+    # 2b. Repair decimated SK_MG03 QA (wire edge, back_horns shoulder seating, coplanar cloth fold)
+    mesh_qa_repairs = repair_body_mesh_qa(mesh)
     skin_limit_stats = enforce_max_4_weights(mesh)
     body_tris = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
 
-    # 3. Build held needle wand (hand.R) & missing-page ledger (hand.L)
-    needle_obj, ledger_obj = build_held_props(arm)
+    # 3. Build held needle wand (hand.R), missing-page ledger (hand.L), and shoulder horn mount (chest)
+    needle_obj, ledger_obj, mount_obj = build_held_props(arm)
 
     # 4. Precompute MG03 rest transforms
     bpy.context.view_layer.update()
@@ -614,6 +751,7 @@ def build_mg03(args: argparse.Namespace) -> dict:
         "out_blend_sha256": sha256_file(out_blend),
         "target_height": TARGET_HEIGHT,
         "decimated_body_tris": body_tris,
+        "mesh_qa_repairs": mesh_qa_repairs,
         "skin_limit_4": skin_limit_stats,
         "qa_audit": qa_audit,
         "roundtrip": {
