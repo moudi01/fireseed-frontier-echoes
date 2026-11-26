@@ -20,10 +20,12 @@ const Ado = Profiles.Ado
 const Mg02 = Profiles.Mg02
 const Mg03 = Profiles.Mg03
 const Mg04 = Profiles.Mg04
+const Demon = Profiles.Demon
 const GENERAL_CAST_MOVES := {"MG03": Mg03.MG03_MOVES, "MG04": Mg04.MG04_MOVES}
 const MirrorCourtKit = preload("res://mirror_court_kit.gd")
 const SaltCrossingKit = preload("res://salt_crossing_kit.gd")
 const ForgeCrossingKit = preload("res://forge_crossing_kit.gd")
+const CitadelRingKit = preload("res://citadel_ring_kit.gd")
 const FortressKit = preload("res://fortress_kit.gd")
 const MODEL_PATH := Profiles.SHIELD_MODEL
 const ADO_PATH := Profiles.ADO_MODEL
@@ -386,6 +388,8 @@ func set_scenery(placements: Dictionary) -> void:
 				part = SaltCrossingKit.piece(row.asset)
 			elif ForgeCrossingKit.supports(row.asset):
 				part = ForgeCrossingKit.piece(row.asset)
+			elif CitadelRingKit.supports(row.asset):
+				part = CitadelRingKit.piece(row.asset)
 			else:
 				var resource := _scene(row.asset)
 				if resource != null:
@@ -1064,6 +1068,8 @@ func _assemble_actor(pawn: Node3D, scene: PackedScene, kind: String, profile: Di
 			return pawn.assemble_mg03(scene, travel, profile)
 		"mg04":
 			return pawn.assemble_mg04(scene, travel, profile)
+		"demon":
+			return pawn.assemble_demon(scene, travel, profile)
 		"enemy_spear":
 			return pawn.assemble(scene, true)
 		"skeleton":
@@ -1138,7 +1144,7 @@ func _prepare_bow(pawn: Node3D, row: Dictionary, restore: bool) -> void:
 
 
 func _uses_general_casts(pawn: Variant) -> bool:
-	return pawn is Mg03 or pawn is Mg04
+	return pawn is Mg03 or pawn is Mg04 or pawn is Demon
 
 
 func _prepare_general_cast(pawn: Node3D, row: Dictionary, restore: bool) -> void:
@@ -1302,7 +1308,9 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 		var actor_node: Variant = actors.get(event.get("actor", ""), {}).get("node")
 		var event_move := str(event.get("move", ""))
 		var sev_skill: bool = actor_node is Mg02 and event_move in Mg02.MG02_MOVES
-		var general_skill: bool = event_move in GENERAL_CAST_MOVES.get(source_row.get("kind", ""), [])
+		var source_kind: String = source_row.get("kind", "")
+		var general_skill: bool = event_move in GENERAL_CAST_MOVES.get(source_kind, []) \
+			or (source_kind == "DEMON" and Demon.supports_move(event_move))
 		if event.type in ["hero_interrupt", "hero_stun_cancel"]:
 			var cancelled_id: String = event.target if event.type == "hero_interrupt" else event.actor
 			var cancelled = actors.get(cancelled_id, {}).get("node")
@@ -1313,6 +1321,7 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 				cancelled.apply_boss_event("cancel", cancelled.active_move, cancelled.active_cast, cancelled.heading, reduced)
 		if (sev_skill or general_skill) and event.type == "boss_private_shield" and not downs.has(event.actor):
 			_mark(event.actor, source_row.pos, "护盾 +%d" % int(event.amount), true)
+		# mimic_start describes the same cast as windup. Only windup starts its pose.
 		if general_skill and event.type == "windup" and _uses_general_casts(actor_node) \
 				and source_row.get("boss_pending", {}).get("id") == event.action_id:
 			_prepare_general_cast(actor_node, source_row, false)

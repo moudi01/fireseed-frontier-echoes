@@ -48,6 +48,7 @@ SEV_MOVES = {'MG02-A', 'MG02-B', 'MG02-C'}
 GENERAL_CAST_MOVES = {
     'MG03': {'MG03-A', 'MG03-B', 'MG03-C'},
     'MG04': {'MG04-A', 'MG04-B', 'MG04-C'},
+    'DEMON': {'DEMON-A', 'DEMON-B', 'DEMON-C', 'DEMON-D'},
 }
 HUNT_BOARD_ART = {'MIRROR_COURT', 'SALT_CROSSING', 'FORGE_CROSSING'}
 INFANTRY_MOVES = {'S02-A', 'S03-A', 'M02-A', 'M03-A', 'M04-A'}
@@ -849,6 +850,10 @@ def battle_view(game):
     from_history = False
     if battle is None:
         reports = state['battle_reports']
+        if state['phase'] == 'FINAL_REGROUP':
+            finale = (state['finale'].get('run') or {}).get('reports', [])
+            if finale and finale[-1]['encounter_id'] == 'BATTLE-DEMON':
+                reports = finale
         if not reports and state['phase'] == 'TOWN':
             reports = next((trip['battle_reports'] for trip in reversed(state['completed_history'])
                             if trip.get('battle_reports')), [])
@@ -876,8 +881,8 @@ def battle_view(game):
         if event['type'] == 'windup' and (event.get('move') in ADO_MOVES or event.get('move') in INFANTRY_MOVES
                                            or event.get('move') in ENEMY_MOVES or event.get('move') in HERO_MOVES
                                            or event.get('move') in SEV_MOVES
-                                           or event.get('move') in GENERAL_CAST_MOVES.get(
-                                               by_id.get(event.get('actor'), {}).get('kind'), ())):
+                                           or general_cast_move(by_id.get(event.get('actor'), {}).get('kind'),
+                                                                event.get('move'))):
             locks[event['action_id']] = event
         if event.get('tick') != battle['tick']:
             continue
@@ -902,15 +907,19 @@ def battle_view(game):
         cancel_cast = name in ('hero_interrupt', 'hero_stun_cancel')
         sev_event = boss_actor.get('kind') == 'MG02' and (
             cancel_cast or (event.get('move') in SEV_MOVES and name in ('windup', 'release', 'boss_private_shield')))
-        general_moves = GENERAL_CAST_MOVES.get(boss_actor.get('kind'))
-        general_event = general_moves is not None and (
+        boss_kind = boss_actor.get('kind')
+        general_event = boss_kind in GENERAL_CAST_MOVES and (
             cancel_cast or name == 'boss_phase'
-            or (event.get('move') in general_moves and name in ('windup', 'release', 'skill_miss', 'boss_private_shield')))
+            or (general_cast_move(boss_kind, event.get('move'))
+                and name in ('windup', 'release', 'skill_miss', 'boss_private_shield')))
+        mimic_started = boss_kind == 'DEMON' and name == 'mimic_start'
         if name not in ('move', 'basic_start', 'hit', 'down', 'guard_redirect', 'shared_shield') and not (
                 spear_event or en01_event or infantry_event or hero_event or ado_event or sev_event
-                or general_event or aid_heal or mist_delay or enemy_event or bone_guard):
+                or general_event or mimic_started or aid_heal or mist_delay or enemy_event or bone_guard):
             continue
         row = {key: event[key] for key in fields if key in event}
+        if mimic_started:
+            row.update({key: event[key] for key in ('source_hero', 'source_move', 'source_action_id')})
         if (ado_event or sev_event or general_event) and name == 'release':
             windup = locks.get(event['action_id'], {})
             row['cells'] = windup.get('cells', [])
@@ -993,9 +1002,9 @@ def battle_view(game):
             row['bone_pending'] = {key: pending.get(key) for key in ('id', 'cells', 'origin', 'due', 'facing')}
         if actor.get('town_defense_bonus', 0) > 0:
             row['town_defense_bonus'] = actor['town_defense_bonus']
-        if kind in HUNT_GENERALS:
+        if kind in HUNT_GENERALS or kind == 'DEMON':
             row['boss_phase'] = actor['boss_phase']
-        if (actor['hp'] > 0 and pending.get('move_id') in GENERAL_CAST_MOVES.get(kind, ())
+        if (actor['hp'] > 0 and general_cast_move(kind, pending.get('move_id'))
                 and not battle.get('result')):
             row['boss_pending'] = {key: pending.get(key) for key in ('move_id', 'id', 'facing', 'cells', 'due')}
         if kind == 'MG01':
@@ -2101,6 +2110,11 @@ def ready_contact_model_kinds(game, ledger, verified):
     return sorted(kinds, key=lambda kind: kind != 'MG01')
 
 
+def general_cast_move(kind, move):
+    return (move in GENERAL_CAST_MOVES.get(kind, ())
+            or (kind == 'DEMON' and isinstance(move, str) and move.startswith('MIMIC-')))
+
+
 def forge_anchors(units):
     return next((card['locked_anchor_cells'] for unit in units
                  if unit.get('kind', unit.get('enemy_id')) == 'MG04'
@@ -2140,6 +2154,8 @@ def make_presentation(game, ledger, primary, *, battle_board=None, committed_sav
     battle = game.s.get('battle')
     if game.s['phase'] == 'BATTLE' and battle and battle.get('finale'):
         board = {'battle_cells': battle['board_cells']}
+        if battle['encounter_id'] in ('BATTLE-DEMON', 'BATTLE-ADMIN'):
+            board['board_id'] = battle['board_id']
     elif game.s['phase'] == 'BATTLE':
         # Live and terminal battle views use this geometry. Exploration is
         # projected again when the battle ends, with the current fog and contacts.

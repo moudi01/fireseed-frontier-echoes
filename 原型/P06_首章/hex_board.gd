@@ -18,6 +18,7 @@ const WetlandBoard = preload("res://wetland_board.gd")
 const MirrorCourt = preload("res://mirror_court_board.gd")
 const SaltCrossing = preload("res://salt_crossing_board.gd")
 const ForgeCrossing = preload("res://forge_crossing_board.gd")
+const CitadelRing = preload("res://citadel_ring_board.gd")
 const MIRROR_COVER_PROPS := {"LOW_OBSTACLE": "mirror-plinth", "HIGH_OBSTACLE": "mirror-stele"}
 const SALT_TERRAIN_PROPS := {"LOW_OBSTACLE": "salt-bollard", "HIGH_GROUND": "salt-dais"}
 const FORGE_TERRAIN_PROPS := {
@@ -86,6 +87,7 @@ var _field_art: Texture2D
 var _mirror_court := false
 var _salt_crossing := false
 var _forge_crossing := false
+var _citadel_ring := false
 var _route_art: Texture2D
 var _prepared_field_art := ""
 var field_art_timings: Array[Dictionary] = []
@@ -284,13 +286,15 @@ func _refresh() -> void:
 	var projected: Dictionary = _presentation.get("map") if _presentation.get("map") is Dictionary else {}
 	if phase == "BATTLE" and projected.is_empty() and not slice.get("rescue_board", []).is_empty():
 		projected = {"battle_cells": slice.rescue_board}
+	var demon_aftermath: bool = phase == "FINAL_REGROUP" and snapshot.get("encounter") == "BATTLE-DEMON"
+	var show_demon_down: bool = not _motion_reduced and not _paused and show_models and stage.actors.has("DEMON-STORY-1")
 	if phase == "BATTLE" and not snapshot.is_empty():
 		_last_live_battle = snapshot.id
 		_last_battle_map = projected
 		_terminal_version = -1
 	elif not snapshot.is_empty() and snapshot.get("finished", false) and _last_live_battle == snapshot.id:
 		_last_live_battle = ""
-		if stage.is_ready:
+		if stage.is_ready and (not demon_aftermath or show_demon_down):
 			_terminal_version = _version
 			if _hold != null and _hold.is_valid():
 				_hold.kill()
@@ -299,6 +303,11 @@ func _refresh() -> void:
 			_hold.tween_callback(_end_terminal)
 			if _paused:
 				_hold.pause()
+	if demon_aftermath and _terminal_version >= 0 and (_terminal_version != _version or not show_demon_down):
+		if _hold != null and _hold.is_valid():
+			_hold.kill()
+		_hold = null
+		_terminal_version = -1
 	var terminal := _terminal_version >= 0 and _terminal_version == _version
 	map_data = _last_battle_map if terminal else projected
 	if slice.get("region") == "RG02" and (phase == "EXPLORE" or \
@@ -340,6 +349,8 @@ func _refresh() -> void:
 		and not SaltCrossing.field_art_path(str(slice.get("region", "")), current_site).is_empty()
 	_forge_crossing = _battle_mode and not _town and map_data.get("board_id") == ForgeCrossing.BOARD_ID \
 		and not ForgeCrossing.field_art_path(str(slice.get("region", "")), current_site).is_empty()
+	_citadel_ring = snapshot.get("encounter") in ["BATTLE-DEMON", "BATTLE-ADMIN"] \
+		and CitadelRing.is_active({"phase": "BATTLE" if terminal else phase, "map": map_data})
 	var art_path := _field_art_path(current_site) if _battle_mode and not _town else ""
 	if _town_yard:
 		art_path = TOWN_YARD_ART
@@ -364,7 +375,7 @@ func _refresh() -> void:
 		_deploy_hover_cell = Vector2i(999, 999)
 	var terrain_state := [size, _town, _battle_mode, _sideways, art_path, slice.get("region"), slice.get("site"),
 		phase == "MISSING_SEARCH", _show_deployment, _gray_oak_field, _layout_cells, _deployment_cells(),
-		_overlook_width, overlook_path, impact_font_size, _mirror_court, _salt_crossing, _forge_crossing,
+		_overlook_width, overlook_path, impact_font_size, _mirror_court, _salt_crossing, _forge_crossing, _citadel_ring,
 		map_data.get("forge_anchors", [])]
 	var terrain_changed := terrain_state != _terrain_state
 	var same_ado_field: bool = not terrain_changed and phase == "BATTLE" \
@@ -394,11 +405,14 @@ func _refresh() -> void:
 		if _town_yard:
 			_town_landmarks = _town_scenery()
 			stage.set_scenery(_town_landmarks)
-		elif (_mirror_court or _salt_crossing or _forge_crossing) and _field_art != null:
+		elif (_mirror_court or _salt_crossing or _forge_crossing or _citadel_ring) and _field_art != null:
 			var previous_props: Array = stage.scenery.keys()
 			var props := MIRROR_COVER_PROPS
 			var prefix := "mirror"
-			if _forge_crossing:
+			if _citadel_ring:
+				props = CitadelRing.TERRAIN_PROPS
+				prefix = "citadel"
+			elif _forge_crossing:
 				props = FORGE_TERRAIN_PROPS
 				prefix = "forge"
 			elif _salt_crossing:
@@ -731,7 +745,10 @@ func _draw_terrain() -> void:
 	if _battle_mode:
 		if _field_art != null and (slice.get("region") == "RG07" or _field_art.resource_path == GRAY_OAK_ROUTE_FIELDS.B1):
 			_draw_water_and_bridges()
-		if _mirror_court and _field_art != null:
+		if _citadel_ring and _field_art != null:
+			var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "HIGH_OBSTACLE": []}, "citadel")
+			CitadelRing.draw_terrain(_terrain, coordinate_map, terrain, _scale, _sideways)
+		elif _mirror_court and _field_art != null:
 			_draw_mirror_terrain()
 		elif _salt_crossing:
 			var terrain := _terrain_without_props({"HIGH_GROUND": [], "LOW_OBSTACLE": [], "SHALLOW_WATER": []}, "salt")
@@ -749,6 +766,8 @@ func _draw_terrain() -> void:
 
 
 func _field_art_path(site: String) -> String:
+	if _citadel_ring:
+		return CitadelRing.field_art_path()
 	if _forge_crossing:
 		var forge_art := ForgeCrossing.field_art_path(str(slice.get("region", "")), site)
 		return forge_art if not forge_art.is_empty() and ResourceLoader.exists(forge_art, "Texture2D") else ""

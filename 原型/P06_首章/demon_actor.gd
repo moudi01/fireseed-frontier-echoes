@@ -2,7 +2,7 @@ extends "res://shield_actor.gd"
 
 ## Standalone DEMON (初生魔王) boss actor for shared CITADEL_RING (90 cells).
 ## Matches shield_actor.gd / shield_stage.gd general-cast contract with distinct
-## non-color-dependent silhouettes for DEMON-A (临摹号令), DEMON-B (样本回声, archive-only),
+## non-color-dependent silhouettes for DEMON-A (临摹号令), DEMON-B (样本回声, from recorded basic attacks),
 ## DEMON-C (未解之问 52私盾), DEMON-D (见证崩流 W3可打断), and MIMIC-* (镜像习得/适应技能).
 
 const DEMON_MODEL := "res://assets/enemies/DEMON_Board.glb"
