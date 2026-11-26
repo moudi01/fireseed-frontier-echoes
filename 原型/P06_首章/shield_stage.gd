@@ -1450,11 +1450,14 @@ func _animate(events: Array[Dictionary], by_id: Dictionary, finished: bool, relo
 					var facing := _intent_facing(event.get("facing"), int(source_row.facing))
 					yaw = _general_cast_yaw(attacker, event_move, event.get("cells", []), facing)
 				var cast_id := str(event.get("action_id", ""))
-				if event_move == "EL04-B" and side_steps.has(cast_id) and attacker is Admin:
-					var landing := _world(_at(side_steps[cast_id].position))
-					var sideways: Vector3 = landing - attacker.position
-					var step_yaw := yaw if sideways.length_squared() < 0.0001 else _yaw(sideways)
-					contacts[key] = attacker.release_side_step(event_move, cast_id, step_yaw, landing, reduced)
+				if event_move == "EL04-B" and attacker is Admin:
+					if side_steps.has(cast_id):
+						var landing := _world(_at(side_steps[cast_id].position))
+						var sideways: Vector3 = landing - attacker.position
+						var step_yaw := yaw if sideways.length_squared() < 0.0001 else _yaw(sideways)
+						contacts[key] = attacker.release_side_step(event_move, cast_id, step_yaw, landing, reduced)
+					else:
+						attacker.apply_boss_event("cancel", event_move, cast_id, yaw, reduced)
 				else:
 					contacts[key] = attacker.apply_boss_event("release" if general_skill else "attack",
 						event_move, cast_id, yaw, reduced)
