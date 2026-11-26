@@ -263,7 +263,9 @@ def build_eel_mesh(tex_path: Path) -> bpy.types.Object:
             if 0.05 < s < 0.14 and abs(ca) > 0.65 and sa > -0.1:
                 lx *= 1.12
             v = bm.verts.new((cx + lx, y, max(0.005, cz + lz)))
-            ring.append((v, u, s * 0.92))
+            # Reserve non-zero V margins [0.004..0.020] for snout cap and [0.900..0.928] for tail cap
+            # so none of the 36 pole cap triangles are collinear in UV space (zero-area UV = 0).
+            ring.append((v, u, 0.02 + s * 0.88))
         rings.append(ring)
 
     # Connect rings with quads
@@ -282,15 +284,17 @@ def build_eel_mesh(tex_path: Path) -> bpy.types.Object:
             for loop, uv in zip(f.loops, uvs):
                 loop[uv_layer].uv = uv
 
-    # Cap snout & tail tip cleanly with pole vertices
+    # Cap snout & tail tip cleanly with non-degenerate pole UV triangles (delta-V > 0.015)
     snout_c = sum((v.co for v, _, _ in rings[0]), Vector()) / n_rad
     snout_tip = bm.verts.new(snout_c + Vector((0.0, -0.045, -0.005)))
     for j in range(n_rad):
         jn = (j + 1) % n_rad
         v0, u0, vv0 = rings[0][j]
         v1, u1, vv1 = rings[0][jn]
+        u1_w = 1.0 if jn == 0 else u1
+        u_mid = 0.5 * (u0 + u1_w)
         f = bm.faces.new((snout_tip, v0, v1))
-        for loop, uv in zip(f.loops, [(0.25, 0.0), (u0, vv0), (1.0 if jn == 0 else u1, vv1)]):
+        for loop, uv in zip(f.loops, [(u_mid, 0.004), (u0, vv0), (u1_w, vv1)]):
             loop[uv_layer].uv = uv
 
     tail_c = sum((v.co for v, _, _ in rings[-1]), Vector()) / n_rad
@@ -299,8 +303,10 @@ def build_eel_mesh(tex_path: Path) -> bpy.types.Object:
         jn = (j + 1) % n_rad
         v0, u0, vv0 = rings[-1][j]
         v1, u1, vv1 = rings[-1][jn]
+        u1_w = 1.0 if jn == 0 else u1
+        u_mid = 0.5 * (u0 + u1_w)
         f = bm.faces.new((tail_tip, v1, v0))
-        for loop, uv in zip(f.loops, [(0.25, 0.92), (1.0 if jn == 0 else u1, vv1), (u0, vv0)]):
+        for loop, uv in zip(f.loops, [(u_mid, 0.928), (u1_w, vv1), (u0, vv0)]):
             loop[uv_layer].uv = uv
 
     # 2. Add sculpted crystalline salt-crest fins (Left +X and Right -X) & dorsal salt-crystal shards
