@@ -3,6 +3,21 @@ extends Control
 const Pipe = preload("res://pipe_client.gd")
 const SlotCatalog = preload("res://slot_catalog.gd")
 const ENTRY_META := &"p06_player_entry"
+const PRODUCT_TITLE := "火种计划 · 边境回响"
+const FIRST_EXPEDITION_REFERENCE := """出发
+在暮汀接受委任后，确认补给、出征和战斗 Cost，安排上阵队员与站位，再从北门出发。
+
+林道首战
+沿灰栎边道走到林道接敌。先查看实际敌阵和蓝色部署格，再开战。途中获得物先记入本趟行囊。
+
+远眺点 D
+抵达远眺点，选择「观察并记录」。走过地点或只看远眺图都不会留下侦路记录。
+
+根口目标战
+到根口查看当前敌阵、布阵与预警，赢下第二战。可先查看战后的实际记录和行囊。
+
+安全归城与交档
+两战胜利并记录 D 点观察后，沿归路安全归城，才会交付侦路调查。城内在「旧档案」找许苇核对旧日志，再交存调查与旧名册。"""
 const Board = preload("res://hex_board.gd")
 const ArchivePage = preload("res://archive_page.gd")
 const MemoryPauseCard = preload("res://memory_pause_card.gd")
@@ -108,6 +123,8 @@ var research_member_id := ""
 var outfit_selection: Array[String] = []
 var outfit_editing := false
 var chapter_history_open := false
+var _first_expedition_open := false
+var _first_expedition_scroll := 0
 var _archive_list_scroll := 0
 var _archive_record_id := ""
 var _archive_page: ArchivePage
@@ -199,6 +216,8 @@ var _logged_location: Array = []
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
+	if OS.has_feature("windows") and OS.has_feature("template"):
+		get_window().title = PRODUCT_TITLE
 	var base: String
 	if OS.has_feature("template"):
 		base = OS.get_executable_path().get_base_dir()
@@ -1081,7 +1100,7 @@ func _render_player_menu() -> void:
 	elif _selecting_slot:
 		_slot_actions()
 	else:
-		_label(actions, "火种计划 · 边境回响", GOLD, 31)
+		_label(actions, PRODUCT_TITLE, GOLD, 31)
 		_button("选择存档", "choose-slot", _show_slots)
 		_button("开始新周目", "new-cycle", _start_new_cycle)
 		_button("设置", "settings", _show_settings)
@@ -1121,6 +1140,7 @@ func _show_player_menu_after_session() -> void:
 	_closing = false
 	_close_after_save = false
 	_returning_to_menu = false
+	_first_expedition_open = false
 	focus_key = "choose-slot"
 	_build_player_menu()
 	print("P06 player entry pid=%d case=menu" % OS.get_process_id())
@@ -1201,6 +1221,8 @@ func _render() -> void:
 	var opening_lines: Array = view.get("opening_lines", [])
 	var showing_opening: bool = not client.blocked and (not opened or captions_open) and not opening_lines.is_empty()
 	var show_confirmation: bool = not client.blocked and not settings_open and not confirmation.is_empty()
+	var reading_first_expedition: bool = _first_expedition_open and not client.blocked and not settings_open \
+		and not showing_opening and not show_confirmation
 	var show_combat: bool = opened and not client.blocked and not captions_open and not settings_open \
 		and confirmation.is_empty() and phase == "BATTLE" and snapshot is Dictionary \
 		and view.get("battle_memory", {}).is_empty()
@@ -1262,8 +1284,10 @@ func _render() -> void:
 	_overlook_mat.visible = _overlook_open and not showing_opening and not client.blocked and not settings_open and confirmation.is_empty()
 	_overlook_picture.texture = board._overlook_art if _overlook_mat.visible else null
 	_opening_art.present(str(opening_lines[caption_index].get("id", "TD001")) if showing_opening else "")
-	if not (opened and phase == "TOWN" and (chapter_history_open or books_open) and not showing_opening and not settings_open
-			and not client.blocked and (confirmation.is_empty() or books_open) and view.get("town_memory", {}).is_empty()):
+	var reading_town_archive: bool = opened and phase == "TOWN" and (chapter_history_open or books_open) \
+		and not showing_opening and not settings_open and not client.blocked \
+		and (confirmation.is_empty() or books_open) and view.get("town_memory", {}).is_empty()
+	if not (reading_first_expedition or reading_town_archive):
 		_archive_page.dismiss()
 	board.deployment_open = _can_edit_deployment() and phase != "FINAL_REGROUP"
 	var actions_started := Time.get_ticks_usec() if profile_panels else 0
@@ -1303,6 +1327,9 @@ func _render() -> void:
 		command_buttons["confirm"].text = "确认恢复整备" if retry else "确认"
 		for control in command_buttons.values():
 			control.disabled = client.busy
+	elif reading_first_expedition:
+		_archive_page.show_document("first-expedition", "首章 · 只读参考", "首次远征", FIRST_EXPEDITION_REFERENCE, settings["大字"])
+		_button("返回", "first-expedition-back", _toggle_first_expedition)
 	else:
 		var show_finished: bool = opened and not captions_open and phase in ["EXPLORE", "RETURNED", "FAILED", "TOWN"] \
 			and snapshot is Dictionary and snapshot.get("finished", false) and not _show_deployment() \
@@ -1343,8 +1370,11 @@ func _render() -> void:
 				_rescue_office(false)
 				if not ending.is_empty():
 					_button("查看本轮档案", "ending-archive", _toggle_ending_archive)
-		if opened and not captions_open and not view.get("opening_lines", []).is_empty():
-			_button("回看开场字幕", "opening-replay", _replay_opening)
+		if opened and not captions_open:
+			if phase in ["FINISHED", "FIN_C"] and view.get("complete", false):
+				_button("回查首次远征", "first-expedition", _toggle_first_expedition)
+			if not view.get("opening_lines", []).is_empty():
+				_button("回看开场字幕", "opening-replay", _replay_opening)
 	if not show_combat and not show_confirmation:
 		if _contact_controls.get_child_count() > 0:
 			var settings_button := _button("设置", "settings", _show_settings, true, _contact_controls)
@@ -1366,8 +1396,8 @@ func _render() -> void:
 		actions.show()
 	var footer_started := Time.get_ticks_usec() if profile_panels else 0
 	_render_subtitle()
-	var reading_records: bool = not client.blocked and not settings_open and not captions_open \
-		and (chapter_history_open or remembrance_history_open or books_open)
+	var reading_records: bool = reading_first_expedition or (not client.blocked and not settings_open and not captions_open \
+		and (chapter_history_open or remembrance_history_open or books_open))
 	notice.visible = not reading_records and (not field or not notice.text.is_empty())
 	_subtitle_row.visible = not reading_records and (subtitles.visible or _receipt_plate.visible or dialogue_next.visible)
 	if command_buttons.has(focus_key) and not command_buttons[focus_key].disabled:
@@ -1756,6 +1786,7 @@ func _chapter_actions() -> void:
 	else:
 		_label(actions, "首章已交档 · 应召印库存 %d 枚" % int(chapter.seals), INK, 17)
 	_button("查阅交档记录", "chapter-history", _toggle_chapter_history)
+	_button("回查首次远征", "first-expedition", _toggle_first_expedition)
 	var cases: Dictionary = view.get("protection_cases", {})
 	if not cases.get("reports", []).is_empty() or not cases.get("followups", []).is_empty():
 		_button("查看庇护案件", "protection-archive", _toggle_protection_archive)
@@ -1853,6 +1884,15 @@ func _commission_grant_text(receipt: Dictionary) -> String:
 		text += "配发 %d 铜、%d 结晶和 %d 补给。" % [
 			int(resources.copper), int(resources.crystal), int(resources.supply)]
 	return text
+
+
+func _toggle_first_expedition() -> void:
+	if not _first_expedition_open:
+		_first_expedition_scroll = _action_scroll.scroll_vertical
+	_first_expedition_open = not _first_expedition_open
+	focus_key = "first-expedition-back" if _first_expedition_open else "first-expedition"
+	_render()
+	_action_scroll.set_deferred("scroll_vertical", 0 if _first_expedition_open else _first_expedition_scroll)
 
 
 func _toggle_chapter_history() -> void:
@@ -4707,6 +4747,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	elif not confirmation.is_empty():
 		_cancel_confirmation()
+	elif _first_expedition_open and command_buttons.has("first-expedition-back"):
+		_toggle_first_expedition()
 	elif finale_terms_open and command_buttons.has("finale-terms"):
 		_toggle_finale_terms()
 	elif finale_executor_open and command_buttons.has("finale-executor"):
