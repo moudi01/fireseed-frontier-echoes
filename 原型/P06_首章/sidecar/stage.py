@@ -224,6 +224,11 @@ def stage(source, output, release_id=None):
         'tutorial': {'anyOf': variants}, 'quest': {'enum': sorted(view['QUEST_ACTIONS'])},
         **{command: {'enum': sorted(variants)} for command, variants in view['FIXED_ACTIONS'].items()},
     }
+    constraints['choose'] = {'anyOf': [constraints['choose'], {
+        'type': 'array', 'minItems': 3, 'maxItems': 3,
+        'prefixItems': [*({'const': part} for part in view['REGIONAL_CLEANSE']),
+                        {'type': 'string', 'pattern': '^' + view['JOURNEY_CONDITION_ID'] + '$'}],
+    }]}
     coordinate = {'pattern': r'^-?\d{1,3}$'}
     member = {'pattern': '^' + view['MEMBER_ID'] + '$'}
     batch = {'pattern': '^' + view['BATCH_ID'] + '$'}

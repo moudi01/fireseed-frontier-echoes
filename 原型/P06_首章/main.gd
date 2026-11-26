@@ -3913,13 +3913,27 @@ func _field_handbook_event() -> void:
 			"将「%s」加入行囊，安全带回后入库。占 1 个技能书额度，结束本站其他选项。\n%s\n%s" % [
 				book.name, book.timing, book.summary], event.can_claim)
 	var shown_blockers: Array[String] = []
+	var shown_costs: Array[String] = []
 	for option in event.choices:
+		var args: Array = option.get("args", [option.id])
 		if option.has("confirmation"):
-			if not option.blocker.is_empty() and not option.blocker in shown_blockers:
-				shown_blockers.append(option.blocker)
-				_label(actions, option.blocker, ALERT, 16)
-			var args: Array = option.get("args", [option.id])
-			_input_action(option.label, "choose", args, option.confirmation, option.allowed)
+			var detail := str(option.confirmation)
+			var blocker := str(option.blocker)
+			if option.has("quote"):
+				var quote: Dictionary = option.quote
+				var cost := _regional_service_cost(quote.copper, quote.carried)
+				if not cost.is_empty():
+					detail += "\n费用 · " + cost
+					if not cost in shown_costs:
+						shown_costs.append(cost)
+						_label(actions, "费用 · " + cost, MUTED, 16)
+				var missing := _regional_service_cost(quote.copper_missing, quote.missing)
+				if not missing.is_empty():
+					blocker += ("\n" if not blocker.is_empty() else "") + "仍缺 · " + missing
+			if not blocker.is_empty() and not blocker in shown_blockers:
+				shown_blockers.append(blocker)
+				_label(actions, blocker, ALERT, 16)
+			_input_action(option.label, "choose", args, detail, option.allowed)
 			continue
 		var materials: bool = option.kind == "materials"
 		var description := "将一件装备放入行囊。"
@@ -3930,8 +3944,17 @@ func _field_handbook_event() -> void:
 			description += "随队人员侵蚀 +%d。" % int(option.erosion)
 		if not option.allowed:
 			_label(actions, "本趟%s额度不足。" % ("材料" if materials else "装备"), ALERT, 16)
-		_input_action(option.label, "choose", [option.id],
+		_input_action(option.label, "choose", args,
 			description + "结束本站其他选项。", option.allowed)
+
+
+func _regional_service_cost(copper: int, carried: Dictionary) -> String:
+	var rows: PackedStringArray = []
+	if copper > 0:
+		rows.append("入库铜 ×%d" % copper)
+	if not carried.is_empty():
+		rows.append("随身 " + _cargo_amounts(carried))
+	return " / ".join(rows)
 
 
 func _toggle_field_gear() -> void:

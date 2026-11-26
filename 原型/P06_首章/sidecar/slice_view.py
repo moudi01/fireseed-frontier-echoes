@@ -124,9 +124,29 @@ REGIONAL_VARIANT_EVENTS = {
 }
 REGIONAL_VARIANT_EVENT_IDS = frozenset(REGIONAL_VARIANT_EVENTS.values())
 REGIONAL_VARIANT_OPTIONS = frozenset(('PRIMARY', 'SECONDARY', 'PASS'))
+REGIONAL_SCOUT_EVENTS = {
+    'RG01': 'EV29', 'RG02': 'EV41', 'RG03': 'EV44', 'RG04': 'EV47',
+    'RG05': 'EV50', 'RG06': 'EV32', 'RG07': 'EV35', 'RG08': 'EV38',
+}
+REGIONAL_WORKSHOP_EVENTS = {
+    'RG01': 'EV30', 'RG02': 'EV42', 'RG03': 'EV45', 'RG04': 'EV48',
+    'RG05': 'EV51', 'RG06': 'EV33', 'RG07': 'EV36', 'RG08': 'EV39',
+}
+REGIONAL_SERVICE_EVENT_IDS = frozenset((*REGIONAL_SCOUT_EVENTS.values(), *REGIONAL_WORKSHOP_EVENTS.values()))
+REGIONAL_EXTRA_OPTIONS = {'EV30': {'FIT'}, 'EV39': {'SHARP'}}
+REGIONAL_SIMPLE_OPTIONS = {
+    eid: REGIONAL_VARIANT_OPTIONS | REGIONAL_EXTRA_OPTIONS.get(eid, set())
+    for eid in REGIONAL_VARIANT_EVENT_IDS | REGIONAL_SERVICE_EVENT_IDS
+}
+REGIONAL_FORTUNE_CHOICES = {
+    ('FORTUNE', eid, target) for eid in REGIONAL_SCOUT_EVENTS.values() for target in ('A', 'B', 'RISK')
+}
+REGIONAL_CLEANSE = ('CLEANSE', 'EV36')
+JOURNEY_CONDITION_ID = r'JC-[0-9]{6,12}'
 FIXED_ACTIONS = {
     'choose': {('BOOK',), ('PRIMARY',), ('SECONDARY',), ('RUSH',),
-               *((option, eid) for eid in REGIONAL_VARIANT_EVENT_IDS for option in REGIONAL_VARIANT_OPTIONS)},
+               *((option, eid) for eid, options in REGIONAL_SIMPLE_OPTIONS.items() for option in options),
+               *REGIONAL_FORTUNE_CHOICES},
     'agla': {('craft', 'CONFIRM')},
     **{command: {request[1:] for request in PROTECTION_REQUESTS if request[0] == command}
        for command in ('event', 'case', 'water', 'medicine')},
@@ -157,6 +177,8 @@ def valid_tutorial(args):
 
 
 def valid_command(command, args):
+    if command == 'choose' and len(args) == 3 and tuple(args[:2]) == REGIONAL_CLEANSE:
+        return bool(re.fullmatch(JOURNEY_CONDITION_ID, args[2]))
     if command == 'tutorial':
         return valid_tutorial(args)
     if command == 'quest':
@@ -423,14 +445,97 @@ def field_book_rewards(game):
     return result
 
 
-def regional_variant_event(game):
+def regional_field_event(game):
     state = game.s
-    if state['phase'] != 'EXPLORE' or state['mission'] != 'ORDINARY' or state['site'] != 'D':
+    if state['phase'] != 'EXPLORE' or state['mission'] != 'ORDINARY':
         return None
-    expected = REGIONAL_VARIANT_EVENTS.get(state['region'])
-    if expected and game.manifest_region['events'].get('D', {}).get('event_id') == expected:
+    sites = {'A': REGIONAL_SCOUT_EVENTS, 'B': REGIONAL_WORKSHOP_EVENTS, 'D': REGIONAL_VARIANT_EVENTS}
+    site = state['site']
+    expected = sites.get(site, {}).get(state['region'])
+    if expected and game.manifest_region['events'].get(site, {}).get('event_id') == expected:
         return expected
     return None
+
+
+def scouting_blocker(game):
+    if 'B2' not in game.manifest_region['encounters']:
+        return '本趟清单没有可侦察的目标。'
+    if 'B2' in game.current['revealed_battles'] or 'B2' in game.current['cleared']:
+        return '侧路 B2 已揭示，不能重复记录。'
+    return ''
+
+
+def regional_service_costs(game, option):
+    state = game.s
+    raw = option['costs']
+    carried = raw.get('carried_materials', {})
+    copper = raw.get('banked_copper', 0)
+    short_materials = {key: qty - state['materials'].get(key, 0) for key, qty in carried.items()
+                       if qty > state['materials'].get(key, 0)}
+    return dict(carried=carried, copper=copper, missing=short_materials,
+                copper_missing=max(0, copper - state['bank']['copper']))
+
+
+def regional_service_choices(game, event_id, option, binding, material_room):
+    from event_conditions import (ITEM_CHOICES, SPECS, _item_future, public, remaining_mandatory_battles)
+    from rogue_events import DEBITS as FORTUNE_DEBITS
+
+    key = option['option_id']
+    if key == 'SECONDARY':
+        return []
+    enabled = key in binding['enabled_options']
+    blocker = '' if enabled else binding['disabled_options'].get(key) or '本趟远征清单未开放该选项。'
+    quote = regional_service_costs(game, option)
+    state = game.s
+    costs_short = bool(quote['missing'] or quote['copper_missing'])
+    no_room = len(state['pouch']) + state['used_prep_slots'] >= 4
+    label = option['label']
+    specs = []
+    if key == 'PASS':
+        specs = [(label, [key, event_id], '暂离现场，保留进度，本区可以回访。')]
+    elif key == 'PRIMARY' and state['site'] == 'A':
+        blocker = blocker or scouting_blocker(game)
+        specs = [(label, [key, event_id], '在图上记录本趟已锁定的侧路 B2。原敌阵、棋盘及物资维持本趟清单。')]
+    elif key in ('PRIMARY', 'FIT') and state['site'] == 'B':
+        effect = option['effects'][0]
+        if key == 'PRIMARY' and effect['type'] == 'craft_event_consumable':
+            item = game.cat.recipes[effect['recipe_id']]['output_id']
+        elif key == 'FIT' and event_id == 'EV30':
+            item = next(code for code, choice in ITEM_CHOICES.items() if choice == key)
+        else:
+            return []
+        if no_room:
+            blocker = blocker or '携行袋已满，制作成品需要 1 个空位。'
+        name = game.cat.items[item]['name']
+        detail = option.get('mechanical_summary') if key == 'FIT' else consumable_effect(item, game.cat.items[item]['effect'])
+        specs = [(label, [key, event_id], f'制作 1 份{name}放入携行袋，占 1 格。未使用的成品安全带回后入库。{detail or ""}')]
+    elif key == 'SHARP' and event_id == 'EV39':
+        if remaining_mandatory_battles(game) <= 0:
+            blocker = blocker or '本趟没有后续必经战。'
+        elif any(row['family'] == SPECS[key]['family'] for row in public(game)['active']):
+            blocker = blocker or '同族条件已生效，不能叠加或刷新。'
+        specs = [(label, [key, event_id], option['mechanical_summary'])]
+    elif key == 'CLEANSE' and event_id == 'EV36':
+        cap = state['manifest']['caps'].get('event_recovery_claims', 0)
+        if state['debits'].get('event_recovery_claims', 0) >= cap:
+            blocker = blocker or '本趟休整额度不足。'
+        specs = [(f"{label} · {row['name']}", [key, event_id, row['id']], option['mechanical_summary'])
+                 for row in public(game)['cleansable']]
+        if not specs:
+            blocker = blocker or '当前没有可清理的负面条件。'
+            specs = [(label, [key, event_id], option['mechanical_summary'])]
+    elif key == 'FORTUNE' and state['site'] == 'A' and enabled and binding.get('rogue_offer'):
+        if _item_future(game) <= 0:
+            blocker = '本趟没有后续战斗可使用旅途约定。'
+        elif material_room < FORTUNE_DEBITS['material_units']:
+            blocker = '本趟可用材料额度不足。'
+        for target in option.get('target_choices', ()):
+            name = target['label'].split('：', 1)[0]
+            specs.append((name, [key, event_id, target['id']],
+                          f"{target['label']}。{option['mechanical_summary']}"))
+    return [dict(id=key, args=args, label=caption, confirmation=confirmation,
+                 quote=quote, blocker=blocker, allowed=not (blocker or costs_short))
+            for caption, args, confirmation in specs]
 
 
 def regional_variant_choice(game, event_id, option, binding):
@@ -460,7 +565,7 @@ def regional_variant_choice(game, event_id, option, binding):
 
 def field_event_choice(game, event_id, option, binding, material_room):
     key = option['option_id']
-    if event_id == regional_variant_event(game) and key in REGIONAL_VARIANT_OPTIONS:
+    if event_id in REGIONAL_VARIANT_EVENT_IDS and key in REGIONAL_VARIANT_OPTIONS:
         return regional_variant_choice(game, event_id, option, binding)
     if event_id == 'EV59' and key == 'RUSH':
         from event_conditions import SPECS
@@ -502,7 +607,8 @@ def handbook_event_view(game):
     binding = game.manifest_region['events'].get(state['site'], {})
     source = binding.get('book_offer')
     fixed = binding.get('material_commission') or {}
-    has_site_choices = regional_variant_event(game) is not None or binding.get('event_id') == 'EV59'
+    regional = regional_field_event(game)
+    has_site_choices = regional is not None or binding.get('event_id') == 'EV59'
     if not source and not fixed and not has_site_choices:
         return {}
     event, binding, visit = game.event_info()
@@ -524,13 +630,20 @@ def handbook_event_view(game):
     choices = []
     for option in event['options']:
         key = option['option_id']
-        site_choice = field_event_choice(game, event['event_id'], option, binding, material_room) if has_site_choices else None
-        if site_choice:
-            choices.append(site_choice)
-            continue
+        if regional in REGIONAL_SERVICE_EVENT_IDS:
+            service_choices = regional_service_choices(game, regional, option, binding, material_room)
+            if service_choices:
+                choices.extend(service_choices)
+                continue
+        elif has_site_choices:
+            site_choice = field_event_choice(game, event['event_id'], option, binding, material_room)
+            if site_choice:
+                choices.append(site_choice)
+                continue
         if key not in binding['enabled_options'] or (key,) not in FIXED_ACTIONS['choose']:
             continue
-        if not offer and key not in fixed.get('options', ()):
+        if not offer and key not in fixed.get('options', ()) and not (
+                regional in REGIONAL_SERVICE_EVENT_IDS and key == 'SECONDARY'):
             continue
         effects = option['effects']
         grants = [effect['bundle_id'] for effect in effects if effect['type'] == 'claim_reward']
@@ -541,6 +654,8 @@ def handbook_event_view(game):
         bundle = game.cat.bundles[bundle_id]
         row = {'id': key, 'label': option['label'],
                'erosion': sum(effect['amount'] for effect in effects if effect['type'] == 'erosion')}
+        if regional in REGIONAL_SERVICE_EVENT_IDS:
+            row['args'] = [key, regional]
         if bundle_id == 'RB-MAT2':
             row.update(kind='materials', units=bundle['effect']['units'],
                        allowed=material_room >= bundle['budget_debits']['material_units'],

@@ -4,30 +4,32 @@ from engine import Game, require
 import region_space
 from expedition_peril import deployable
 from slice_view import (FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS, LOCAL_PROTECTION_ACTIONS,
-                        REGIONAL_VARIANT_EVENT_IDS, REGIONAL_VARIANT_OPTIONS,
-                        finale_retry_town, regional_variant_event)
+                        REGIONAL_SIMPLE_OPTIONS, REGIONAL_SCOUT_EVENTS, finale_retry_town,
+                        regional_field_event, scouting_blocker, valid_command)
 
 
 class DeploymentGame(Game):
     def choose(self, option_id, target='01', plan=None):
         state = self.s
-        variant_event = regional_variant_event(self)
-        bound_selection = target in REGIONAL_VARIANT_EVENT_IDS
-        if bound_selection:
-            require(target == variant_event and option_id in REGIONAL_VARIANT_OPTIONS,
-                    '请选择当前区域 D 点的巡队方案。')
-            binding = self.manifest_region['events']['D']
+        regional = regional_field_event(self)
+        if target in REGIONAL_SIMPLE_OPTIONS:
+            args = [option_id, target] + ([plan] if plan is not None else [])
+            require(target == regional and valid_command('choose', args),
+                    '这项选择只在本趟对应的现场开放。')
+            binding = self.manifest_region['events'][state['site']]
             require(option_id in binding['enabled_options'],
                     '本趟远征清单未开放该选项。')
-            target = '01'
+            target, plan = plan or '01', None
         if state['phase'] == 'EXPLORE' and state['mission'] == 'ORDINARY':
             site = state['site']
             event_id = self.manifest_region['events'].get(site, {}).get('event_id')
-            variant_choice = variant_event and option_id in REGIONAL_VARIANT_OPTIONS
-            if variant_choice or (event_id == 'EV59' and option_id == 'RUSH'):
+            if regional or (event_id == 'EV59' and option_id == 'RUSH'):
                 # The text client reports success even after a local visit closes.
                 require(self.current['events'][site]['state'] not in ('RESOLVED', 'DECLINED'),
                         '本现场已处理，不能再次选择。')
+            if regional in REGIONAL_SCOUT_EVENTS.values() and option_id == 'PRIMARY':
+                blocker = scouting_blocker(self)
+                require(not blocker, blocker)
         return super().choose(option_id, target, plan)
 
     def dispatch(self, command, args):
