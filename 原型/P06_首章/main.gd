@@ -1271,10 +1271,11 @@ func _render() -> void:
 			_button("打开会话目录", "session-folder", _open_session_directory)
 		if not client.runtime_log.is_empty() and FileAccess.file_exists(client.runtime_log):
 			_button("打开运行时日志", "runtime-log", _open_runtime_log)
-		if opening_failed and FileAccess.file_exists(data_dir.path_join("runs").path_join(case_name).path_join("save.json.bak")):
+		if not client.can_reconnect and FileAccess.file_exists(data_dir.path_join("runs").path_join(case_name).path_join("save.json.bak")):
 			var package_root := OS.get_executable_path().get_base_dir()
 			if data_dir == package_root.path_join("data") and FileAccess.file_exists(package_root.path_join("恢复存档.cmd")):
-				_label(actions, "请打开发布包根目录的 恢复存档.cmd。主档损坏时在原位置恢复（--recover %s）；搬移后只剩备份时选择导入。恢复会创建新槽，原文件保留。" % case_name, MUTED, 16)
+				_label(actions, "请打开发布包里的 恢复存档.cmd，原槽名为 %s。若写档中断，选择「未决写档恢复」并确认。恢复可能丢失备份之后的进度。工具会创建新槽并保留原件。" % case_name, MUTED, 16)
+				_label(actions, "主档损坏或丢失时可选「原位置恢复」（--recover %s）。搬移后只剩备份时可选「导入」。" % case_name, MUTED, 16)
 			else:
 				_label(actions, "主档损坏时，试玩入口的 --recover 可从校验后的备份新建会话。", MUTED, 16)
 		focus_key = "reconnect" if client.can_reconnect else "return-menu"
