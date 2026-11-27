@@ -1733,7 +1733,7 @@ func _town_actions() -> void:
 		_label(actions, ChapterCopy.text("UI.S03.HUD.COST_SUMMARY", [
 			int(view.resources.expedition_used), int(budget.expedition),
 			int(view.resources.battle_used), int(budget.battle)]), MUTED, 16)
-		var budget_hint := _full_battle_budget_hint(selected_id)
+		var budget_hint := _deployment_budget_hint(selected_id)
 		if not budget_hint.is_empty():
 			_label(actions, budget_hint.replace("，", "，\n"), ALERT, 16)
 		var can_recommend := not party.any(func(member: Dictionary) -> bool: return int(member.injury_days) > 0)
@@ -3191,10 +3191,11 @@ func _explore_actions() -> void:
 		command_buttons["fight"].custom_minimum_size.x = 154.0
 		_input_action(ChapterCopy.text("UI.S05.BTN.PRE_RETREAT"), "retreat", [], "", true, _contact_controls)
 		if not scouting.is_empty():
-			var budget_hint := _full_battle_budget_hint(selected_id)
+			var budget_hint := _deployment_budget_hint(selected_id)
 			if budget_hint.is_empty():
-				_label(actions, ChapterCopy.text("UI.S05.HUD.DEPLOY_HINT", [
-					int(view.resources.battle_used), int(view.budget.battle)]), MUTED, 16)
+				var normal_hint := ChapterCopy.text("UI.S05.HUD.DEPLOY_HINT", [
+					int(view.resources.battle_used), int(view.budget.battle)])
+				_label(actions, normal_hint.replace("（战斗Cost", "\n（战斗Cost"), MUTED, 16)
 			else:
 				_label(actions, budget_hint.replace("，", "，\n"), ALERT, 16)
 		var spacer := Control.new()
@@ -4512,18 +4513,24 @@ func _deployment_member_button(member: Dictionary) -> void:
 	entry.set_drag_forwarding(board.begin_deployment_drag.bind(id), Callable(), Callable())
 
 
-func _full_battle_budget_hint(member_id: String) -> String:
+func _deployment_budget_hint(member_id: String) -> String:
 	var in_town: bool = view.get("phase") == "TOWN" and not view.get("complete", false)
 	if member_id.is_empty() or not (in_town or not view.get("scouting", {}).is_empty()):
 		return ""
 	var used := int(view.resources.battle_used)
 	var cap := int(view.budget.battle)
-	if used < cap or not view.party.any(func(member: Dictionary) -> bool:
-			return member.instance_id == member_id and not member.deployed \
-				and member.deployable and int(member.injury_days) == 0):
-		return ""
-	var id := "UI.S03.HUD.COST_SUMMARY" if in_town else "UI.S05.HUD.DEPLOY_HINT"
-	return ChapterCopy.text(id, [used, cap], "full")
+	for member: Dictionary in view.party:
+		if member.instance_id != member_id or member.deployed \
+				or not member.deployable or int(member.injury_days) > 0:
+			continue
+		var cost := int(member.cost)
+		if used + cost <= cap:
+			return ""
+		var id := "UI.S03.HUD.COST_SUMMARY" if in_town else "UI.S05.HUD.DEPLOY_HINT"
+		if used >= cap:
+			return ChapterCopy.text(id, [used, cap], "full")
+		return ChapterCopy.text(id, [cap - used, cost], "insufficient")
+	return ""
 
 
 func _selected_deployment(member: Dictionary, cells: Array) -> void:
@@ -4531,7 +4538,7 @@ func _selected_deployment(member: Dictionary, cells: Array) -> void:
 	if advanced:
 		_label(actions, "Lv%d · 生命 %d/%d" % [int(member.level), int(member.hp), int(member.max_hp)], MUTED, 15)
 	var can_deploy: bool = member.deployable and int(member.injury_days) == 0
-	var budget_hint := _full_battle_budget_hint(member.instance_id)
+	var budget_hint := _deployment_budget_hint(member.instance_id)
 	var deploy_button := _input_action("撤下部署" if member.deployed else "加入部署", "deploy",
 		[member.instance_id, "off" if member.deployed else "on"], "",
 		member.deployed or (can_deploy and budget_hint.is_empty()))
@@ -4765,7 +4772,7 @@ func _deployment_target(id: String, cell: Vector2i) -> Dictionary:
 			return {"error": "对方当前无法上阵"}
 		return {"swap": other.instance_id, "hint": "交换 " + _name(other)}
 	if not member.deployed and spent + int(member.cost) > int(view.budget.battle):
-		var budget_hint := _full_battle_budget_hint(id)
+		var budget_hint := _deployment_budget_hint(id)
 		return {"error": "超过战斗 Cost" if budget_hint.is_empty() else budget_hint}
 	if member.deployed and Board.cell_index(member.position) == cell \
 			and (selected_id != id or selected_facing == int(member.facing)):

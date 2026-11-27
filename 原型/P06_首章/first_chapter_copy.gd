@@ -55,11 +55,19 @@ const STRINGS := {
 	"UI.S07.TIP.REPLAY_NO_DUP": "首章档案已交存，当前仅作回看，不再发放奖励。",
 }
 
+const BATTLE_BUDGET_INSUFFICIENT := "战斗Cost不足（余%d／需%d），请先撤下队员。"
+
 const VARIANTS := {
 	"UI.S01.BTN.CONTINUE": {"incompatible": "存档版本不兼容，请改选或开新档"},
 	"UI.S01.HUD.RESUME_OK": {"incompatible": "存档版本不兼容，请改选存档或开新档。"},
-	"UI.S03.HUD.COST_SUMMARY": {"full": "战斗Cost已满（%d/%d），请先取消其他上阵队员"},
-	"UI.S05.HUD.DEPLOY_HINT": {"full": "战斗Cost已满（%d/%d），请先收回已部署队员。"},
+	"UI.S03.HUD.COST_SUMMARY": {
+		"full": "战斗Cost已满（%d/%d），请先取消其他上阵队员",
+		"insufficient": BATTLE_BUDGET_INSUFFICIENT,
+	},
+	"UI.S05.HUD.DEPLOY_HINT": {
+		"full": "战斗Cost已满（%d/%d），请先收回已部署队员。",
+		"insufficient": BATTLE_BUDGET_INSUFFICIENT,
+	},
 	"UI.S05.BTN.START_BATTLE": {"empty": "棋盘未部署队员，请点高亮格部署"},
 }
 
