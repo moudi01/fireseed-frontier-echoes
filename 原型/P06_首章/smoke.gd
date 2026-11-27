@@ -406,8 +406,8 @@ func _confirmation_focus() -> bool:
 	await get_tree().process_frame
 	_key(KEY_ESCAPE, true, true)
 	_key(KEY_ESCAPE, false)
-	if not await _wait_focus("settings") or app.settings_open or app.confirmation.is_empty():
-		failure = "Closing settings did not restore its entry in the confirmation"
+	if not await _wait_focus("cancel") or app.settings_open or app.confirmation.is_empty():
+		failure = "Closing settings did not restore safe Cancel focus in the confirmation"
 		return false
 	_key(KEY_ESCAPE, true)
 	_key(KEY_ESCAPE, false)
@@ -524,6 +524,8 @@ func _chapter_flow(collect_whistle := true) -> void:
 	if not chapter.reviewed or not chapter.archived or int(chapter.seals) != 1 or chapter.books.is_empty():
 		failure = "The native chapter facts or first delivery were not reflected"
 		return
+	if not await _check_first_chapter_copy():
+		return
 	await _capture("chapter-archive")
 	var book: Dictionary = chapter.books[0]
 	if not await _press("chapter-books") or not await _command("book choice ST-104 " + book.id + " CONFIRM"):
@@ -540,8 +542,9 @@ func _chapter_flow(collect_whistle := true) -> void:
 	var copper := int(app.view.town_roster.copper)
 	var price := int(app.view.whistle.price)
 	if collect_whistle:
-		if not await _commands(["quest MG01 record", "quest MG01 witness", "quest MG01 collect CONFIRM"]):
-			return
+		for command in ["quest MG01 record", "quest MG01 witness", "quest MG01 collect CONFIRM"]:
+			if not await _command(command) or not await _check_first_chapter_copy():
+				return
 		if app.view.whistle.stage != "done" or int(app.view.town_roster.copper) != copper - price:
 			failure = "The whistle was not paid for and recorded exactly once"
 			return
@@ -557,6 +560,24 @@ func _chapter_flow(collect_whistle := true) -> void:
 				await _capture("chapter-equipment")
 				return
 	failure = "The actual tutorial loot could not be equipped"
+
+
+func _check_first_chapter_copy() -> bool:
+	var tips := {
+		"record": "先查阅铜哨寄存登记",
+		"witness": "寄存登记已查阅",
+		"collect": "证词已核实",
+		"done": "裂口铜哨已持有",
+	}
+	var stage: String = app.view.whistle.stage
+	await get_tree().process_frame
+	if not tips.has(stage) or not _panel_has(tips[stage]):
+		failure = "The archived whistle hint did not match the committed step: " + stage
+		return false
+	var checked: Array = side_checks.get("chapter_copy_whistle_stages", [])
+	checked.append(stage)
+	side_checks["chapter_copy_whistle_stages"] = checked
+	return true
 
 
 func _check_chapter() -> void:
@@ -664,8 +685,8 @@ func _check_commission_receipt() -> void:
 		side_checks["opening_skip_read_only"] = true
 		return
 	var key := "quest commission CONFIRM"
-	if not await _press(key, false) or not _panel_has("3 名盾兵、3 名近战兵和 2 名弓兵") \
-			or not _panel_has("60 铜、12 结晶和 6 补给") or not await _press("cancel"):
+	if not await _press(key, false) or not _panel_has("3名盾兵、3名近战兵和2名弓兵") \
+			or not _panel_has("60铜、12公共结晶和6补给") or not await _press("cancel"):
 		failure = "The commission preview did not list its grant or support cancellation"
 		return
 	if app.client.frame != original or app.view.commissioned or not app.view.party.is_empty():
@@ -786,7 +807,7 @@ func _check_chapter_delivery() -> void:
 	var offer := "出征预算 8 → 12 Cost\n战斗预算 6 → 8 Cost" if archive else "「守誓回斩」×1 · 应召印 ×1"
 	if not await _press(key, false):
 		return
-	if not _panel_has(offer) or (archive and (not _panel_has("应召印 ×1\n自选基础技能书 ×1") \
+	if not _panel_has(offer) or (archive and (not _panel_has("应召印 ×1\n基础技能书自选权益 ×1") \
 				or not _panel_has("任务物品「封存档案片」"))) \
 			or int(app.client.frame.state_version) != version:
 		failure = "The delivery confirmation did not show the frozen reward before submitting"
@@ -891,7 +912,7 @@ func _check_preview_readers(book: Dictionary) -> bool:
 
 func _check_archive_progress() -> void:
 	if app.view.get("scouting", {}).get("delivered_here", false):
-		if not _panel_has("可在暮汀旧档案请许苇核对远眺记录") or not await _command("town"):
+		if not _panel_has("灰栎侦路完成，请通过「旧档案」与许苇核对旧日志。") or not await _command("town"):
 			failure = "The scouting settlement did not link to its archive task"
 			return
 	if app.view.get("phase") == "EXPLORE" and app.view.get("hunt", {}).get("report_pending_return", false):
@@ -1945,14 +1966,28 @@ func _ado_steps(victories: Array[String]) -> bool:
 
 func _check_settlement(reason: String, complete: bool) -> void:
 	var summary: Variant = app.view.get("settlement")
-	var title := "侦路调查已交付" if complete else "远征结算"
 	if not summary is Dictionary or summary.get("result") != reason or app.view.get("complete") != complete:
 		failure = "Unexpected settlement: " + reason
 		return
-	for control in app.actions.get_children():
-		if control is Label and control.text == title:
-			return
-	failure = "Settlement is missing from the action panel: " + reason
+	var title := "侦路调查已交付" if complete else "远征结算"
+	if not app.view.get("scouting", {}).is_empty():
+		if reason == "SAFE_RETURN":
+			title = "安全归城 · 第%d日结算" % int(app.view.day)
+		elif reason == "DEFEAT":
+			title = "远征败战 · 独自归城"
+	if not app.actions.get_children().any(func(control): return control is Label and control.text == title):
+		failure = "Settlement is missing from the action panel: " + reason
+
+
+func _check_scouting_redeparture() -> void:
+	if not await _command("town") or not await _command("tutorial start"):
+		return
+	var scouting: Dictionary = app.view.get("scouting", {})
+	if app.view.get("complete", false) or app.view.get("site") != "I" \
+			or int(scouting.get("battles", -1)) != 0 or scouting.get("observed", true):
+		failure = "A fresh scouting trip inherited unfinished evidence"
+	else:
+		side_checks["scouting_redeparture_clean"] = true
 
 
 func _rescue_route() -> void:
@@ -3280,20 +3315,25 @@ func _check_tutorial_resume() -> void:
 			await _check_tutorial_deadline()
 		return
 	var from_entrance: bool = app.view.get("site") == "I" and int(app.view.supply) == 0
-	var detail := "本趟还缺林道战胜利、根口战胜利、远眺点（D）观察" if from_entrance else "本趟还缺远眺点（D）观察"
+	var detail := "本趟还缺林道战胜利、根口战胜利、远眺点观察记录" if from_entrance else "本趟还缺远眺点观察记录"
 	var return_for_observation := "--return-for-observation" in OS.get_cmdline_user_args()
 	if return_for_observation:
 		var backtrack: Button = app.command_buttons.get("move G")
 		if backtrack == null or backtrack.disabled or backtrack.text != "经根口返回远眺点":
 			failure = "The exit did not offer the way back to the missed observation"
 			return
-	if not app.view.get("tutorial_area") or not await _press("return CONFIRM", false) or not _panel_has(detail):
+	var route_back: Button = app.command_buttons.get("move G")
+	var can_backtrack := route_back != null and not route_back.disabled and route_back.text == "经根口返回远眺点"
+	var expected := "尚未在远眺点「观察并记录」" if can_backtrack else detail
+	if not app.view.get("tutorial_area") or not await _press("return CONFIRM", false) or not _panel_has(expected):
 		failure = "The return confirmation omitted an actual scouting requirement"
 		return
 	if return_for_observation:
+		if "--cycle-copy-size" in OS.get_cmdline_user_args() and not await _check_copy_size():
+			return
 		var before: Dictionary = app.client.frame
-		if not _panel_has("可取消归城并经根口返回远眺点") or not await _press("cancel") \
-				or app.client.frame != before:
+		if not app._confirmation_text.text.contains("请点「取消」，再点「经根口返回远眺点」") \
+				or not await _press("cancel") or app.client.frame != before:
 			failure = "The early return could not be cancelled without a transaction"
 			return
 		if not await _commands(["move G", "move D", "tutorial observe", "move G", "move X"]):
@@ -3305,7 +3345,7 @@ func _check_tutorial_resume() -> void:
 		if not await _command("return CONFIRM"):
 			return
 		_check_settlement("SAFE_RETURN", true)
-		if not app.view.scouting.delivered_here or not _panel_has("可在暮汀旧档案请许苇核对远眺记录"):
+		if not app.view.scouting.delivered_here or not _panel_has("灰栎侦路完成，请通过「旧档案」与许苇核对旧日志。"):
 			failure = "The completed investigation did not link to the saved settlement"
 		return
 	await _capture("scouting-return-confirm")
@@ -5177,6 +5217,8 @@ func _run() -> void:
 		elif mode != "boot" and await _opening():
 			if mode in ["full", "full-mouse", "unclaimed", "unobserved", "chapter", "ado-early", "ado-late", "fortress-branches", "rescue"] or spear_count > 0:
 				await _full()
+				if mode == "unobserved" and failure.is_empty() and "--retry-first-scouting" in OS.get_cmdline_user_args():
+					await _check_scouting_redeparture()
 				if mode == "rescue" and failure.is_empty():
 					await _chapter_flow()
 					if failure.is_empty():
@@ -5216,7 +5258,8 @@ func _run() -> void:
 				await _repeat_input()
 	var result := {"scenario": mode, "passed": failure.is_empty(), "failure": failure, "steps": steps,
 		"state_digest": app.client.frame.get("state_digest"), "domain_sequence": app.client.frame.get("domain_sequence"),
-		"files": app.client.frame.get("files"), "warnings_played": app.sound_count, "elapsed_ms": Time.get_ticks_msec() - began}
+		"files": app.client.frame.get("files"), "warnings_played": app.sound_count, "elapsed_ms": Time.get_ticks_msec() - began,
+		"window_px": [app.get_window().size.x, app.get_window().size.y]}
 	result["shield_visuals"] = app.board.stage.audit
 	result["sidecar_reads"] = {"inline": app.client.views_in_receipts, "snapshots": app.client.snapshot_requests,
 		"battle_boards_reused": app.client.battle_boards_reused}

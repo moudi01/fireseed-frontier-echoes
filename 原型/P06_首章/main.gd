@@ -75,6 +75,9 @@ var _contact_controls: HBoxContainer
 var _subtitle_row: HBoxContainer
 var _field_title_font: Font
 var location: Label
+const ChapterCopy := preload("res://first_chapter_copy.gd")
+
+var _chapter_goal: Label
 var _resource_bar: VBoxContainer
 var _resource_totals: Label
 var _material_totals: Label
@@ -406,6 +409,7 @@ func _build() -> void:
 	area_title = _label(title, "火种计划  /  灰栎边道", INK, 31)
 	area_title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	location = _label(title, "暮汀", MUTED, 17)
+	_chapter_goal = _label(title, "", MUTED, 15)
 	_resource_bar = VBoxContainer.new()
 	_resource_bar.size_flags_horizontal = SIZE_EXPAND_FILL
 	_resource_bar.size_flags_vertical = SIZE_SHRINK_CENTER
@@ -751,6 +755,9 @@ func _refresh(row: Dictionary) -> void:
 			focus_key = "quest archive CONFIRM" if chapter.reviewed else "quest review CONFIRM"
 		elif not previous_chapter.is_empty() and row.get("status") == "COMMITTED":
 			if not previous_chapter.archived and chapter.get("archived", false):
+				var budget: Dictionary = chapter.archive_budget
+				notice.text = ChapterCopy.text("UI.S07.DLG.ST104_REWARD", [
+					int(chapter.archive_seals), str(chapter.archive_item), int(budget.expedition), int(budget.battle)])
 				focus_key = "town-expedition"
 			elif not previous_chapter.reviewed and chapter.get("reviewed", false):
 				focus_key = "quest archive CONFIRM"
@@ -762,7 +769,7 @@ func _refresh(row: Dictionary) -> void:
 	if int(row["state_version"]) > 0 or view.get("commissioned", false):
 		opened = true
 	if initial_snapshot and notice.text in ["正在连接旁载运行时…", "正在重新连接并核对存档…"]:
-		notice.text = ""
+		notice.text = ChapterCopy.text("UI.S01.HUD.RESUME_OK") if int(row.state_version) > 0 else ""
 	if not was_commissioned and row.get("status") == "COMMITTED" and not view.get("commission_receipt", {}).is_empty():
 		notice.text = "委任已接受。" + _commission_grant_text(view.commission_receipt)
 		focus_key = "tutorial recommend CONFIRM"
@@ -1117,7 +1124,8 @@ func _render_player_menu() -> void:
 	else:
 		_label(actions, PRODUCT_TITLE, GOLD, 31)
 		_button("选择存档", "choose-slot", _show_slots)
-		_button("开始新周目", "new-cycle", _start_new_cycle)
+		_button(ChapterCopy.text("UI.S01.BTN.NEW_GAME"), "new-cycle", _start_new_cycle)
+		_label(actions, ChapterCopy.text("UI.S01.TIP.KEYBIND_BAR"), MUTED, 16)
 		_button("设置", "settings", _show_settings)
 		_button("退出游戏", "quit", _quit)
 	if not notice.text.is_empty():
@@ -1187,7 +1195,7 @@ func _slot_actions() -> void:
 	_label(actions, "选择存档", GOLD, 24)
 	_button("返回主菜单", "slot-back", _close_slots)
 	if _slot_rows.is_empty():
-		_label(actions, "这里还没有可以打开的存档。", MUTED, 16)
+		_label(actions, ChapterCopy.text("UI.S01.EMPTY.SAVE_SLOT"), MUTED, 16)
 		return
 	for row: Dictionary in _slot_rows:
 		var mark := " · 已选" if row.name == _selected_slot else ""
@@ -1195,8 +1203,8 @@ func _slot_actions() -> void:
 		if row.name == _selected_slot:
 			var status := "有主档和备份" if row.primary and row.backup else ("有主档" if row.primary else (
 				"主档缺失，仍有备份" if row.backup else "主档缺失，可查看存档目录"))
-			_label(actions, status, MUTED, 16)
-			_button("打开所选存档", "open-slot", _switch_player_scene.bind("existing", row.name))
+			_label(actions, ChapterCopy.text("UI.S01.HUD.SAVE_SLOT_META", [row.name, status]), MUTED, 16)
+			_button(ChapterCopy.text("UI.S01.BTN.CONTINUE"), "open-slot", _switch_player_scene.bind("existing", row.name))
 
 
 func _start_new_cycle() -> void:
@@ -1279,6 +1287,8 @@ func _render() -> void:
 		region = "灰栎边道"
 	area_title.text = region if field else "火种计划  /  " + region
 	location.text = "暮汀北门 · 独返" if showing_opening else _display_location()
+	_chapter_goal.text = _chapter_goal_text() if opened and not showing_opening and not client.blocked else ""
+	_chapter_goal.visible = not _chapter_goal.text.is_empty()
 	_render_resources(opened and not showing_opening)
 	save_info.text = "结果待核实" if client.blocked else "正在处理" if client.busy else "已保存 · 版本 %d" % save_version if save_version >= 0 else "存档尚未确认"
 	save_info.visible = not field or client.blocked
@@ -1435,15 +1445,36 @@ func _render() -> void:
 			"footer_usec": Time.get_ticks_usec() - footer_started, "confirmation": show_confirmation})
 
 
+func _chapter_goal_text() -> String:
+	if view.get("phase") == "TOWN":
+		if not view.get("commissioned", false):
+			return ChapterCopy.text("UI.S02.HUD.GOAL_ST101")
+		if not view.get("complete", false):
+			return ChapterCopy.text("UI.S02.HUD.GOAL_ST101_READY")
+		var chapter: Dictionary = view.get("chapter", {})
+		if not chapter.is_empty() and not chapter.archived:
+			return ChapterCopy.text("UI.S02.HUD.GOAL_ST104" if chapter.reviewed else "UI.S02.HUD.GOAL_ST103")
+	elif view.get("phase") == "EXPLORE":
+		var scouting: Dictionary = view.get("scouting", {})
+		if not scouting.is_empty():
+			return ChapterCopy.text("UI.S02.HUD.GOAL_ST102", [
+				int(scouting.battles), "已记录" if scouting.observed else "待记录"])
+	return ""
+
+
 func _render_resources(visible_on_screen: bool) -> void:
 	var resources: Dictionary = view.get("resources", {})
 	_resource_bar.visible = visible_on_screen and not resources.is_empty()
 	if not _resource_bar.visible:
 		return
 	var budget: Dictionary = view.budget
-	_resource_totals.text = "铜币 %d　结晶 %d　出征 %d/%d　战斗 %d/%d Cost" % [
-		int(resources.copper), int(resources.crystal), int(resources.expedition_used), int(budget.expedition),
-		int(resources.battle_used), int(budget.battle)]
+	if _chapter_goal.visible:
+		_resource_totals.text = ChapterCopy.text("UI.S02.HUD.RES_BAR", [
+			int(resources.copper), int(resources.crystal), int(view.supply), int(view.day)])
+	else:
+		_resource_totals.text = "铜币 %d　结晶 %d　出征 %d/%d　战斗 %d/%d Cost" % [
+			int(resources.copper), int(resources.crystal), int(resources.expedition_used), int(budget.expedition),
+			int(resources.battle_used), int(budget.battle)]
 	var materials := PackedStringArray()
 	for material: String in resources.warehouse:
 		materials.append("%s %d" % [CARGO_NAMES[material], int(resources.warehouse[material])])
@@ -1616,8 +1647,8 @@ func _town_actions() -> void:
 		if _asked_about_old_company:
 			_label(actions, "沈砚　旧队档案缺了几页。等你把灰栎边道的调查带回来，我请许苇把余下的旧日志给你看。", MUTED, 16)
 		_label(actions, "沈砚　城墙可以晚修一截，回来的路不能再少一条。\n秦姨　报名的人有名字，回来的时候照着名字点。", INK, 16)
-		_input_action("接受委任", "quest", ["commission", "CONFIRM"],
-			"接受灰栎边道侦路委任\n登记 3 名盾兵、3 名近战兵和 2 名弓兵。\n配发 60 铜、12 结晶和 6 补给。")
+		_input_action(ChapterCopy.text("UI.S02.BTN.ACCEPT_COMMISSION"), "quest", ["commission", "CONFIRM"],
+			"接受灰栎边道侦路委任\n" + ChapterCopy.text("UI.S02.TIP.ACCEPT_COMMISSION"))
 		return
 	var recall: Dictionary = view.get("town_memory", {})
 	if not recall.is_empty():
@@ -1674,17 +1705,25 @@ func _town_actions() -> void:
 		_summary()
 	var party: Array = view.get("party", [])
 	if not view.get("complete", false):
+		var budget: Dictionary = view.budget
+		_label(actions, ChapterCopy.text("UI.S03.HUD.COST_SUMMARY", [
+			int(view.resources.expedition_used), int(budget.expedition),
+			int(view.resources.battle_used), int(budget.battle)]), MUTED, 16)
 		var can_recommend := not party.any(func(member: Dictionary) -> bool: return int(member.injury_days) > 0)
-		_input_action("采用建议部署", "tutorial", ["recommend", "CONFIRM"],
+		_input_action(ChapterCopy.text("UI.S03.BTN.AUTO_DEPLOY"), "tutorial", ["recommend", "CONFIRM"],
 			"将建议部署应用于当前可用的初始队员。", can_recommend)
 		var has_supply := int(view.supply) >= 1
 		var blocker: String = view.preparation.get("deployment_error", "")
 		if not blocker.is_empty():
 			_label(actions, blocker + "。", ALERT, 16)
-		_input_action("出发 · 消耗 1 补给", "tutorial", _tutorial_departure_args(),
-			_day_consequence("前往灰栎边道。消耗 1 补给。"), has_supply and blocker.is_empty())
+		if blocker.is_empty() and not party.any(func(member: Dictionary) -> bool: return member.deployed and member.deployable):
+			blocker = ChapterCopy.text("UI.S03.ERR.DEPLOY_EMPTY")
+			_label(actions, blocker, ALERT, 16)
+		var departure := _input_action("出发 · 消耗 1 补给", "tutorial", _tutorial_departure_args(),
+			_day_consequence(ChapterCopy.text("UI.S03.DLG.DEPART_LOCK")), has_supply and blocker.is_empty())
+		departure.tooltip_text = ChapterCopy.text("UI.S03.TIP.TUT01_ROUTE")
 		if not has_supply:
-			_label(actions, "补给不足。采购后可再次出发。", ALERT, 16)
+			_label(actions, ChapterCopy.text("UI.S03.ERR.SUPPLY_SHORT", [1, int(view.supply)]), ALERT, 16)
 			_buy_supply()
 	if not view.get("chapter", {}).get("archived", false):
 		_rest_action()
@@ -1700,14 +1739,19 @@ func _town_actions() -> void:
 		for recruit in view.get("preparation", {}).get("recruits", []):
 			_input_action("招募%s · %d 铜" % [recruit.name, price], "recruit", [recruit.id],
 				"支付 %d 铜，加入留城名册，出征 Cost 为 2。" % price, int(treasury.copper) >= price)
+		if int(treasury.copper) < price:
+			_label(actions, ChapterCopy.text("UI.S02.ERR.RES_SHORTAGE", ["铜币", price, int(treasury.copper)]), MUTED, 16)
 		if not treasury.home.is_empty():
-			_label(actions, "留城名册", GOLD, 16)
+			_label(actions, "留城名册", GOLD, 16).tooltip_text = ChapterCopy.text("UI.S02.TIP.ROSTER_HEADER")
 			for member in treasury.home:
 				if logistics.get("training", {}).get("pending", []).any(func(row): return row.id == member.instance_id):
 					_label(actions, _name(member) + " · 等待补训结算", MUTED, 16)
 					continue
 				var eligible := int(member.hp) > 0 and int(member.injury_days) == 0 and expedition + int(member.cost) <= int(view.budget.expedition)
-				_input_action("随队 · " + _name(member), "squad", [member.instance_id, "on"], "", eligible)
+				var join := _input_action("随队 · " + _name(member), "squad", [member.instance_id, "on"], "", eligible)
+				if not eligible:
+					var reason := "伤势未恢复" if int(member.injury_days) > 0 else ("人员失能" if int(member.hp) <= 0 else "出征预算不足")
+					join.tooltip_text = ChapterCopy.text("UI.S03.ERR.UNIT_UNAVAILABLE", [reason])
 				if _can_manage_gear(member) or int(member.get("heal_cost", 0)) > 0 or int(member.injury_days) > 0 \
 						or int(member.get("next_xp", 0)) > 0 and int(member.xp) >= int(member.next_xp):
 					_button("状态 · " + _name(member), "member-" + member.instance_id, _choose_member.bind(member.instance_id))
@@ -1788,18 +1832,19 @@ func _chapter_actions() -> void:
 	_label(actions, "暮汀 · 旧档案", GOLD, 24)
 	if not chapter.get("reviewed", false):
 		_label(actions, "调查已交回 · 待核对旧日志", MUTED, 16)
-		_input_action("请许苇核对调查", "quest", ["review", "CONFIRM"],
+		_input_action(ChapterCopy.text("UI.S07.BTN.CHECK_LOG"), "quest", ["review", "CONFIRM"],
 			"请许苇将远眺记录与旧日志核对。\n" + chapter.observation)
 	elif not chapter.get("archived", false):
-		_label(actions, "旧日志已核对 · 待交存", MUTED, 16)
+		_label(actions, ChapterCopy.text("UI.S07.TIP.ST103_REPLAY"), MUTED, 16)
 		_label(actions, chapter.review_exchange, MUTED, 16)
 		var next_budget: Dictionary = chapter.archive_budget
-		_input_action("交存调查与旧名册", "quest", ["archive", "CONFIRM"],
-			"完成首章\n出征预算 %d → %d Cost\n战斗预算 %d → %d Cost\n应召印 ×%d\n自选基础技能书 ×1\n任务物品「%s」" % [
+		_input_action(ChapterCopy.text("UI.S07.BTN.SUBMIT_ARCHIVE"), "quest", ["archive", "CONFIRM"],
+			"完成首章\n出征预算 %d → %d Cost\n战斗预算 %d → %d Cost\n应召印 ×%d\n基础技能书自选权益 ×1\n任务物品「%s」" % [
 				int(view.budget.expedition), int(next_budget.expedition), int(view.budget.battle), int(next_budget.battle),
 				int(chapter.archive_seals), chapter.archive_item])
 	else:
 		_label(actions, "首章已交档 · 应召印库存 %d 枚" % int(chapter.seals), INK, 17)
+		_label(actions, ChapterCopy.text("UI.S02.HUD.GOAL_ST104_DONE"), MUTED, 16)
 	_button("查阅交档记录", "chapter-history", _toggle_chapter_history)
 	_button("回查首次远征", "first-expedition", _toggle_first_expedition)
 	var cases: Dictionary = view.get("protection_cases", {})
@@ -1810,8 +1855,13 @@ func _chapter_actions() -> void:
 	if chapter.archived:
 		_label(actions, "阿铎 · 裂口铜哨", GOLD, 17)
 		var whistle: Dictionary = view.whistle
-		if whistle.get("stage") == "record":
+		var stage := str(whistle.get("stage", ""))
+		if stage == "record":
 			_label(actions, chapter.whistle_clue, MUTED, 16)
+		var dialogue := ChapterCopy.clockmaker_line(stage)
+		if not dialogue.is_empty():
+			_label(actions, dialogue, INK, 16)
+			_label(actions, ChapterCopy.whistle_tip(stage, int(whistle.price)), MUTED, 16)
 		_whistle_actions(whistle)
 		var archived_budget: Dictionary = chapter.archive_budget
 		_label(actions, "出征预算 %d Cost · 战斗预算 %d Cost" % [
@@ -1854,6 +1904,7 @@ func _chapter_history(chapter: Dictionary) -> void:
 				details.append("登记基础技能书自选权益 ×1")
 			if not chapter.book_selected.is_empty():
 				details.append(_chapter_book_text(chapter.book_selected))
+			details.append(ChapterCopy.text("UI.S07.TIP.REPLAY_NO_DUP"))
 			record.text = "\n".join(details)
 	if records.is_empty():
 		return
@@ -2505,8 +2556,11 @@ func _construction_detail(project: Dictionary, next_id: String) -> void:
 		var required := int(quote.required)
 		var target := int(quote.target)
 		_label(actions, "Lv%d 工期 · %d 次行动结算" % [target, required], MUTED, 16)
-		if not quote.blocker.is_empty() and int(project.level) > 0:
-			_label(actions, quote.blocker, MUTED, 16)
+		if not quote.blocker.is_empty():
+			var blocker := str(quote.blocker)
+			if project.key == "armory" and not view.get("chapter", {}).get("archived", false):
+				blocker = ChapterCopy.text("UI.S02.ERR.FACILITY_LOCKED", [str(project.name), blocker])
+			_label(actions, blocker, MUTED, 16)
 		_input_action("开工 · %d 铜 · %d 公共结晶" % [copper, crystal], "facility", ["build", project.key, str(target), next_id, "CONFIRM"],
 			"建设%s Lv%d。支付 %d 铜和 %d 公共结晶。\n开工不耗日，%d 次后续行动结算后竣工。" % [project.name, target, copper, crystal, required],
 			quote.blocker.is_empty())
@@ -2571,7 +2625,7 @@ func _consumables_actions(town: bool) -> void:
 	if town and int(bag.get("workshop", 0)) == 0:
 		_label(actions, "一级工坊竣工后开放制作。", MUTED, 16)
 	if items.is_empty():
-		_label(actions, "没有可管理的随身道具。", MUTED, 16)
+		_label(actions, ChapterCopy.text("UI.S03.EMPTY.BAG_SLOT"), MUTED, 16)
 	for item: Dictionary in items:
 		var counts: PackedStringArray = []
 		if int(item.carried) > 0:
@@ -2957,8 +3011,16 @@ func _memory_actions(memory: Dictionary, command: String) -> void:
 
 
 func _settlement_actions() -> void:
-	var scouting_delivered: bool = view.get("scouting", {}).get("delivered_here", false)
-	_label(actions, "侦路调查已交付" if scouting_delivered else "远征结算", GOLD, 24)
+	var scouting: Dictionary = view.get("scouting", {})
+	var scouting_delivered: bool = scouting.get("delivered_here", false)
+	var settlement: Dictionary = view.get("settlement", {})
+	var tutorial_result := str(settlement.get("result", "")) if not scouting.is_empty() else ""
+	var heading := "侦路调查已交付" if scouting_delivered else "远征结算"
+	if tutorial_result == "SAFE_RETURN":
+		heading = ChapterCopy.text("UI.S06.TTL.RETURN_SAFE", [int(view.day)])
+	elif tutorial_result == "DEFEAT":
+		heading = ChapterCopy.text("UI.S06.TTL.RETURN_DEFEAT")
+	_label(actions, heading, GOLD, 24)
 	_summary()
 	for case: Dictionary in view.get("protection_cases", {}).get("reports", []):
 		_protection_report(case)
@@ -2967,7 +3029,7 @@ func _settlement_actions() -> void:
 		_label(actions, "%s讨伐报告可在暮汀旧档案交存。" % hunt.name, INK, 17)
 		_input_action("返回暮汀旧档案", "town", [])
 	elif scouting_delivered:
-		_label(actions, "可在暮汀旧档案请许苇核对远眺记录。", INK, 17)
+		_label(actions, ChapterCopy.text("UI.S06.HUD.ST102_COMPLETE"), INK, 17)
 		_input_action("返回暮汀旧档案", "town", [])
 	elif view.get("phase") in ["RETURNED", "FAILED"]:
 		_input_action("返回暮汀整备", "town", [])
@@ -3078,17 +3140,25 @@ func _explore_actions() -> void:
 	var return_to_overlook: bool = site == "X" and int(scouting.get("battles", 0)) == 2 \
 		and not scouting.observed and "G" in route.get("neighbors", [])
 	if not scouting.is_empty():
-		var observed := "远眺已记录" if scouting.observed else "远眺待记录"
-		_label(actions, "侦路调查 · 两战 %d/2 · %s" % [int(scouting.battles), observed], MUTED, 16)
+		var guide := ChapterCopy.text("UI.S04.HUD.TUT01_GUIDE")
+		if scouting.ready:
+			guide = "两战已胜，远眺已记录。可前往归路。"
+		elif return_to_overlook:
+			guide = "漏做远眺记录，可经根口返回补记。"
+		_label(actions, guide, MUTED, 16)
 	if route.get("contact_pending", false):
 		var map_data: Dictionary = model.get("map", {})
 		var enemies: Array = map_data.get("enemy_preview", [])
 		var blocker := str(route.get("deployment_error", ""))
 		if not blocker.is_empty():
 			_label(actions, blocker, ALERT, 16)
-		_input_action("确认开战", "fight", [], "按当前部署开战。战斗会自动推进，可按空格暂停。", blocker.is_empty(), _contact_controls)
+		_input_action(ChapterCopy.text("UI.S05.BTN.START_BATTLE"), "fight", [],
+			"按当前部署开战。战斗会自动推进，可按空格暂停。", blocker.is_empty(), _contact_controls)
 		command_buttons["fight"].custom_minimum_size.x = 154.0
-		_input_action("返回道路", "retreat", [], "", true, _contact_controls)
+		_input_action(ChapterCopy.text("UI.S05.BTN.PRE_RETREAT"), "retreat", [], "", true, _contact_controls)
+		if not scouting.is_empty():
+			_label(actions, ChapterCopy.text("UI.S05.HUD.DEPLOY_HINT", [
+				int(view.resources.battle_used), int(view.budget.battle)]), MUTED, 16)
 		var spacer := Control.new()
 		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		spacer.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -3146,7 +3216,7 @@ func _explore_actions() -> void:
 	for entry in route.get("next_regions", []):
 		_input_action("跨区前往 " + entry.name, "next", [entry.id, "CONFIRM"], "离开本区，前往%s。" % entry.name)
 	if route.get("safe_return", false):
-		var consequence := _return_consequence(scouting)
+		var consequence := _return_consequence(scouting, return_to_overlook)
 		if letters.get("current_status") == "SIGNED":
 			consequence += "\n本趟签收的回信委托凭据将随队安全带回。"
 		elif letters.get("current_status") == "ACTIVE":
@@ -3154,12 +3224,13 @@ func _explore_actions() -> void:
 		for case: Dictionary in view.get("protection_cases", {}).get("field", []):
 			if case.has("transit") or case.get("loaded", false):
 				consequence += "\n安全归城时由%s接收%s。" % [case.receiver, case.subject]
-		if return_to_overlook:
-			consequence += "\n如要本趟交付，可取消归城并经根口返回远眺点。"
 		var carried := _cargo_amounts(view.get("field_book_rewards", {}).get("carried", {}))
 		if not carried.is_empty():
 			consequence += "\n随队技能书将入库\n" + carried
-		_input_action("确认归城", "return", ["CONFIRM"], _day_consequence(consequence))
+		var return_label := "确认归城"
+		if not scouting.is_empty() and site == "I":
+			return_label = ChapterCopy.text("UI.S04.BTN.EARLY_RETURN")
+		_input_action(return_label, "return", ["CONFIRM"], _day_consequence(consequence))
 	for place in route.get("neighbors", []):
 		var caption := "经根口返回远眺点" if return_to_overlook and place == "G" else "前往 " + _site_name(place, place)
 		_input_action(caption, "move", [place])
@@ -3420,7 +3491,7 @@ func _hunt_pending_return(region: String) -> Dictionary:
 	return {}
 
 
-func _return_consequence(scouting: Dictionary) -> String:
+func _return_consequence(scouting: Dictionary, return_to_overlook: bool) -> String:
 	if scouting.is_empty():
 		var hunt := _hunt_pending_return(view.region)
 		if hunt.is_empty():
@@ -3429,11 +3500,13 @@ func _return_consequence(scouting: Dictionary) -> String:
 			return "安全归城后，可在暮汀旧档案交存%s讨伐报告。" % hunt.name
 		return "结束本趟远征并按实际结果归城。"
 	if scouting.ready:
-		return "安全归城将交付本趟侦路调查。"
+		return ChapterCopy.text("UI.S04.DLG.EXIT_X_READY")
+	if return_to_overlook:
+		return ChapterCopy.text("UI.S04.DLG.EXIT_X_MISSING_D")
 	var missing := _scouting_missing(scouting)
 	if missing.is_empty():
 		return "可以安全归城。当前存档无法交付侦路调查。"
-	return "可以提前归城。本趟还缺%s。再次出发会开启新一趟侦路。" % missing
+	return "可以提前归城。本趟还缺%s。补给不退，下次须重做两战与观察。" % missing
 
 
 func _scouting_missing(scouting: Dictionary) -> String:
@@ -3442,7 +3515,7 @@ func _scouting_missing(scouting: Dictionary) -> String:
 	for encounter in scouting.get("missing_battles", []):
 		missing.append(names[encounter])
 	if not scouting.get("observed", false):
-		missing.append("远眺点（D）观察")
+		missing.append("远眺点观察记录")
 	return "、".join(missing)
 
 
@@ -3460,7 +3533,7 @@ func _site_actions(site: String) -> void:
 					_input_action("请求支援 · " + _name(member), "tutorial", ["support", member["instance_id"]], "为此队员确认本次支援。")
 			_input_action("放弃支援", "tutorial", ["support", "PASS"], "结束本站的支援选择。")
 		"B_MATERIAL":
-			_input_action("领取材料", "tutorial", ["materials"], "确认领取材料匣中的物资。")
+			_input_action(ChapterCopy.text("UI.S04.BTN.NODE_INTERACT"), "tutorial", ["materials"], "确认领取材料匣中的物资。")
 			_input_action("放弃材料", "tutorial", ["materials", "PASS"], "结束本站的材料选择。")
 		"D":
 			if board._overlook_art != null:
@@ -3490,7 +3563,8 @@ func _overlook_observation_actions() -> void:
 			elif not scouting.missing_battles.is_empty():
 				_label(actions, "本趟还缺%s。补齐后安全归城，再请许苇核对旧日志。" % _scouting_missing(scouting), MUTED, 16)
 	else:
-		_input_action("观察并记录", "tutorial", ["observe"])
+		_label(actions, ChapterCopy.text("UI.S04.TIP.OVERLOOK_VIEW_ONLY"), MUTED, 16)
+		_input_action(ChapterCopy.text("UI.S04.BTN.OBSERVE_D"), "tutorial", ["observe"])
 
 
 func _build_combat_actions() -> void:
@@ -3544,7 +3618,7 @@ func _add_unit_grid(parent: Container) -> GridContainer:
 
 
 func _request_retreat() -> void:
-	var withdrawal := "撤退时将结算一拍追击。成功撤出可带回行囊物资，战败时会丢失。"
+	var withdrawal := ChapterCopy.text("UI.S05.DLG.MID_RETREAT")
 	var carried := _cargo_amounts(view.get("field_book_rewards", {}).get("carried", {}))
 	if not carried.is_empty():
 		withdrawal += "\n随队技能书\n" + carried
@@ -3646,6 +3720,7 @@ func _update_combat_actions(snapshot: Dictionary) -> void:
 	command_buttons["combat-playback"].text = "Ⅱ  暂停" if _playback_running else "▶  继续战斗"
 	command_buttons["step"].visible = not _playback_running
 	command_buttons["combat-pace"].text = _pace_label()
+	command_buttons["combat-playback"].tooltip_text = ChapterCopy.text("UI.S05.HUD.BATTLE_CTRL", [int(snapshot.tick)])
 
 
 func _can_toggle_playback() -> bool:
@@ -4503,10 +4578,29 @@ func _summary() -> void:
 			_label(actions, "最迟第 %d 日救回 · 回城后前往搜救所" % int(summary.capture_batch.deadline), MUTED, 16)
 		if summary.has("rescued_injury_days"):
 			_label(actions, "救回人员留城休养 %d 日" % int(summary.rescued_injury_days), MUTED, 16)
-	if not view.get("complete", false) and view.get("tutorial_return", false):
-		var missing := _scouting_missing(view.get("scouting", {}))
-		var detail := "本趟还缺%s。" % missing if not missing.is_empty() else "交付须具备本趟的安全归城记录。"
-		_label(actions, "调查尚未交付。" + detail, MUTED, 16)
+	_first_chapter_settlement_copy()
+
+
+func _first_chapter_settlement_copy() -> void:
+	var scouting: Dictionary = view.get("scouting", {})
+	if scouting.is_empty() or scouting.delivered_here or view.get("complete", false):
+		return
+	var result := str(view.get("settlement", {}).get("result", ""))
+	match result:
+		"DEFEAT":
+			_label(actions, "侦路未完成。请在搜救所查看失联队员。", MUTED, 16)
+		"COMBAT_RETREAT":
+			_label(actions, ChapterCopy.text("UI.S06.HUD.ST102_MID_RETREAT"), MUTED, 16)
+		"SAFE_RETURN":
+			var key := "UI.S06.HUD.ST102_INCOMPLETE"
+			if int(scouting.battles) == 2 and not scouting.observed:
+				key = "UI.S06.HUD.ST102_MISS_OBS"
+			elif view.get("site") == "I":
+				key = "UI.S06.HUD.ST102_EARLY_RETURN"
+			_label(actions, ChapterCopy.text(key), MUTED, 16)
+	var missing := _scouting_missing(scouting)
+	if not missing.is_empty():
+		_label(actions, "本趟未完成：%s。" % missing, MUTED, 16)
 
 
 func _cargo_amounts(rows: Dictionary) -> String:
