@@ -1874,7 +1874,7 @@ def chapter_view(game, commission):
         history.append({'id': 'ST-103', 'title': '旧日志核对', 'day': facts['ST-103']['day'],
                         'text': '许苇在旧日志上找到了相似的巡行次序。谁在重复谁仍待查证。\n' + review_exchange})
     if 'ST-104' in facts:
-        detail = '旧名册上的四个名字被同色墨覆盖。'
+        detail = '灯下，旧名册纸背透出四行压痕。阿铎、赛芙、伊蕾、赫岚。'
         if 'KS01' in campaign['task_items']:
             detail += f'「{archive_item}」已收入任务物品。'
         whistle_clue = '秦姨拿出铜哨的旧照片和寄存登记单。阿铎从前用集合哨叫厨房开饭。'
@@ -2029,9 +2029,12 @@ def whistle_view(game):
         stage = 'witness' if 'record' in receipts else 'record'
     collect = receipts.get('collect', {})
     collected = {'day': collect['day'], 'copper': collect['paid']['copper']} if stage == 'done' and collect else {}
+    witness = receipts.get('witness', {}).get('text', '')
+    if witness and 'ST-104' not in campaign['facts']:
+        witness = '秦姨核对旧照片。持哨人从前常吹集合哨叫厨房开饭，哨口的缺口那时就有了。'
     return {'stage': stage, 'price': quest['cost']['copper'],
             'record': receipts.get('record', {}).get('text', ''),
-            'witness': receipts.get('witness', {}).get('text', ''), 'collection': collected}
+            'witness': witness, 'collection': collected}
 
 
 def scarf_view(game):

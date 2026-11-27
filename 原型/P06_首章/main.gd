@@ -1005,6 +1005,8 @@ func _notice(message: String, command := "", args: Array = []) -> void:
 		notice.text = "已取消材料委托。" if args[1] == "off" else "已登记材料委托。常规远征出发时锁定领取地点。"
 	elif command == "quest" and args == ["commission", "CONFIRM"]:
 		notice.text = "委任记录已核对。"
+	elif command == "quest" and args == ["MG01", "witness"] and not view.get("chapter", {}).get("archived", false):
+		notice.text = "已核实铜哨证词。"
 	elif message.begins_with("进入逐拍战斗") or message.begins_with("战斗推进完成。未分胜负可继续"):
 		notice.text = ""
 	elif message.begins_with("搜救所·失联调查"):

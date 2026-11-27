@@ -757,6 +757,10 @@ func _check_early_whistle(reopening: bool) -> void:
 		if int(app.view.town_roster.copper) != balance - int(app.view.whistle.price):
 			failure = "The early collection did not charge the frozen price once"
 			return
+	if not _panel_has("持哨人从前常吹集合哨") or "阿铎" in app.view.whistle.witness \
+			or _panel_has("阿铎") or "阿铎" in app.notice.text:
+		failure = "The optional early whistle revealed its owner before the archive"
+		return
 	if app.view.whistle.stage != "done" or not _panel_has("裂口铜哨已入任务物品") \
 			or app.command_buttons.has("quest MG01 collect CONFIRM") or not app.view.hunt.is_empty() \
 			or app.command_buttons.has("challenge MG01") or not app.command_buttons.has("tutorial start"):
@@ -769,7 +773,32 @@ func _check_early_whistle(reopening: bool) -> void:
 		failure = "Closing the optional commission changed the save"
 		return
 	side_checks["early_whistle"] = {"stage": app.view.whistle.stage, "copper": app.view.town_roster.copper,
-		"version": app.client.frame.state_version, "reopened": reopening, "hunt_unlocked": false}
+		"version": app.client.frame.state_version, "reopened": reopening, "hunt_unlocked": false, "owner_hidden": true}
+	if "--q14-through-archive" in OS.get_cmdline_user_args():
+		await _check_whistle_owner_at_archive()
+
+
+func _check_whistle_owner_at_archive() -> void:
+	var collection: Dictionary = app.view.whistle.collection.duplicate(true)
+	if not await _commands(["tutorial recommend CONFIRM", "tutorial start"]):
+		return
+	await _full()
+	if not failure.is_empty() or not await _commands(["town", "quest review CONFIRM"]):
+		return
+	if _panel_has("阿铎") or "阿铎" in app.view.whistle.witness or app.view.chapter.archived:
+		failure = "The owner was revealed when checking the old log"
+		return
+	if not await _command("quest archive CONFIRM"):
+		return
+	var chapter: Dictionary = app.view.chapter
+	var archive: Array = chapter.history.filter(func(record: Dictionary) -> bool: return record.id == "ST-104")
+	if not chapter.archived or archive.size() != 1 or "阿铎" not in archive[0].text \
+			or "阿铎" not in app.view.whistle.witness or not _panel_has("阿铎 · 裂口铜哨") \
+			or app.view.whistle.collection != collection or app.view.hunt.is_empty():
+		failure = "First archive did not reveal the whistle owner with the original collection"
+		return
+	side_checks["whistle_owner_reveal"] = {"first_fact": "ST-104", "old_log_hidden": true,
+		"retained_collection": true, "archive_readback": true}
 
 
 func _check_copy_size() -> bool:
