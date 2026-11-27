@@ -208,6 +208,7 @@ var _main_menu := false
 var _selecting_slot := false
 var _slot_rows: Array[Dictionary] = []
 var _selected_slot := ""
+var _incompatible_slot := ""
 var _menu_actions: VBoxContainer
 var _menu_settings_heading: Label
 var _menu_buttons: Dictionary = {}
@@ -355,7 +356,6 @@ func _apply_field_style(active: bool) -> void:
 	_field_style = active
 	_frame.add_theme_stylebox_override("panel", _field_frame if active else _standard_frame)
 	_side_panel.add_theme_stylebox_override("panel", _field_panel if active else _standard_panel)
-	_side_panel.custom_minimum_size.x = 350.0 if active else 365.0
 	_action_scroll.get_v_scroll_bar().theme_type_variation = &"FieldScroll" if active else &""
 	if active:
 		area_title.add_theme_font_override("font", _field_title_font)
@@ -1150,6 +1150,7 @@ func _show_player_menu_after_session() -> void:
 		get_tree().process_frame.disconnect(_sync_window_minimize)
 	get_window().focus_entered.disconnect(_resume_visible_presentation)
 	get_window().focus_exited.disconnect(_suspend_window_input)
+	var failed_slot := case_name if is_instance_valid(client) and client.save_version_incompatible else ""
 	if is_instance_valid(client):
 		var closing_client := client
 		client = null
@@ -1169,7 +1170,12 @@ func _show_player_menu_after_session() -> void:
 	focus_key = "choose-slot"
 	_build_player_menu()
 	print("P06 player entry pid=%d case=menu" % OS.get_process_id())
-	_render()
+	if not failed_slot.is_empty():
+		_incompatible_slot = failed_slot
+		_selected_slot = failed_slot
+		_show_slots()
+	else:
+		_render()
 
 
 func _show_slots() -> void:
@@ -1183,6 +1189,7 @@ func _show_slots() -> void:
 
 func _close_slots() -> void:
 	_selecting_slot = false
+	_incompatible_slot = ""
 	focus_key = "choose-slot"
 	_render()
 
@@ -1206,7 +1213,12 @@ func _slot_actions() -> void:
 			var status := "有主档和备份" if row.primary and row.backup else ("有主档" if row.primary else (
 				"主档缺失，仍有备份" if row.backup else "主档缺失，可查看存档目录"))
 			_label(actions, ChapterCopy.text("UI.S01.HUD.SAVE_SLOT_META", [row.name, status]), MUTED, 16)
-			_button(ChapterCopy.text("UI.S01.BTN.CONTINUE"), "open-slot", _switch_player_scene.bind("existing", row.name))
+			var incompatible: bool = row.name == _incompatible_slot
+			var variant := "incompatible" if incompatible else ""
+			_button(ChapterCopy.text("UI.S01.BTN.CONTINUE", [], variant), "open-slot",
+				_switch_player_scene.bind("existing", row.name), not incompatible)
+			if incompatible:
+				_button(ChapterCopy.text("UI.S01.BTN.NEW_GAME"), "new-cycle", _start_new_cycle)
 
 
 func _start_new_cycle() -> void:
@@ -1253,6 +1265,9 @@ func _render() -> void:
 		and view.get("battle_memory", {}).is_empty()
 	var field: bool = opened and not showing_opening and (phase == "BATTLE" or view.get("route", {}).get("contact_pending", false))
 	_apply_field_style(field)
+	var large_recommendation: bool = show_confirmation and settings["大字"] \
+		and confirmation.get("command") == "tutorial" and confirmation.get("args") == ["recommend", "CONFIRM"]
+	_side_panel.custom_minimum_size.x = 400.0 if large_recommendation else (350.0 if field else 365.0)
 	for control in _contact_controls.get_children():
 		_contact_controls.remove_child(control)
 		control.queue_free()
@@ -1321,17 +1336,22 @@ func _render() -> void:
 	if show_combat:
 		_update_combat_actions(snapshot)
 	elif client.blocked:
+		if client.save_version_incompatible:
+			var hint := ChapterCopy.text("UI.S01.HUD.RESUME_OK", [], "incompatible")
+			_label(actions, hint.replace("，", "，\n"), ALERT, 19)
 		var opening_failed: bool = model.is_empty() and not client.can_reconnect
 		var title := "无法打开试玩会话" if opening_failed else (
 			"运行时连接中断" if client.can_reconnect else "存档状态待核实")
-		_label(actions, title, GOLD, 23)
+		if not client.save_version_incompatible:
+			_label(actions, title, GOLD, 23)
 		if client.can_reconnect:
 			_button("重新连接", "reconnect", _reconnect_runtime, not client.busy)
 		if DirAccess.dir_exists_absolute(data_dir):
 			_button("打开会话目录", "session-folder", _open_session_directory)
 		if not client.runtime_log.is_empty() and FileAccess.file_exists(client.runtime_log):
 			_button("打开运行时日志", "runtime-log", _open_runtime_log)
-		if not client.can_reconnect and FileAccess.file_exists(data_dir.path_join("runs").path_join(case_name).path_join("save.json.bak")):
+		if not client.can_reconnect and not client.save_version_incompatible \
+				and FileAccess.file_exists(data_dir.path_join("runs").path_join(case_name).path_join("save.json.bak")):
 			var package_root := OS.get_executable_path().get_base_dir()
 			if data_dir == package_root.path_join("data") and FileAccess.file_exists(package_root.path_join("恢复存档.cmd")):
 				_label(actions, "请打开发布包里的 恢复存档.cmd，原槽名为 %s。若写档中断，选择「未决写档恢复」并确认。恢复可能丢失备份之后的进度。工具会创建新槽并保留原件。" % case_name, MUTED, 16)
@@ -1410,7 +1430,8 @@ func _render() -> void:
 			if not settings_open and not client.blocked:
 				_button("设置", "settings", _show_settings)
 			if not settings_open:
-				_button("返回主菜单", "return-menu", _return_to_menu)
+				var menu_caption := "改选存档" if client.save_version_incompatible else "返回主菜单"
+				_button(menu_caption, "return-menu", _return_to_menu)
 			_button("退出游戏", "quit", _quit)
 		if phase == "EXPLORE" and _show_deployment() and not client.busy and not client.blocked:
 			_prepare_contact_battle_rows()
@@ -1425,7 +1446,8 @@ func _render() -> void:
 	_render_subtitle()
 	var reading_records: bool = reading_first_expedition or (not client.blocked and not settings_open and not captions_open \
 		and (chapter_history_open or remembrance_history_open or books_open))
-	notice.visible = not reading_records and (not field or not notice.text.is_empty())
+	notice.visible = not reading_records and not client.save_version_incompatible \
+		and (not field or not notice.text.is_empty())
 	_subtitle_row.visible = not reading_records and (subtitles.visible or _receipt_plate.visible or dialogue_next.visible)
 	if command_buttons.has(focus_key) and not command_buttons[focus_key].disabled:
 		if command_buttons[focus_key].visible:
@@ -1711,16 +1733,23 @@ func _town_actions() -> void:
 		_label(actions, ChapterCopy.text("UI.S03.HUD.COST_SUMMARY", [
 			int(view.resources.expedition_used), int(budget.expedition),
 			int(view.resources.battle_used), int(budget.battle)]), MUTED, 16)
+		var budget_hint := _full_battle_budget_hint(selected_id)
+		if not budget_hint.is_empty():
+			_label(actions, budget_hint.replace("，", "，\n"), ALERT, 16)
 		var can_recommend := not party.any(func(member: Dictionary) -> bool: return int(member.injury_days) > 0)
+		var recommendation := ChapterCopy.text("UI.S03.DLG.AUTO_DEPLOY").replace("，", "，\n")
 		_input_action(ChapterCopy.text("UI.S03.BTN.AUTO_DEPLOY"), "tutorial", ["recommend", "CONFIRM"],
-			"将建议部署应用于当前可用的初始队员。", can_recommend)
+			recommendation, can_recommend)
 		var has_supply := int(view.supply) >= 1
 		var blocker: String = view.preparation.get("deployment_error", "")
-		if not blocker.is_empty():
-			_label(actions, blocker + "。", ALERT, 16)
-		if blocker.is_empty() and not party.any(func(member: Dictionary) -> bool: return member.deployed and member.deployable):
+		var no_ready_deployment := not party.any(func(member: Dictionary) -> bool:
+			return member.deployed and member.deployable)
+		if (blocker.is_empty() and no_ready_deployment) or (int(view.resources.battle_used) == 0 \
+				and (blocker.begins_with("出征Cost不合法") or blocker == "部署Cost不合法")):
 			blocker = ChapterCopy.text("UI.S03.ERR.DEPLOY_EMPTY")
 			_label(actions, blocker, ALERT, 16)
+		elif not blocker.is_empty():
+			_label(actions, blocker + "。", ALERT, 16)
 		var departure := _input_action("出发 · 消耗 1 补给", "tutorial", _tutorial_departure_args(),
 			_day_consequence(ChapterCopy.text("UI.S03.DLG.DEPART_LOCK")), has_supply and blocker.is_empty())
 		departure.tooltip_text = ChapterCopy.text("UI.S03.TIP.TUT01_ROUTE")
@@ -3152,15 +3181,22 @@ func _explore_actions() -> void:
 		var map_data: Dictionary = model.get("map", {})
 		var enemies: Array = map_data.get("enemy_preview", [])
 		var blocker := str(route.get("deployment_error", ""))
-		if not blocker.is_empty():
+		var empty_deployment: bool = not scouting.is_empty() and int(view.resources.battle_used) == 0
+		if not blocker.is_empty() and (not empty_deployment or blocker != "部署Cost不合法"):
 			_label(actions, blocker, ALERT, 16)
-		_input_action(ChapterCopy.text("UI.S05.BTN.START_BATTLE"), "fight", [],
-			"按当前部署开战。战斗会自动推进，可按空格暂停。", blocker.is_empty(), _contact_controls)
+		var fight_variant := "empty" if empty_deployment else ""
+		_input_action(ChapterCopy.text("UI.S05.BTN.START_BATTLE", [], fight_variant), "fight", [],
+			"按当前部署开战。战斗会自动推进，可按空格暂停。",
+			blocker.is_empty() and not empty_deployment, _contact_controls)
 		command_buttons["fight"].custom_minimum_size.x = 154.0
 		_input_action(ChapterCopy.text("UI.S05.BTN.PRE_RETREAT"), "retreat", [], "", true, _contact_controls)
 		if not scouting.is_empty():
-			_label(actions, ChapterCopy.text("UI.S05.HUD.DEPLOY_HINT", [
-				int(view.resources.battle_used), int(view.budget.battle)]), MUTED, 16)
+			var budget_hint := _full_battle_budget_hint(selected_id)
+			if budget_hint.is_empty():
+				_label(actions, ChapterCopy.text("UI.S05.HUD.DEPLOY_HINT", [
+					int(view.resources.battle_used), int(view.budget.battle)]), MUTED, 16)
+			else:
+				_label(actions, budget_hint.replace("，", "，\n"), ALERT, 16)
 		var spacer := Control.new()
 		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		spacer.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -4476,13 +4512,31 @@ func _deployment_member_button(member: Dictionary) -> void:
 	entry.set_drag_forwarding(board.begin_deployment_drag.bind(id), Callable(), Callable())
 
 
+func _full_battle_budget_hint(member_id: String) -> String:
+	var in_town: bool = view.get("phase") == "TOWN" and not view.get("complete", false)
+	if member_id.is_empty() or not (in_town or not view.get("scouting", {}).is_empty()):
+		return ""
+	var used := int(view.resources.battle_used)
+	var cap := int(view.budget.battle)
+	if used < cap or not view.party.any(func(member: Dictionary) -> bool:
+			return member.instance_id == member_id and not member.deployed \
+				and member.deployable and int(member.injury_days) == 0):
+		return ""
+	var id := "UI.S03.HUD.COST_SUMMARY" if in_town else "UI.S05.HUD.DEPLOY_HINT"
+	return ChapterCopy.text(id, [used, cap], "full")
+
+
 func _selected_deployment(member: Dictionary, cells: Array) -> void:
 	var advanced: bool = view.get("complete", false)
 	if advanced:
 		_label(actions, "Lv%d · 生命 %d/%d" % [int(member.level), int(member.hp), int(member.max_hp)], MUTED, 15)
 	var can_deploy: bool = member.deployable and int(member.injury_days) == 0
-	_input_action("撤下部署" if member.deployed else "加入部署", "deploy",
-		[member.instance_id, "off" if member.deployed else "on"], "", member.deployed or can_deploy)
+	var budget_hint := _full_battle_budget_hint(member.instance_id)
+	var deploy_button := _input_action("撤下部署" if member.deployed else "加入部署", "deploy",
+		[member.instance_id, "off" if member.deployed else "on"], "",
+		member.deployed or (can_deploy and budget_hint.is_empty()))
+	if not budget_hint.is_empty():
+		deploy_button.tooltip_text = budget_hint
 	if advanced:
 		_label(actions, "战术姿态 · " + str(STANCES[member.stance]), GOLD, 17)
 		var posture := GridContainer.new()
@@ -4711,7 +4765,8 @@ func _deployment_target(id: String, cell: Vector2i) -> Dictionary:
 			return {"error": "对方当前无法上阵"}
 		return {"swap": other.instance_id, "hint": "交换 " + _name(other)}
 	if not member.deployed and spent + int(member.cost) > int(view.budget.battle):
-		return {"error": "超过战斗 Cost"}
+		var budget_hint := _full_battle_budget_hint(id)
+		return {"error": "超过战斗 Cost" if budget_hint.is_empty() else budget_hint}
 	if member.deployed and Board.cell_index(member.position) == cell \
 			and (selected_id != id or selected_facing == int(member.facing)):
 		return {"unchanged": true, "hint": "原阵位"}

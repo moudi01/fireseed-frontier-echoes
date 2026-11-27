@@ -1,6 +1,6 @@
 """Adapt P06 commands to one P03 save transaction."""
 
-from engine import Game, require
+from engine import Game, VERSION, require
 import region_space
 from expedition_peril import deployable
 from slice_view import (FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS, LOCAL_PROTECTION_ACTIONS,
@@ -8,7 +8,18 @@ from slice_view import (FINALE_AGLA_ACTIONS, FINALE_IDENTITY_ACTIONS, LOCAL_PROT
                         regional_field_event, scouting_blocker, valid_command)
 
 
+class IncompatibleSaveVersion(ValueError):
+    pass
+
+
 class DeploymentGame(Game):
+    @classmethod
+    def from_state(cls, state, catalog=None, path=None):
+        version = state.get('version') if isinstance(state, dict) else None
+        if isinstance(version, str) and version.startswith('TINDER-GREYBOX-') and version != VERSION:
+            raise IncompatibleSaveVersion('Save format does not match the packaged runtime.')
+        return super().from_state(state, catalog, path)
+
     def choose(self, option_id, target='01', plan=None):
         state = self.s
         regional = regional_field_event(self)

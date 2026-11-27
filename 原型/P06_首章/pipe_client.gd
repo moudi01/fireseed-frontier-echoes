@@ -11,6 +11,7 @@ const MAX_REQUEST_BYTES := 65536
 var busy := false
 var blocked := false
 var can_reconnect := false
+var save_version_incompatible := false
 var frame: Dictionary = {}
 var data_dir: String
 var case_name: String
@@ -49,6 +50,7 @@ func _open() -> void:
 	pending = {}
 	_receipt_for_snapshot = {}
 	runtime_log = ""
+	save_version_incompatible = false
 	if DirAccess.make_dir_recursive_absolute(data_dir) != OK:
 		_stop("无法建立样段存档目录。")
 		return
@@ -186,6 +188,10 @@ func _receive(incoming: Variant, error: ExchangeError) -> void:
 				return
 			if row.get("status") == "SLOT_MISSING":
 				_stop("所选存档的主档已丢失。请查看恢复提示或另选存档。")
+				return
+			if row.get("status") == "SLOT_VERSION_INCOMPATIBLE":
+				save_version_incompatible = true
+				_stop("存档版本与当前旁载运行时不兼容。")
 				return
 			if row.get("status") == "SLOT_EXISTS":
 				_stop("新槽名已被使用。现有存档仍可从主菜单打开。")

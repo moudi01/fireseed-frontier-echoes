@@ -22,8 +22,9 @@ const STRINGS := {
 	"UI.S02.TIP.ROSTER_HEADER": "查看留城队员、伤势和随队资格。",
 	"UI.S03.HUD.COST_SUMMARY": "出征Cost %d/%d｜战斗Cost %d/%d",
 	"UI.S03.BTN.AUTO_DEPLOY": "采用建议部署",
+	"UI.S03.DLG.AUTO_DEPLOY": "将按当前预算替换为推荐阵容，是否确认采用建议部署？",
 	"UI.S03.ERR.UNIT_UNAVAILABLE": "当前无法出战（%s）。",
-	"UI.S03.ERR.DEPLOY_EMPTY": "请至少部署一名可上阵的队员。",
+	"UI.S03.ERR.DEPLOY_EMPTY": "未设上阵队员，请先选择队员设为上阵",
 	"UI.S03.ERR.SUPPLY_SHORT": "出发补给不足（需%d，仓库余%d）。",
 	"UI.S03.DLG.DEPART_LOCK": "前往灰栎边道需消耗1份补给，并锁定本趟队伍与携行。确认出发？",
 	"UI.S03.EMPTY.BAG_SLOT": "当前未携带战外消耗品或准备品。",
@@ -54,6 +55,15 @@ const STRINGS := {
 	"UI.S07.TIP.REPLAY_NO_DUP": "首章档案已交存，当前仅作回看，不再发放奖励。",
 }
 
+const VARIANTS := {
+	"UI.S01.BTN.CONTINUE": {"incompatible": "存档版本不兼容，请改选或开新档"},
+	"UI.S01.HUD.RESUME_OK": {"incompatible": "存档版本不兼容，请改选存档或开新档。"},
+	"UI.S03.HUD.COST_SUMMARY": {"full": "战斗Cost已满（%d/%d），请先取消其他上阵队员"},
+	"UI.S05.HUD.DEPLOY_HINT": {"full": "战斗Cost已满（%d/%d），请先收回已部署队员。"},
+	"UI.S05.BTN.START_BATTLE": {"empty": "棋盘未部署队员，请点高亮格部署"},
+}
+
+
 # UI.S07.TIP.WHISTLE_NEXT follows the actual steps exposed by the sidecar.
 const WHISTLE_TIPS := {
 	"record": "先查阅铜哨寄存登记，再向秦姨核对证词。",
@@ -68,8 +78,8 @@ const CLOCKMAKER_VERIFIED := "修钟匠朝你抬了抬下巴：「阿铎那枚�
 const CLOCKMAKER_ACQUIRED := "修钟匠瞥见你腰袋边的旧哨绳：「哨子在你这儿就好。见着阿铎，替我问他还欠不欠半斤修表油。」"
 
 
-static func text(id: String, values: Array = []) -> String:
-	var template: String = STRINGS[id]
+static func text(id: String, values: Array = [], variant := "") -> String:
+	var template: String = STRINGS[id] if variant.is_empty() else VARIANTS[id][variant]
 	return template if values.is_empty() else template % values
 
 

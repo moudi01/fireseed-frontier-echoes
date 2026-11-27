@@ -131,9 +131,15 @@ def stage(source, output, release_id=None):
                    "        if args.slot_mode == 'new' and save.exists():\n"
                    "            print(json.dumps({'status': 'SLOT_EXISTS'}), flush=True)\n"
                    "            return\n"
-                   "        game = (Game.load(save) if args.slot_mode == 'existing' or save.exists()\n"
-                   "                else Game.new_campaign(seed=11, save_path=save))")
-    text = replace(text, '    from engine import Game', '    from deployment import DeploymentGame as Game')
+                   "        try:\n"
+                   "            game = (Game.load(save) if args.slot_mode == 'existing' or save.exists()\n"
+                   "                    else Game.new_campaign(seed=11, save_path=save))\n"
+                   "        except IncompatibleSaveVersion as exc:\n"
+                   "            print(f'Save refused: {exc}', file=sys.stderr, flush=True)\n"
+                   "            print(json.dumps({'status': 'SLOT_VERSION_INCOMPATIBLE'}), flush=True)\n"
+                   "            return")
+    text = replace(text, '    from engine import Game',
+                   '    from deployment import DeploymentGame as Game, IncompatibleSaveVersion')
     start = text.index('COMMANDS = ')
     finish = text.index('\n\n\ndef read_frame', start)
     text = text[:start] + 'from slice_view import COMMANDS, valid_command, make_presentation, ready_contact_model_kinds' + text[finish:]
