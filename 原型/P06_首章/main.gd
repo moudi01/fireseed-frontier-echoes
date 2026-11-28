@@ -1456,13 +1456,13 @@ func _render() -> void:
 	_subtitle_row.visible = not reading_records and (subtitles.visible or _receipt_plate.visible or dialogue_next.visible)
 	if command_buttons.has(focus_key) and not command_buttons[focus_key].disabled:
 		if command_buttons[focus_key].visible:
-			command_buttons[focus_key].call_deferred("grab_focus")
+			_grab_visible_focus.call_deferred(command_buttons[focus_key])
 		elif command_buttons.has("combat-playback"):
-			command_buttons["combat-playback"].call_deferred("grab_focus")
+			_grab_visible_focus.call_deferred(command_buttons["combat-playback"])
 	else:
 		for control in command_buttons.values():
 			if not control.disabled and control.visible:
-				control.call_deferred("grab_focus")
+				_grab_visible_focus.call_deferred(control)
 				break
 	_render_town_shortcuts()
 	_resume_visible_presentation()
@@ -1472,6 +1472,11 @@ func _render() -> void:
 			"board_usec": actions_started - board_started, "actions_usec": switch_started - actions_started,
 			"page_switch_usec": footer_started - switch_started,
 			"footer_usec": Time.get_ticks_usec() - footer_started, "confirmation": show_confirmation})
+
+
+func _grab_visible_focus(control: Button) -> void:
+	if is_instance_valid(control) and control.is_visible_in_tree() and not control.disabled:
+		control.grab_focus()
 
 
 func _chapter_goal_text() -> String:
@@ -1897,7 +1902,7 @@ func _town_tab(tab: String, project := "") -> void:
 	if focus_key.is_empty():
 		for control: Control in command_buttons.values():
 			if control is Button and actions.is_ancestor_of(control) and control.visible and not control.disabled:
-				control.call_deferred("grab_focus")
+				_grab_visible_focus.call_deferred(control)
 				break
 
 
