@@ -100,7 +100,22 @@ func _press(key: String, accept_confirmation := true) -> bool:
 			if scroll.scroll_vertical != offset:
 				await RenderingServer.frame_post_draw
 		await get_tree().process_frame
+		if not is_instance_valid(button) or button != app.command_buttons.get(key) or button.disabled \
+				or not button.is_visible_in_tree():
+			failure = "Control changed before mouse input: " + key
+			return false
 		var point := _button_point(button)
+		# Establish the cursor target before Windows delivers the button events.
+		_mouse_motion(point, Vector2.ZERO, false)
+		Input.flush_buffered_events()
+		var hover: Control = button.get_viewport().gui_get_hovered_control()
+		var target := hover
+		while target != null and target != button and target.mouse_filter != Control.MOUSE_FILTER_STOP \
+				and not target.is_set_as_top_level():
+			target = target.get_parent_control()
+		if target != button:
+			failure = "Mouse missed %s at %s (hovered %s)" % [key, point, hover]
+			return false
 		_mouse(point, true)
 		_mouse(point, false)
 	else:
