@@ -4690,6 +4690,92 @@ func _check_ground_projection(phase: String) -> bool:
 	return true
 
 
+func _check_budget_drop() -> void:
+	var shield := "INIT-S01-B"
+	var spear := "N-0001"
+	var shield_slot := Vector2i(4, 1)
+	var target := Vector2i(4, -1)
+	var budget_message := "战斗Cost不足（余1／需2），请先撤下队员。"
+	if not app._can_edit_deployment() or app.view.phase != "EXPLORE" or app.view.site != "A" \
+			or int(app.view.resources.battle_used) != 5 or int(app.view.budget.battle) != 6 \
+			or not app.command_buttons.has("member-" + spear):
+		failure = "The budget drop check needs the first scouting contact 5/6 seed"
+		return
+	if not await _press("member-" + shield) or not await _command("deploy %s off" % shield):
+		return
+	var version: int = app.client.frame.state_version
+	await _drag(await _roster_drag_point(shield), _board_screen(shield_slot), "budget-shield")
+	if not await _wait_ready() or not _check_dropped(shield, shield_slot, version + 1):
+		return
+	var prior_notice: String = app.notice.text
+	if app.selected_id != shield or int(app.view.resources.battle_used) != 5 or "已部署" not in prior_notice:
+		failure = "The shield did not leave a successful deployment notice at 5/6: " + prior_notice
+		return
+	var frame: Dictionary = app.client.frame.duplicate(true)
+	var slot: String = app.data_dir.path_join("runs").path_join(app.case_name)
+	var save_path := slot.path_join("save.json")
+	var ledger_path := slot.path_join("ledger.json")
+	var save_hash := FileAccess.get_sha256(save_path)
+	var ledger_hash := FileAccess.get_sha256(ledger_path)
+	var window := get_window()
+	var board = app.board
+	var drop_point := _board_screen(target)
+	for action in ["cancel", "outside", "occupied", "reject"]:
+		await _hold_drag(await _roster_drag_point(spear), drop_point)
+		if not window.gui_is_dragging() or window.gui_get_drag_data().get("deploy_member") != spear \
+				or app.selected_id != shield or board._drop_cell != target or board._drop_allowed \
+				or budget_message not in board._drag_label.text or app.notice.text != prior_notice:
+			failure = "The unselected spear did not show only a budget preview before %s" % action
+			return
+		var release_point := drop_point
+		if action == "cancel":
+			_key(KEY_ESCAPE, true)
+			_key(KEY_ESCAPE, false)
+		elif action == "outside":
+			release_point = _button_point(app._field_toolbar)
+		elif action == "occupied":
+			release_point = _board_screen(shield_slot)
+		if release_point != drop_point:
+			_mouse_motion(release_point, release_point - drop_point, true)
+			await get_tree().process_frame
+		_mouse(release_point, false)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var expected := budget_message if action == "reject" else prior_notice
+		if window.gui_is_dragging() or window.gui_is_drag_successful() or app.notice.text != expected \
+				or not app.notice.is_visible_in_tree() or app.selected_id != shield:
+			failure = "Unexpected release feedback for %s: %s" % [action, app.notice.text]
+			return
+		if app.client.frame != frame or app.client.busy or not app.client.pending.is_empty() \
+				or save_hash.is_empty() or FileAccess.get_sha256(save_path) != save_hash \
+				or ledger_hash.is_empty() or FileAccess.get_sha256(ledger_path) != ledger_hash:
+			failure = "A noncommitting deployment drag changed the save or ledger: " + action
+			return
+	if not await _command("deploy %s off" % shield):
+		return
+	if int(app.view.resources.battle_used) != 4:
+		failure = "Removing the shield did not leave room for the legal two-Cost drop"
+		return
+	version = int(app.client.frame.state_version)
+	await _drag(await _roster_drag_point(spear), _board_screen(target), "budget-legal-drop")
+	if not await _wait_ready() or not _check_dropped(spear, target, version + 1) \
+			or int(app.view.resources.battle_used) != 6 or not window.gui_is_drag_successful() \
+			or "已部署" not in app.notice.text:
+		if failure.is_empty():
+			failure = "The same cell rejected a legal 4/6 to 6/6 pointer drop"
+		return
+	side_checks["budget_drop"] = {"target": [target.x, target.y], "notice": budget_message,
+		"unselected": true, "escape": true, "outside": true, "occupied": true, "save_and_ledger_unchanged": true,
+		"legal_drop_commits": 1}
+
+
+func _roster_drag_point(id: String) -> Vector2:
+	var entry: Button = app.command_buttons["member-" + id]
+	app._action_scroll.ensure_control_visible(entry)
+	await get_tree().process_frame
+	return _button_point(entry)
+
+
 func _side_controls() -> void:
 	if app.view.get("phase") != "EXPLORE" or app.view.site != "G" or not app.board._sideways:
 		failure = "The side-view check needs the saved fortress contact"
@@ -5066,6 +5152,12 @@ func _run() -> void:
 	elif mode == "deployment-interrupt":
 		if await _wait_ready():
 			await _check_deployment_interrupts()
+	elif mode == "deployment-budget-drop":
+		if DisplayServer.get_name() == "headless":
+			get_window().size = Vector2i(1600, 900)
+			get_window().notify_mouse_entered()
+		if await _wait_ready():
+			await _check_budget_drop()
 	elif mode == "book-slot-swap":
 		if await _wait_ready():
 			await _check_book_slot_swap()

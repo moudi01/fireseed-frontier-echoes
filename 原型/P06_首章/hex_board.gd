@@ -2,6 +2,7 @@ extends Control
 
 signal cell_selected(cell: Vector2i)
 signal deployment_dropped(id: String, cell: Vector2i)
+signal deployment_rejected(message: String)
 signal deployment_selected(id: String)
 signal deployment_withdrawn(id: String)
 signal battle_actor_selected(id: String)
@@ -2156,6 +2157,14 @@ func _input(event: InputEvent) -> void:
 	if deployment_open and event is InputEventMouse:
 		# Resolve the drop from the same input event as the dragged preview.
 		_pointer = make_input_local(event).position
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			var viewport := get_viewport()
+			var drag: Variant = viewport.gui_get_drag_data()
+			if _is_deployment_drag(drag) and viewport.gui_get_hovered_control() == self:
+				# Godot discards rejected hover targets before it processes the release.
+				var destination: Dictionary = deployment_target.call(drag.deploy_member, _cell_at(_pointer))
+				if destination.get("report_budget_rejection", false):
+					deployment_rejected.emit(destination.error)
 
 
 func _cell_at(point: Vector2) -> Vector2i:

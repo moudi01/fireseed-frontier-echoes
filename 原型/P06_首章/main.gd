@@ -442,6 +442,7 @@ func _build() -> void:
 	board.size_flags_vertical = SIZE_EXPAND_FILL
 	board.cell_selected.connect(_board_cell)
 	board.deployment_dropped.connect(_deploy_drop)
+	board.deployment_rejected.connect(_show_deployment_rejection, CONNECT_DEFERRED)
 	board.deployment_selected.connect(_choose_member)
 	board.deployment_withdrawn.connect(_deploy_to_reserve)
 	board.battle_actor_selected.connect(_inspect_battle_actor)
@@ -4773,7 +4774,9 @@ func _deployment_target(id: String, cell: Vector2i) -> Dictionary:
 		return {"swap": other.instance_id, "hint": "交换 " + _name(other)}
 	if not member.deployed and spent + int(member.cost) > int(view.budget.battle):
 		var budget_hint := _deployment_budget_hint(id)
-		return {"error": "超过战斗 Cost" if budget_hint.is_empty() else budget_hint}
+		if not budget_hint.is_empty():
+			return {"error": budget_hint, "report_budget_rejection": true}
+		return {"error": "超过战斗 Cost"}
 	if member.deployed and Board.cell_index(member.position) == cell \
 			and (selected_id != id or selected_facing == int(member.facing)):
 		return {"unchanged": true, "hint": "原阵位"}
@@ -4799,6 +4802,12 @@ func _deploy_drop(id: String, cell: Vector2i) -> void:
 				args.append(destination.swap)
 			client.submit("deploy_at", args)
 			return
+
+
+func _show_deployment_rejection(message: String) -> void:
+	if _can_edit_deployment():
+		_notice(message)
+		_render()
 
 
 func _deploy_to_reserve(id: String) -> void:
