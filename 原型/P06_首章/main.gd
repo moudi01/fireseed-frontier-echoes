@@ -750,6 +750,7 @@ func _refresh(row: Dictionary) -> void:
 			focus_key = "finale-roster"
 		elif previous is Dictionary and previous.get("result") in ["DEFEAT", "RESCUE_SUCCESS", "SEARCH_RETURN", "LOCATION_CONFIRMED", "SEARCH_EXPIRED"] and not view.get("rescue", {}).is_empty():
 			town_tab = "rescue"
+			focus_key = "rescue-roster"
 		elif not report.is_empty() and (initial_snapshot or previous_phase == "RETURNED"):
 			town_tab = "chapter"
 			focus_key = "quest report %s CONFIRM" % report.id
@@ -1732,8 +1733,9 @@ func _town_actions() -> void:
 	var last_trip: Dictionary = view.get("last_trip", {})
 	if not last_trip.is_empty():
 		_last_trip_actions(last_trip)
-		if _last_trip_open:
-			return
+	_preparation_rescue_status(last_trip)
+	if _last_trip_open:
+		return
 	if view.get("settlement") is Dictionary:
 		_summary()
 	var party: Array = view.get("party", [])
@@ -1774,7 +1776,6 @@ func _town_actions() -> void:
 	if not view.get("complete", false):
 		_whistle_section()
 	var treasury: Dictionary = view.get("town_roster", {})
-	var expedition: int = int(view.resources.expedition_used)
 	_member_actions(view.get("town_deploy_cells", []))
 	if not treasury.is_empty():
 		var price := int(treasury.spear_price)
@@ -1787,14 +1788,14 @@ func _town_actions() -> void:
 			_label(actions, ChapterCopy.text("UI.S02.ERR.RES_SHORTAGE", ["铜币", price, int(treasury.copper)]), MUTED, 16)
 		if not treasury.home.is_empty():
 			_label(actions, "留城名册", GOLD, 16).tooltip_text = ChapterCopy.text("UI.S02.TIP.ROSTER_HEADER")
+			var training: Array = logistics.get("training", {}).get("pending", [])
 			for member in treasury.home:
-				if logistics.get("training", {}).get("pending", []).any(func(row): return row.id == member.instance_id):
-					_label(actions, _name(member) + " · 等待补训结算", MUTED, 16)
+				var reason := _home_join_blocker(member, training)
+				if reason == "等待补训结算":
+					_label(actions, _name(member) + " · " + reason, MUTED, 16)
 					continue
-				var eligible := int(member.hp) > 0 and int(member.injury_days) == 0 and expedition + int(member.cost) <= int(view.budget.expedition)
-				var join := _input_action("随队 · " + _name(member), "squad", [member.instance_id, "on"], "", eligible)
-				if not eligible:
-					var reason := "伤势未恢复" if int(member.injury_days) > 0 else ("人员失能" if int(member.hp) <= 0 else "出征预算不足")
+				var join := _input_action("随队 · " + _name(member), "squad", [member.instance_id, "on"], "", reason.is_empty())
+				if not reason.is_empty():
 					join.tooltip_text = ChapterCopy.text("UI.S03.ERR.UNIT_UNAVAILABLE", [reason])
 				if _can_manage_gear(member) or int(member.get("heal_cost", 0)) > 0 or int(member.injury_days) > 0 \
 						or int(member.get("next_xp", 0)) > 0 and int(member.xp) >= int(member.next_xp):
@@ -1815,21 +1816,31 @@ func _last_trip_actions(trip: Dictionary) -> void:
 		if not lost.is_empty():
 			_label(actions, "损失物资  " + lost, ALERT, 16)
 		_button("查看上趟结算", "last-trip", _toggle_last_trip)
+
+
+func _preparation_rescue_status(trip: Dictionary) -> void:
+	var batches: Array = view.get("rescue", {}).get("batches", [])
 	var capture: Variant = trip.get("capture_batch")
-	if not capture is Dictionary:
-		return
-	for batch: Dictionary in view.get("rescue", {}).get("batches", []):
-		if batch.id != capture.get("id"):
-			continue
-		if not batch.members.is_empty():
-			var status := "待救回" if batch.known else "失联待查"
-			_label(actions, "%s %d 人 · 最迟第 %d 日救回" % [status, batch.members.size(), int(batch.deadline)], ALERT, 16)
-		if not batch.recovered.is_empty():
-			_label(actions, "已救回 %d 人" % batch.recovered.size(), INK, 16)
-		if not batch.lost.is_empty():
-			_label(actions, "到期失救 %d 人" % batch.lost.size(), ALERT, 16)
+	var related: Dictionary = {}
+	for batch: Dictionary in batches:
+		if capture is Dictionary and batch.id == capture.get("id"):
+			related = batch
+			if not batch.recovered.is_empty():
+				_label(actions, "本批已救回 %d 人" % batch.recovered.size(), INK, 16)
+			if not batch.lost.is_empty():
+				_label(actions, "本批到期失救 %d 人" % batch.lost.size(), ALERT, 16)
+			break
+	var active := _active_rescue_batches(batches)
+	if not active.is_empty():
+		var urgent: Dictionary = related if _last_trip_open and not related.get("members", []).is_empty() else active[0]
+		var status := "待救回" if urgent.known else "失联待查"
+		var batch_label := "搜救所 · %s" % urgent.id if active.size() > 1 else "搜救所"
+		_label(actions, "%s · %s %d 人 · 最迟第 %d 日救回" % [
+			batch_label, status, urgent.members.size(), int(urgent.deadline)], ALERT, 16)
+		if active.size() > 1:
+			_label(actions, "另有 %d 批待处理" % (active.size() - 1), MUTED, 16)
+	if not active.is_empty() or not related.is_empty():
 		_button("前往搜救所", "last-trip-rescue", _town_tab.bind("rescue"))
-		break
 
 
 func _toggle_last_trip() -> void:
@@ -1879,6 +1890,8 @@ func _town_tab(tab: String, project := "") -> void:
 					focus_key = "quest archive CONFIRM" if chapter.reviewed else "quest review CONFIRM"
 		"construction":
 			focus_key = "construction-project-hospital" if project.is_empty() else "construction-list"
+		"rescue":
+			focus_key = "rescue-roster"
 	_render()
 	_action_scroll.set_deferred("scroll_vertical", 0)
 	if focus_key.is_empty():
@@ -3120,9 +3133,12 @@ func _settlement_actions() -> void:
 func _rescue_office(can_act := true) -> void:
 	var rescue: Dictionary = view.get("rescue", {})
 	_label(actions, "搜救所", GOLD, 24)
-	for batch in rescue.get("batches", []):
-		if not batch.members.is_empty():
-			_rescue_batch(batch, int(rescue.cost), can_act)
+	if can_act:
+		_button("返回队伍整备", "rescue-roster", _town_tab.bind("roster"))
+	var batches: Array = rescue.get("batches", [])
+	for batch: Dictionary in _active_rescue_batches(batches):
+		_rescue_batch(batch, int(rescue.cost), can_act)
+	for batch: Dictionary in batches:
 		if not batch.recovered.is_empty():
 			_label(actions, "%s · 已救回" % batch.id, INK, 16)
 			for member in batch.recovered:
@@ -3137,19 +3153,30 @@ func _rescue_office(can_act := true) -> void:
 		_rest_action()
 
 
+func _active_rescue_batches(batches: Array) -> Array:
+	var active := batches.filter(func(batch: Dictionary) -> bool: return not batch.members.is_empty())
+	active.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.deadline) < int(b.deadline) if a.deadline != b.deadline else a.id < b.id)
+	return active
+
+
 func _rescue_batch(batch: Dictionary, cost: int, can_act: bool) -> void:
 	var deadline := int(batch.deadline)
-	var tomorrow := int(view.day) + 1
 	_label(actions, "%s · %s" % [batch.id, "转运点已确认" if batch.known else "失联 · 去向待查"], GOLD, 18)
 	_label(actions, "第 %d 日登记 · 最迟第 %d 日救回" % [int(batch.day), deadline], INK, 16)
 	if not str(batch.origin_region).is_empty():
 		_label(actions, "最后出现于 %s · %s" % [batch.origin_region, batch.origin_site_name], MUTED, 16)
+	if can_act:
+		_rescue_departure(batch, cost)
+	var names := PackedStringArray()
 	for member in batch.members:
 		var gear_names: Array = member.get("equipment_names", [])
-		var gear := " · 原装备 " + "、".join(gear_names) if not gear_names.is_empty() else ""
-		_label(actions, _name(member) + gear, MUTED, 16)
-	if not can_act:
-		return
+		var gear := "（原装备 %s）" % "、".join(gear_names) if not gear_names.is_empty() else ""
+		names.append(_name(member) + gear)
+	_label(actions, ("待救回  " if batch.known else "失联  ") + "、".join(names), MUTED, 16)
+
+
+func _rescue_departure(batch: Dictionary, cost: int) -> void:
 	var supply_ok := int(view.supply) >= cost
 	var blocker: String = view.rescue.deployment_error
 	if not blocker.is_empty():
@@ -3158,6 +3185,8 @@ func _rescue_batch(batch: Dictionary, cost: int, can_act: bool) -> void:
 	if not supply_ok:
 		_label(actions, "需要 %d 份仓库补给。" % cost, ALERT, 16)
 	var ready := supply_ok and blocker.is_empty()
+	var tomorrow := int(view.day) + 1
+	var deadline := int(batch.deadline)
 	if batch.known:
 		var detail := "%s 救援需一战，计划第 %d 日归城。" % [batch.id, tomorrow]
 		_input_action("出发救援 · %d 补给" % cost, "rescue", [batch.id, "CONFIRM"],
@@ -3175,11 +3204,36 @@ func _rescue_batch(batch: Dictionary, cost: int, can_act: bool) -> void:
 func _rescue_team_hint(blocker: String) -> String:
 	var party: Array = view.get("party", [])
 	if blocker.begins_with("出征Cost不合法") and party.is_empty():
-		if view.get("town_roster", {}).get("home", []).is_empty():
-			return "名册暂无可出征队员。请先招募队员，再设为「随队」。"
-		return "尚未安排随队队员。请在留城名册选择可用队员，设为「随队」。"
+		var treasury: Dictionary = view.town_roster
+		var training: Array = view.get("town_services", {}).get("training", {}).get("pending", [])
+		var reasons := {}
+		for member: Dictionary in treasury.home:
+			var reason := _home_join_blocker(member, training)
+			if reason.is_empty():
+				return "尚未安排随队队员。请在留城名册选择可用队员，设为「随队」。"
+			reasons[reason] = true
+		var hint := "名册暂无可出征队员。" if treasury.home.is_empty() else (
+			"留城队员暂不能随队（%s）。" % "、".join(reasons.keys()))
+		if int(treasury.copper) >= int(treasury.spear_price):
+			return hint + "请先招募队员，再设为「随队」。"
+		return hint + "招募需 %d 铜，现有 %d 铜。" % [int(treasury.spear_price), int(treasury.copper)]
 	if blocker == "部署Cost不合法" and not party.any(func(member: Dictionary) -> bool: return member.deployed):
-		return "随队队员尚未部署。请选择队员，再点「加入部署」。"
+		if party.any(func(member: Dictionary) -> bool:
+				return member.deployable and int(member.cost) <= int(view.budget.battle)):
+			return "随队队员尚未部署。请选择队员，再点「加入部署」。"
+		return "随队队员当前无法上阵。请在队伍页查看队员状态。"
+	return ""
+
+
+func _home_join_blocker(member: Dictionary, training: Array) -> String:
+	if training.any(func(row: Dictionary) -> bool: return row.id == member.instance_id):
+		return "等待补训结算"
+	if int(member.injury_days) > 0:
+		return "伤势未恢复"
+	if int(member.hp) <= 0:
+		return "人员失能"
+	if int(view.resources.expedition_used) + int(member.cost) > int(view.budget.expedition):
+		return "出征预算不足"
 	return ""
 
 

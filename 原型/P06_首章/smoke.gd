@@ -5610,7 +5610,12 @@ func _check_return_state() -> void:
 	if not await _press("last-trip-back") or not await _wait_focus("last-trip") \
 			or not await _press("last-trip") or not await _press("last-trip-rescue"):
 		return
-	if not _rescue_preparation_shown(rescue, "请先招募队员") or not await _ado_tab("roster"):
+	if not _rescue_preparation_shown(rescue, "请先招募队员"):
+		return
+	if not await _wait_focus("rescue-roster") or app._action_scroll.scroll_vertical != 0:
+		failure = "The rescue office opened away from the transfer point and deadline"
+		return
+	if not await _press("rescue-roster") or not await _check_rescue_presentation():
 		return
 	if app.client.frame != frame or _return_state_files() != hashes or hashes.values().has(""):
 		failure = "Reviewing and returning from the settlement or rescue office changed save, backup or ledger"
@@ -5651,6 +5656,93 @@ func _rescue_preparation_shown(key: String, hint: String) -> bool:
 			or not _panel_has(hint) or _panel_has("护送离队不返还本趟Cost"):
 		failure = "The rescue office omitted the actual preparation step: " + hint
 	return failure.is_empty()
+
+
+func _check_rescue_presentation() -> bool:
+	# These display-only fixtures are derived from the native defeat snapshot.
+	# The original sidecar frame and persisted files remain the authority.
+	var original: Dictionary = app.view
+	var fixture := original.duplicate(true)
+	var newest: Dictionary = fixture.rescue.batches[0].duplicate(true)
+	var next: Dictionary = newest.duplicate(true)
+	var urgent: Dictionary = fixture.rescue.batches[0]
+	var people: Array = urgent.members.duplicate(true)
+	urgent.members = people.slice(0, 6)
+	next.merge({"id": "CAP-0002", "deadline": 5, "members": [people[6]], "known": false}, true)
+	newest.merge({"id": "CAP-0003", "members": [], "recovered": [people[7]]}, true)
+	fixture.last_trip.capture_batch.id = newest.id
+	fixture.last_trip.captured_ids = [people[7].instance_id]
+	fixture.rescue.batches = [newest, next, urgent]
+	app.view = fixture
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("本批已救回 1 人") or not _panel_has("CAP-0001 · 待救回 6 人 · 最迟第 4 日救回") \
+			or not _panel_has("另有 1 批待处理"):
+		failure = "A recovered latest batch obscured other live batches"
+	newest.lost = newest.recovered
+	newest.recovered = []
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("本批到期失救 1 人") or not _panel_has("CAP-0001 · 待救回 6 人"):
+		failure = "An expired latest batch obscured other live batches"
+	fixture.last_trip = {"result": "SAFE_RETURN", "day": 2}
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("安全归城") or not _panel_has("CAP-0001 · 待救回 6 人") \
+			or not app.command_buttons.has("last-trip-rescue"):
+		failure = "A safe return obscured an earlier live rescue batch"
+	if failure.is_empty() and await _press("last-trip-rescue"):
+		var keys: Array = app.command_buttons.keys()
+		var known := keys.find("rescue CAP-0001 CONFIRM")
+		var unknown := keys.find("rescue investigate start CAP-0002 CONFIRM")
+		if known < 0 or unknown <= known or keys.has("rescue CAP-0003 CONFIRM") \
+				or not _panel_has("CAP-0003 · 第 4 日到期"):
+			failure = "The rescue office did not put the urgent action first or offered a retired batch"
+	if failure.is_empty():
+		await _check_rescue_readiness_copy(fixture, people)
+	app.view = original
+	app._town_tab("roster")
+	if failure.is_empty():
+		side_checks["presentation_fixtures"] = ["recovered-with-live-batches", "expired-with-live-batches",
+			"safe-return-with-live-batches", "deadline-order", "unaffordable-recruitment",
+			"wounded-training-and-down-roster", "no-deployable-squad"]
+	return failure.is_empty()
+
+
+func _check_rescue_readiness_copy(fixture: Dictionary, people: Array) -> void:
+	fixture.town_roster.copper = 0
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("招募需 %d 铜，现有 0 铜" % int(fixture.town_roster.spear_price)) \
+			or _panel_has("请先招募队员"):
+		failure = "An empty roster was told to recruit without enough copper"
+		return
+	var home: Array = people.slice(0, 3)
+	home[0].injury_days = 2
+	fixture.town_services = {"training": {"pending": [{"id": home[1].instance_id}]}}
+	home[2].hp = 0
+	fixture.town_roster.home = home
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("留城队员暂不能随队（伤势未恢复、等待补训结算、人员失能）") \
+			or _panel_has("选择可用队员") or _panel_has("请先招募队员"):
+		failure = "The rescue office requested a roster action without an eligible member"
+		return
+	fixture.town_roster.copper = fixture.town_roster.spear_price
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("请先招募队员"):
+		failure = "The rescue office did not show affordable recruitment as an available action"
+		return
+	var member: Dictionary = home.pop_back()
+	member.deployed = false
+	member.deployable = false
+	fixture.party = [member]
+	fixture.rescue.deployment_error = "部署Cost不合法"
+	app._render()
+	await get_tree().process_frame
+	if not _panel_has("随队队员当前无法上阵") or _panel_has("加入部署"):
+		failure = "The rescue office requested deployment with no deployable squad member"
 
 
 func _defeat() -> void:
