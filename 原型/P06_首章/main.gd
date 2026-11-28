@@ -117,6 +117,8 @@ var opened := false
 var captions_open := false
 var _asked_about_old_company := false
 var town_tab := "chapter"
+var _last_trip_open := false
+var _last_trip_scroll := 0
 var _ordinary_route_profile := ""
 var construction_project := ""
 var finale_preview_open := false
@@ -704,6 +706,7 @@ func _refresh(row: Dictionary) -> void:
 		_previewed_book = {}
 	if phase != "TOWN":
 		_ordinary_route_profile = ""
+		_last_trip_open = false
 	if phase != "EXPLORE":
 		field_gear_open = false
 		field_books_open = false
@@ -1381,7 +1384,7 @@ func _render() -> void:
 	else:
 		var show_finished: bool = opened and not captions_open and phase in ["EXPLORE", "RETURNED", "FAILED", "TOWN"] \
 			and snapshot is Dictionary and snapshot.get("finished", false) and not _show_deployment() \
-			and not chapter_history_open and not remembrance_history_open and not books_open and not _overlook_open \
+			and not chapter_history_open and not remembrance_history_open and not books_open and not _last_trip_open and not _overlook_open \
 			and view.get("town_memory", {}).is_empty()
 		if show_finished and phase != "TOWN":
 			_finished_battle(snapshot)
@@ -1446,7 +1449,7 @@ func _render() -> void:
 	var footer_started := Time.get_ticks_usec() if profile_panels else 0
 	_render_subtitle()
 	var reading_records: bool = reading_first_expedition or (not client.blocked and not settings_open and not captions_open \
-		and (chapter_history_open or remembrance_history_open or books_open))
+		and (chapter_history_open or remembrance_history_open or books_open or _last_trip_open))
 	notice.visible = not reading_records and not client.save_version_incompatible \
 		and (not field or not notice.text.is_empty())
 	_subtitle_row.visible = not reading_records and (subtitles.visible or _receipt_plate.visible or dialogue_next.visible)
@@ -1726,6 +1729,11 @@ func _town_actions() -> void:
 		_expedition_actions()
 		return
 	_label(actions, "队伍整备" if view.get("complete", false) else "出发前整备", GOLD, 24)
+	var last_trip: Dictionary = view.get("last_trip", {})
+	if not last_trip.is_empty():
+		_last_trip_actions(last_trip)
+		if _last_trip_open:
+			return
 	if view.get("settlement") is Dictionary:
 		_summary()
 	var party: Array = view.get("party", [])
@@ -1737,15 +1745,19 @@ func _town_actions() -> void:
 		var budget_hint := _deployment_budget_hint(selected_id)
 		if not budget_hint.is_empty():
 			_label(actions, budget_hint.replace("，", "，\n"), ALERT, 16)
-		var can_recommend := not party.any(func(member: Dictionary) -> bool: return int(member.injury_days) > 0)
+		var can_recommend := not party.is_empty() and not party.any(func(member: Dictionary) -> bool:
+			return int(member.injury_days) > 0)
 		var recommendation := ChapterCopy.text("UI.S03.DLG.AUTO_DEPLOY").replace("，", "，\n")
 		_input_action(ChapterCopy.text("UI.S03.BTN.AUTO_DEPLOY"), "tutorial", ["recommend", "CONFIRM"],
 			recommendation, can_recommend)
 		var has_supply := int(view.supply) >= 1
 		var blocker: String = view.preparation.get("deployment_error", "")
+		var recovery_hint := _rescue_team_hint(blocker) if has_records else ""
 		var no_ready_deployment := not party.any(func(member: Dictionary) -> bool:
 			return member.deployed and member.deployable)
-		if (blocker.is_empty() and no_ready_deployment) or (int(view.resources.battle_used) == 0 \
+		if not recovery_hint.is_empty():
+			_label(actions, recovery_hint, ALERT, 16)
+		elif (blocker.is_empty() and no_ready_deployment) or (int(view.resources.battle_used) == 0 \
 				and (blocker.begins_with("出征Cost不合法") or blocker == "部署Cost不合法")):
 			blocker = ChapterCopy.text("UI.S03.ERR.DEPLOY_EMPTY")
 			_label(actions, blocker, ALERT, 16)
@@ -1792,6 +1804,43 @@ func _town_actions() -> void:
 						_recovery_actions(member)
 
 
+func _last_trip_actions(trip: Dictionary) -> void:
+	var result := str(trip.result)
+	_label(actions, "上趟结算 · 第 %d 日 · %s" % [int(trip.get("day", view.day)), REASONS.get(result, result)], GOLD, 18)
+	if _last_trip_open:
+		_button("返回整备", "last-trip-back", _toggle_last_trip)
+		_summary(trip)
+	else:
+		var lost := _cargo_amounts(trip.get("lost_cargo", {}).get("pending", {}))
+		if not lost.is_empty():
+			_label(actions, "损失物资  " + lost, ALERT, 16)
+		_button("查看上趟结算", "last-trip", _toggle_last_trip)
+	var capture: Variant = trip.get("capture_batch")
+	if not capture is Dictionary:
+		return
+	for batch: Dictionary in view.get("rescue", {}).get("batches", []):
+		if batch.id != capture.get("id"):
+			continue
+		if not batch.members.is_empty():
+			var status := "待救回" if batch.known else "失联待查"
+			_label(actions, "%s %d 人 · 最迟第 %d 日救回" % [status, batch.members.size(), int(batch.deadline)], ALERT, 16)
+		if not batch.recovered.is_empty():
+			_label(actions, "已救回 %d 人" % batch.recovered.size(), INK, 16)
+		if not batch.lost.is_empty():
+			_label(actions, "到期失救 %d 人" % batch.lost.size(), ALERT, 16)
+		_button("前往搜救所", "last-trip-rescue", _town_tab.bind("rescue"))
+		break
+
+
+func _toggle_last_trip() -> void:
+	if not _last_trip_open:
+		_last_trip_scroll = _action_scroll.scroll_vertical
+	_last_trip_open = not _last_trip_open
+	focus_key = "last-trip-back" if _last_trip_open else "last-trip"
+	_render()
+	_action_scroll.set_deferred("scroll_vertical", 0 if _last_trip_open else _last_trip_scroll)
+
+
 func _town_tab(tab: String, project := "") -> void:
 	if tab != town_tab:
 		_soundscape.ui("tab")
@@ -1800,6 +1849,7 @@ func _town_tab(tab: String, project := "") -> void:
 	_previewed_book = {}
 	chapter_history_open = false
 	remembrance_history_open = false
+	_last_trip_open = false
 	construction_project = project
 	_protection_archive_open = false
 	_letter_open = false
@@ -3101,9 +3151,10 @@ func _rescue_batch(batch: Dictionary, cost: int, can_act: bool) -> void:
 	if not can_act:
 		return
 	var supply_ok := int(view.supply) >= cost
-	var blocker: String = view.preparation.deployment_error
+	var blocker: String = view.rescue.deployment_error
 	if not blocker.is_empty():
-		_label(actions, blocker + "。请先调整救援小队。", ALERT, 16)
+		var hint := _rescue_team_hint(blocker)
+		_label(actions, blocker + "。请先调整救援小队。" if hint.is_empty() else hint, ALERT, 16)
 	if not supply_ok:
 		_label(actions, "需要 %d 份仓库补给。" % cost, ALERT, 16)
 	var ready := supply_ok and blocker.is_empty()
@@ -3119,6 +3170,17 @@ func _rescue_batch(batch: Dictionary, cost: int, can_act: bool) -> void:
 		if not batch.can_finish_in_time:
 			detail += "\n最早救回日已超过第 %d 日期限。" % deadline
 		_input_action("出发调查 · %d 补给" % cost, "rescue", ["investigate", "start", batch.id, "CONFIRM"], _day_consequence(detail), ready)
+
+
+func _rescue_team_hint(blocker: String) -> String:
+	var party: Array = view.get("party", [])
+	if blocker.begins_with("出征Cost不合法") and party.is_empty():
+		if view.get("town_roster", {}).get("home", []).is_empty():
+			return "名册暂无可出征队员。请先招募队员，再设为「随队」。"
+		return "尚未安排随队队员。请在留城名册选择可用队员，设为「随队」。"
+	if blocker == "部署Cost不合法" and not party.any(func(member: Dictionary) -> bool: return member.deployed):
+		return "随队队员尚未部署。请选择队员，再点「加入部署」。"
+	return ""
 
 
 func _search_actions() -> void:
@@ -4585,11 +4647,13 @@ func _deployment_cells(id: String, cells: Array) -> void:
 		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 
-func _summary() -> void:
-	var summary: Variant = view.get("settlement")
+func _summary(archived_trip := {}) -> void:
+	var archived: bool = not archived_trip.is_empty()
+	var summary: Variant = archived_trip if archived else view.get("settlement")
 	if summary is Dictionary:
 		var result: String = summary.get("result", "归城")
-		_label(actions, REASONS.get(result, result) + " · %d 场战斗" % int(summary.get("battles", 0)), INK, 19)
+		var battles := "%d 场战斗" % int(summary.get("battles", 0))
+		_label(actions, battles if archived else REASONS.get(result, result) + " · " + battles, INK, 19)
 		for pair in [["入库", "banked"], ["入库材料", "materials"], ["入库技能书", "banked_book_names"]]:
 			var text := _cargo_amounts(summary.get(pair[1], {}))
 			if not text.is_empty():
@@ -4609,7 +4673,7 @@ func _summary() -> void:
 			if task.reward_ready:
 				_label(actions, "可在暮汀「技能书 → 研习委托」领取奖励。", MUTED, 16)
 		for gear in summary.get("returned_gear_names", []):
-			_label(actions, "带回装备  %s · 尚未穿戴" % gear, MUTED, 16)
+			_label(actions, "带回装备  %s%s" % [gear, "" if archived else " · 尚未穿戴"], MUTED, 16)
 		var consumables: Array = summary.get("returned_consumable_names", [])
 		if not consumables.is_empty():
 			_label(actions, "带回携行道具  " + "、".join(consumables), MUTED, 16)
@@ -4625,24 +4689,29 @@ func _summary() -> void:
 				_label(actions, pair[0] + "  " + "、".join(names), ALERT, 16)
 		if int(lost.get("medical", 0)) > 0:
 			_label(actions, "损失随队救护 ×%d" % int(lost.medical), ALERT, 16)
-		for member in view.get("party", []):
-			if int(member.get("injury_days", 0)) > 0:
-				_label(actions, "%s  休整 %d 日" % [_name(member), int(member["injury_days"])], MUTED, 16)
+		if not archived:
+			for member in view.get("party", []):
+				if int(member.get("injury_days", 0)) > 0:
+					_label(actions, "%s  休整 %d 日" % [_name(member), int(member["injury_days"])], MUTED, 16)
 		for key in ["missing_ids", "captured_ids", "rescued_ids"]:
 			var ids: Array = summary.get(key, [])
 			if ids.is_empty():
 				continue
 			var label: String = {"missing_ids": "失联", "captured_ids": "被俘", "rescued_ids": "已救回"}[key]
+			if archived and key != "rescued_ids":
+				label = "结算时" + label
 			var names := ids.map(func(id): return summary.get("member_labels", {}).get(id, "队员"))
 			_label(actions, "%s  %s" % [label, "、".join(names)], INK if key == "rescued_ids" else ALERT, 16)
 		var expired: Array = summary.get("expired_rescue_names", [])
 		if not expired.is_empty():
 			_label(actions, "本次结算救援超期 · " + "、".join(expired), ALERT, 16)
-		if summary.has("capture_batch"):
+		if not archived and summary.has("capture_batch"):
 			_label(actions, "最迟第 %d 日救回 · 回城后前往搜救所" % int(summary.capture_batch.deadline), MUTED, 16)
 		if summary.has("rescued_injury_days"):
 			_label(actions, "救回人员留城休养 %d 日" % int(summary.rescued_injury_days), MUTED, 16)
-	_first_chapter_settlement_copy()
+
+	if not archived:
+		_first_chapter_settlement_copy()
 
 
 func _first_chapter_settlement_copy() -> void:
@@ -4735,7 +4804,8 @@ func _show_deployment() -> bool:
 	if view.get("phase") == "FINAL_REGROUP":
 		return true
 	if view.get("phase") == "TOWN":
-		return view.get("commissioned", false) and town_tab not in ["skills", "construction", "logistics", "items"] \
+		return view.get("commissioned", false) and not _last_trip_open \
+			and town_tab not in ["skills", "construction", "logistics", "items"] \
 			and (not view.get("complete", false) or town_tab == "roster") \
 			and view.get("town_memory", {}).is_empty()
 	return view.get("phase") == "EXPLORE" and view.get("route", {}).get("contact_pending", false)
@@ -4965,6 +5035,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_cancel_confirmation()
 	elif _first_expedition_open and command_buttons.has("first-expedition-back"):
 		_toggle_first_expedition()
+	elif _last_trip_open and command_buttons.has("last-trip-back"):
+		_toggle_last_trip()
 	elif finale_terms_open and command_buttons.has("finale-terms"):
 		_toggle_finale_terms()
 	elif finale_executor_open and command_buttons.has("finale-executor"):

@@ -5179,6 +5179,12 @@ func _run() -> void:
 	elif mode == "commission-receipt":
 		if await _wait_ready():
 			await _check_commission_receipt()
+	elif mode == "return-state-setup":
+		if await _wait_ready():
+			await _prepare_return_state()
+	elif mode == "return-state-reopen":
+		if await _wait_ready():
+			await _check_return_state()
 	elif mode not in ["boot", "resume", "chapter", "chapter-resume", "chapter-delivery", "archive-progress", "ado-remembrance", "ado-remembrance-resume", "whistle-commission", "whistle-resume", "ado-early", "ado-late", "sev-report-route", "sev-report-resume", "sev-awakening", "sev-remembrance", "sev-remembrance-resume", "sev-awakened-resume", "mg03-report-route", "mg03-report-resume", "mg04-report-route", "mg04-report-resume", "research-route", "research-resume", "research-early", "finale-route", "finale-defeat", "finale-training", "finale-resume", "ado-sample", "ado-auto-sample", "ado-grip", "side-controls", "deployment-slot", "town-yard", "town-construction", "town-logistics", "consumable-flow", "town-shortcuts", "tutorial-resume", "root-contact-models", "contact-inspection", "field-plan", "field-spoils", "handbook-event", "equipment-flow", "skill-book-flow", "book-market", "book-target", "book-research", "skill-tactics", "live-shields", "rescue-expiry", "live-dialogue", "art-review", "unit-marker-motion", "battle-report-resume", "battle-report-town", "battle-feedback-resume", "gap-resume", "bow-resume", "aid-resume", "crossbow-contact", "crossbow-resume", "mist-contact", "mist-resume", "mercenary-mix", "echo-delay", "sting-resume", "guard-feedback", "enemy-spear-resume", "skeleton-encounter", "bow-flight-lifetime", "projectile-close", "paused-viewport", "projectile-reopen", "projectile-resize", "busy-close", "sidecar-reconnect", "receipt-boot", "startup-help", "fortress-branches", "rescue", "rescue-resume", "spear-resume", "shield-fixtures", "spear-fixtures", "spear", "spear-dual", "full", "full-mouse", "unclaimed", "unobserved", "early", "flee", "contact", "access", "defeat", "repeat-input"]:
 		failure = "Unknown smoke scenario: " + mode
 	elif mode == "receipt-boot":
@@ -5553,6 +5559,98 @@ func _accessibility() -> void:
 	if not app.warning.visible or app.audio.playing or not app.settings["大字"] or app.volume != 75 or app.client.frame["state_digest"] != digest or app.client.frame["files"] != files:
 		failure = "Accessibility settings changed the authority or hid the warning"
 	await _capture("accessible-warning")
+
+
+func _prepare_return_state() -> void:
+	if "--return-no-history" in OS.get_cmdline_user_args():
+		if await _press("opening"):
+			await _command("quest commission CONFIRM")
+		return
+	if not await _opening():
+		return
+	await _defeat()
+	if failure.is_empty():
+		await _command("town")
+
+
+func _return_state_files() -> Dictionary:
+	var slot: String = app.data_dir.path_join("runs").path_join(app.case_name)
+	var hashes := {}
+	for name: String in ["save.json", "save.json.bak", "ledger.json"]:
+		hashes[name] = FileAccess.get_sha256(slot.path_join(name))
+	return hashes
+
+
+func _check_return_state() -> void:
+	if app.view.get("phase") != "TOWN" or app.town_tab != "roster":
+		failure = "The slot did not reopen on town preparation"
+		return
+	if "--return-no-history" in OS.get_cmdline_user_args():
+		if app.command_buttons.has("last-trip") or app.command_buttons.has("last-trip-rescue") \
+				or not app.view.get("last_trip", {}).is_empty() or not app.command_buttons.has("recruit M01"):
+			failure = "A commissioned slot with no history showed a trip or lost ordinary preparation"
+		return
+	var hashes := _return_state_files()
+	var frame: Dictionary = app.client.frame
+	var trip: Dictionary = app.view.get("last_trip", {})
+	var captives: Array = trip.get("captured_ids", [])
+	var rescue := "rescue CAP-0001 CONFIRM"
+	if trip.get("result") != "DEFEAT" or int(trip.get("battles", 0)) != 2 or captives.size() != 8 \
+			or not _panel_has("上趟结算 · 第 1 日 · 战斗败北") or not _panel_has("损失物资  铜 ×6") \
+			or not _panel_has("待救回 8 人 · 最迟第 4 日救回"):
+		failure = "Town preparation omitted the saved first-trip loss, captive count or deadline"
+		return
+	if not await _press("last-trip"):
+		return
+	var names: Array = captives.map(func(id): return trip.get("member_labels", {}).get(id, ""))
+	if names.has("") or not _panel_has("结算时被俘  " + "、".join(names)) or not _panel_has("损失物资  铜 ×6") \
+			or not await _wait_focus("last-trip-back") or app._can_edit_deployment():
+		failure = "The read-only settlement did not list the eight captured members or focus Back"
+		return
+	if not await _press("last-trip-back") or not await _wait_focus("last-trip") \
+			or not await _press("last-trip") or not await _press("last-trip-rescue"):
+		return
+	if not _rescue_preparation_shown(rescue, "请先招募队员") or not await _ado_tab("roster"):
+		return
+	if app.client.frame != frame or _return_state_files() != hashes or hashes.values().has(""):
+		failure = "Reviewing and returning from the settlement or rescue office changed save, backup or ledger"
+		return
+	side_checks["read_only"] = {"hashes": hashes, "digest": frame.state_digest, "captives": names}
+	if not await _command("recruit M01"):
+		return
+	if "--return-expire" in OS.get_cmdline_user_args():
+		for day in range(1, 4):
+			if not await _command("rest CONFIRM"):
+				return
+		if not _panel_has("到期失救 8 人") or _panel_has("最迟第 4 日救回") \
+				or not await _press("last-trip") or not _panel_has("到期失救 8 人") \
+				or _panel_has("最迟第 4 日救回") or not await _press("last-trip-rescue") \
+				or app.command_buttons.has(rescue) or not _panel_has("第 4 日到期，人员已永久损失"):
+			failure = "The archived defeat still presented expired people as rescue targets"
+		return
+	var member: String = app.view.town_roster.home[0].instance_id
+	if not await _ado_tab("rescue") or not _rescue_preparation_shown(rescue, "尚未安排随队队员") \
+			or not await _ado_tab("roster") or not await _command("squad " + member + " on"):
+		return
+	if not await _ado_tab("rescue") or not _rescue_preparation_shown(rescue, "随队队员尚未部署") \
+			or not await _ado_tab("roster"):
+		return
+	if not app.command_buttons.has("deploy " + member + " on") and not await _press("member-" + member):
+		return
+	var supply := int(app.view.supply)
+	if not await _command("deploy " + member + " on") or not await _ado_tab("rescue") or not await _command(rescue):
+		return
+	if app.view.phase != "BATTLE" or app.view.rescue.target.get("member_ids", []) != captives \
+			or int(app.view.supply) != supply - 1 or int(app.view.rescue.target.deadline) != 4:
+		failure = "A qualified team did not depart for the original eight people under the original deadline"
+
+
+func _rescue_preparation_shown(key: String, hint: String) -> bool:
+	var button: Button = app.command_buttons.get(key)
+	if app.town_tab != "rescue" or button == null or not button.disabled \
+			or not _panel_has(hint) or _panel_has("护送离队不返还本趟Cost"):
+		failure = "The rescue office omitted the actual preparation step: " + hint
+	return failure.is_empty()
 
 
 func _defeat() -> void:

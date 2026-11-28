@@ -385,11 +385,10 @@ def tutorial_choice_notes(game, choices, party):
     return notes
 
 
-def settlement_view(game):
+def settlement_view(game, summary):
     from book_catalog import BOOKS
 
     state = game.s
-    summary = state.get('summary')
     if summary is None:
         return None
     ids = {member for key in ('missing_ids', 'captured_ids', 'rescued_ids') for member in summary.get(key, [])}
@@ -403,7 +402,7 @@ def settlement_view(game):
     settlement = summary.get('settlement_id')
     expired = [member_view(member)['display_name'] for member in state['memorial']
                if settlement and member['capture']['settlement_id'] == settlement]
-    lost = summary.get('lost_cargo') or {}
+    lost = summary.get('lost_cargo') or {'pending': summary.get('lost_pending', {})}
     receipt = summary.get('book_rewards') or {}
     trip = state['book_rewards']['departures'].get(str(receipt.get('expedition'))) or {}
     target = trip.get('contract', {}).get('target')
@@ -417,7 +416,8 @@ def settlement_view(game):
         entitlement = state['book_rewards']['entitlements'].get(key)
         research.append({'name': BOOK_RESEARCH[key][0], 'count': count, 'banked': receipt['safe'],
                          'reward_ready': bool(entitlement and not entitlement['selected'])})
-    return {**summary, 'member_labels': people, 'returned_gear_names': equipment, 'expired_rescue_names': expired,
+    return {**summary, 'lost_cargo': lost, 'member_labels': people,
+            'returned_gear_names': equipment, 'expired_rescue_names': expired,
             'banked_book_names': book_names(summary.get('books_banked', {})),
             'lost_book_names': book_names(summary.get('books_lost', {})),
             'book_target_progress': progress,
@@ -1831,7 +1831,8 @@ def rescue_view(game):
             'can_finish_in_time': quote.get('rescue_in_time', state['day'] + 1 <= batch['deadline']),
             'other_due': [iid for iid in due if iid not in absent],
         })
-    return {'batches': batches, 'cost': cost, 'due': due, 'active': active, 'target': target}
+    return {'batches': batches, 'cost': cost, 'due': due, 'active': active, 'target': target,
+            'deployment_error': deployment_error(game, 'OPEN') if state['phase'] == 'TOWN' and live else ''}
 
 
 def commission_receipt(fact):
@@ -2261,13 +2262,15 @@ def make_view(game, ledger, primary, committed_save_version=None):
         from finale import BOARD as board_id
     else:
         board_id = 'OPEN'
-    summary = settlement_view(game)
+    summary = settlement_view(game, state.get('summary'))
     cap = (state.get('manifest') or {}).get('caps', {}).get('gear_claims', 0)
     offers = trip.get('gear_offers', []) if 'G' in route.get('cleared', []) else []
     compatible = [family for family in offers
                   if any(row['unit_id'] in game.cat.gear[family + '-Q1']['allowed_unit_ids'] for row in party)]
     opening = state['narrative']['records'].get('opening', {})
     town = state['phase'] == 'TOWN' and 'ST-101' in facts
+    history = state.get('completed_history') if town else None
+    last_summary = history[-1].get('summary') if history else None
     commission = commission_receipt(facts['ST-101']) if town else {}
     hometown = [member_view(m) for m in state['home_roster']] if town else []
     prepare = preparation_view(game, party + hometown) if town else {}
@@ -2333,6 +2336,7 @@ def make_view(game, ledger, primary, committed_save_version=None):
             'gear_offer_names': {family: gear_name(game.cat, family + '-Q1') for family in offers},
             'gear_claims': cap - state['debits'].get('gear_claims', 0),
             'settlement': summary,
+            'last_trip': settlement_view(game, last_summary) if last_summary and last_summary.get('result') else {},
             'battle_view': snapshot,
             'battle_results': [{key: row.get(key) for key in ('encounter_id', 'battle_id', 'result', 'tick')}
                                for row in reports],
