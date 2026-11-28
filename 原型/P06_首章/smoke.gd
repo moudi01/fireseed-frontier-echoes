@@ -849,6 +849,26 @@ func _check_chapter_delivery() -> void:
 	var seals := int(app.view.chapter.seals)
 	var books := 0 if archive else int(app.view.hunt.report_book.count)
 	var offer := "出征预算 8 → 12 Cost\n战斗预算 6 → 8 Cost" if archive else "「守誓回斩」×1 · 应召印 ×1"
+	if not archive:
+		var report: Button = app.command_buttons.get(key)
+		var ado: Dictionary = app.view.hunt
+		if report == null or report.disabled or report.text != "交存守誓将·阿铎讨伐报告" \
+				or app._chapter_goal.text != "当前目标：通过「旧档案」提交断誓堡垒报告" \
+				or "断誓堡垒首份报告已交存" in app._receipt_text.text:
+			failure = "The ready report did not show its title and next goal before awarding anything"
+			return
+		if not ado.awakened and not ado.evidence:
+			var missing := "铜哨证词" if ado.has_item else ("裂口铜哨" if ado.has_testimony else "裂口铜哨与铜哨证词")
+			if app.command_buttons.has("remember MG01") or not _panel_has("无法开启追忆（缺：%s）" % missing):
+				failure = "The pending report did not identify the actual missing remembrance evidence"
+				return
+		if not ado.awakened and ado.evidence and not app.command_buttons.has("remember MG01"):
+			failure = "The report must not block an eligible remembrance"
+			return
+		if ado.awakened and (not app.command_buttons.has("remembrance-history") \
+				or app.command_buttons.has("remember MG01")):
+			failure = "Ado awakened before delivery should still have a report and a read-only remembrance"
+			return
 	if not await _press(key, false):
 		return
 	if not _panel_has(offer) or (archive and (not _panel_has("应召印 ×1\n基础技能书自选权益 ×1") \
@@ -878,6 +898,22 @@ func _check_chapter_delivery() -> void:
 				or not _panel_has("第 %d 日交存" % int(app.view.day)):
 			failure = "The reported hunt did not distinguish the first reward from its current stock"
 			return
+		var receipt := "断誓堡垒首份报告已交存：获应召印×1、《守誓回斩》×1（解锁20铜补购）。"
+		var next_hint := "还缺回声林海报告完成第二章。" if app.view.hunt.awakened \
+			else "还缺回声林海报告；阿铎旧忆可经「旧档案」追忆。"
+		if app.view.get("sev_hunt", {}).get("reported", false):
+			next_hint = "第二章两份报告已齐，预算升至16/12。"
+		if not app._receipt_plate.is_visible_in_tree() or not app._receipt_text.text.ends_with(receipt + next_hint) \
+				or not _panel_has("当前仅作回看，不再发放奖励。") or not app.command_buttons.has("dialogue next") \
+				or not app.command_buttons.has("dialogue skip"):
+			failure = "The first report did not show the reward and next goal in a dismissible receipt"
+			return
+		side_checks["ado_first_report_receipt"] = app._receipt_text.text
+		if "--ado-close-receipt" in OS.get_cmdline_user_args():
+			if not await _command("dialogue next") or app._receipt_plate.is_visible_in_tree() \
+					or app.view.hunt.report_book.count != books + 1 or int(app.view.chapter.seals) != seals + 1:
+				failure = "Reading the receipt changed the first report rewards or did not close it"
+				return
 		side_checks["report_book"] = book
 	side_checks["seals_added"] = int(app.view.chapter.seals) - seals
 	steps.append({"command": key, "version": version + 1, "digest": app.client.frame.state_digest})
@@ -974,23 +1010,24 @@ func _check_archive_progress() -> void:
 			failure = "The return preview did not explain how to unlock delivery"
 			return
 		await _capture("report-return")
-		if not await _press("confirm") or int(app.client.frame.state_version) != version + 1 \
-				or not _panel_has("阿铎讨伐报告可在暮汀旧档案交存") or app.view.hunt.reported:
-			failure = "The safe return did not unlock the pending report"
+		if not await _press("confirm") or int(app.client.frame.state_version) != version + 1:
+			failure = "The safe return did not settle exactly once"
 			return
 		steps.append({"command": "return CONFIRM", "version": version + 1, "digest": app.client.frame.state_digest})
+	var saved_hunt: Dictionary = app.view.get("hunt", {})
+	if app.view.get("phase") == "RETURNED" and saved_hunt.get("report_ready", false) and not saved_hunt.reported:
+		var archive: Button = app.command_buttons.get("town")
+		if archive == null or archive.tooltip_text != "已击败守誓将·阿铎，请通过「旧档案」提交前线报告。" \
+				or not _panel_has("已击败断誓堡垒守誓将·阿铎并安全归城。通过「旧档案」提交首份报告可领应召印×1与《守誓回斩》"):
+			failure = "The safe return did not explain where to file the report and what it grants"
+			return
 		if not await _command("town"):
 			return
-		await get_tree().process_frame
-		var hunt: Dictionary = app.view.hunt
-		if app.town_tab != "chapter" or app.get_viewport().gui_get_focus_owner() != app.command_buttons.get("quest report MG01 CONFIRM") \
-				or not _panel_has("第 %d 日胜利 · 第 %d 日安全归城" % [int(hunt.victory_day), int(hunt.report_return_day)]):
-			failure = "The return opened the wrong panel or lost the saved return date"
+		saved_hunt = app.view.get("hunt", {})
+		if not _panel_has("第 %d 日胜利 · 第 %d 日安全归城" % [int(saved_hunt.victory_day), int(saved_hunt.report_return_day)]):
+			failure = "The archive did not show the actual victory and safe return dates"
 			return
 		await _capture("report-ready")
-		await _check_chapter_delivery()
-		return
-	var saved_hunt: Dictionary = app.view.get("hunt", {})
 	if app.view.get("phase") == "TOWN" and saved_hunt.get("report_ready", false) and not saved_hunt.reported:
 		if app.town_tab != "chapter" or not await _wait_focus("quest report MG01 CONFIRM"):
 			failure = "Reopening a pending report did not focus its delivery"
@@ -1134,9 +1171,14 @@ func _check_archive_progress() -> void:
 		if record.id == "ST-103":
 			await _capture("review-exchange")
 	if saved_hunt.get("reported", false):
+		if app._receipt_text.text.contains("断誓堡垒首份报告已交存"):
+			failure = "Reopening the report incorrectly offered the first reward again"
+			return
 		if not await _press("archive-report") or not page.body.text.contains("第 %d 日交存" % int(saved_hunt.report_delivery_day)) \
 				or not page.body.text.contains("「守誓回斩」现存 %d 本" % int(saved_hunt.report_book.count)) \
-				or not page.body.text.contains("「守誓回斩」×1 · 应召印 ×1") or app.command_buttons.has("quest report MG01 CONFIRM"):
+				or not page.body.text.contains("「守誓回斩」×1 · 应召印 ×1") \
+				or not page.body.text.contains("断誓堡垒报告已交存，当前仅作回看，不再发放奖励。") \
+				or app.command_buttons.has("quest report MG01 CONFIRM"):
 			failure = "The stored report date or reward stock was lost on reopen"
 			return
 		side_checks["report_delivery_day"] = saved_hunt.report_delivery_day
@@ -1199,11 +1241,11 @@ func _check_ado_remembrance(reopening: bool) -> void:
 			failure = "Returning from the saved transcript changed the archive or the save"
 			return
 	else:
-		if not _panel_has("追忆尚缺裂口铜哨、秦姨核实的证词") or app.command_buttons.has("remember MG01") \
+		if not _panel_has("无法开启追忆（缺：裂口铜哨与铜哨证词）") or app.command_buttons.has("remember MG01") \
 				or not await _commands(["quest MG01 record", "quest MG01 witness"]):
 			failure = "The archive did not show the actual starting prerequisites"
 			return
-		if not _panel_has("追忆尚缺裂口铜哨。") or app.command_buttons.has("remember MG01"):
+		if not _panel_has("无法开启追忆（缺：裂口铜哨）") or app.command_buttons.has("remember MG01"):
 			failure = "Testimony mistakenly unlocked remembrance without the whistle"
 			return
 		if not await _command("quest MG01 collect CONFIRM"):

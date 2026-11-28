@@ -37,6 +37,18 @@ const GEAR_SLOTS := {"weapon": "武器", "armor": "护甲"}
 const GEAR_STATS := {"hp": "生命上限", "physical_attack": "物攻", "magic_attack": "魔攻",
 	"healing_power": "治疗强度", "physical_defense": "物防", "magic_defense": "魔防"}
 const ADO_MOVE_NAMES := {"MG01-A": "断誓横阵", "MG01-B": "留守壁垒", "MG01-C": "归队点名"}
+const ADO_REPORT_COPY := {
+	"UI.S201.HUD.RETURN_WIN": {
+		"short": "已击败守誓将·阿铎，请通过「旧档案」提交前线报告。",
+		"details": "已击败断誓堡垒守誓将·阿铎并安全归城。通过「旧档案」提交首份报告可领应召印×1与《守誓回斩》%s",
+	},
+	"UI.S201.HUD.GOAL_REPORT": "当前目标：通过「旧档案」提交断誓堡垒报告",
+	"UI.S201.HUD.GOAL_RECALL": "可选追忆：补齐铜哨与证词，在「旧档案」追忆阿铎",
+	"UI.S201.BTN.SUBMIT_REPORT": "交存守誓将·阿铎讨伐报告",
+	"UI.S201.DLG.FIRST_REWARD": "断誓堡垒首份报告已交存：获应召印×1、《守誓回斩》×1（解锁20铜补购）。%s",
+	"UI.S201.TIP.REPORT_REPLAY": "断誓堡垒报告已交存，当前仅作回看，不再发放奖励。",
+	"UI.S201.ERR.RECALL_MISSING": "无法开启追忆（缺：%s）。请先补齐后再来。",
+}
 const ADO_CUES := {
 	"MG01-A": preload("res://assets/fortress/audio/mg01-a.wav"),
 	"MG01-B": preload("res://assets/fortress/audio/mg01-b.wav"),
@@ -200,6 +212,7 @@ var _playback_battle := ""
 var _playback_running := false
 var _default_playback := true
 var _committed_memory_window := ""
+var _ado_first_report_receipt := ""
 var _memory_reply := ""
 var _new_warning := false
 var _battle_pace := 1
@@ -659,6 +672,7 @@ func _refresh(row: Dictionary) -> void:
 	var previous_evidence: String = view.get("later_evidence", {}).get(_general_evidence_open, {}).get("stage", "")
 	var prior_recall: Dictionary = view.get("town_memory", {})
 	var returned_report := _pending_hunt_report(view, true)
+	var ado_report_was_delivered: bool = view.get("hunt", {}).get("reported", false)
 	var previous_battle_memory: Dictionary = view.get("battle_memory", {})
 	var was_commissioned: bool = view.get("commissioned", false)
 	var previous_phase: String = view.get("phase", "")
@@ -668,6 +682,8 @@ func _refresh(row: Dictionary) -> void:
 	var previous_map: Variant = model.get("map")
 	model = row.get("presentation", {})
 	view = model.get("slice", {})
+	if not _is_ado_report_receipt(model.get("active")):
+		_ado_first_report_receipt = ""
 	if previous_phase != view.get("phase", "") or not view.get("protection_cases", {}).get("field", []).any(
 			func(case: Dictionary) -> bool:
 				return case.get("at_scene", false) and not case.has("transit") and not case.has("receipt") \
@@ -769,6 +785,10 @@ func _refresh(row: Dictionary) -> void:
 			elif previous_chapter.book_selected.is_empty() and not chapter.get("book_selected", {}).is_empty():
 				notice.text = "「%s」已放入书库。" % chapter.book_selected.name
 				focus_key = "chapter-history"
+		var ado: Dictionary = view.get("hunt", {})
+		if not initial_snapshot and row.get("status") == "COMMITTED" \
+				and not ado_report_was_delivered and ado.get("reported", false):
+			_ado_first_report_receipt = _ado_first_report_reward(ado)
 	if row.get("files", {}).get("save.json") != null:
 		save_version = int(view.get("save_version", 0))
 	if int(row["state_version"]) > 0 or view.get("commissioned", false):
@@ -1010,8 +1030,12 @@ func _notice(message: String, command := "", args: Array = []) -> void:
 		notice.text = "已取消材料委托。" if args[1] == "off" else "已登记材料委托。常规远征出发时锁定领取地点。"
 	elif command == "quest" and args == ["commission", "CONFIRM"]:
 		notice.text = "委任记录已核对。"
-	elif command == "quest" and args == ["MG01", "witness"] and not view.get("chapter", {}).get("archived", false):
+	elif command == "quest" and args == ["MG01", "record"]:
+		notice.text = "已查阅铜哨寄存登记。"
+	elif command == "quest" and args == ["MG01", "witness"]:
 		notice.text = "已核实铜哨证词。"
+	elif command == "quest" and args == ["MG01", "collect", "CONFIRM"]:
+		notice.text = "裂口铜哨已入任务物品。"
 	elif message.begins_with("进入逐拍战斗") or message.begins_with("战斗推进完成。未分胜负可继续"):
 		notice.text = ""
 	elif message.begins_with("搜救所·失联调查"):
@@ -1488,6 +1512,12 @@ func _chapter_goal_text() -> String:
 		var chapter: Dictionary = view.get("chapter", {})
 		if not chapter.is_empty() and not chapter.archived:
 			return ChapterCopy.text("UI.S02.HUD.GOAL_ST104" if chapter.reviewed else "UI.S02.HUD.GOAL_ST103")
+		var ado: Dictionary = view.get("hunt", {})
+		if not ado.is_empty() and view.get("town_memory", {}).is_empty():
+			if ado.report_ready and not ado.reported:
+				return ADO_REPORT_COPY["UI.S201.HUD.GOAL_REPORT"]
+			if ado.reported and not ado.awakened:
+				return "可选追忆：在「旧档案」追忆阿铎" if ado.evidence else ADO_REPORT_COPY["UI.S201.HUD.GOAL_RECALL"]
 	elif view.get("phase") == "EXPLORE":
 		var scouting: Dictionary = view.get("scouting", {})
 		if not scouting.is_empty():
@@ -1573,6 +1603,10 @@ func _render_subtitle() -> void:
 			line = active["line"]
 			if view.get("phase") == "TOWN" and notice.text == line["text"]:
 				notice.text = ""
+			if _is_ado_report_receipt(active):
+				line = line.duplicate()
+				line["text"] = ADO_REPORT_COPY["UI.S201.TIP.REPORT_REPLAY"] \
+					if _ado_first_report_receipt.is_empty() else _ado_first_report_receipt
 	var can_read: bool = opened and not captions_open and active is Dictionary and not settings_open \
 		and confirmation.is_empty() and not client.blocked \
 		and view.get("battle_memory", {}).is_empty() and view.get("town_memory", {}).is_empty()
@@ -2235,6 +2269,23 @@ func _hunt_reward(hunt: Dictionary) -> String:
 	return "「%s」×1 · 应召印 ×%d" % [hunt.report_book.name, int(hunt.report_seals)]
 
 
+func _is_ado_report_receipt(active: Variant) -> bool:
+	if not active is Dictionary or not active.get("line", {}).get("receipt", false):
+		return false
+	var record_id := str(active.get("id", ""))
+	return record_id.begins_with("fact-") and "ST-201" in record_id.trim_prefix("fact-").split(",")
+
+
+func _ado_first_report_reward(ado: Dictionary) -> String:
+	var next_hint := "还缺回声林海报告完成第二章。"
+	if view.get("sev_hunt", {}).get("reported", false):
+		var budget: Dictionary = view.budget
+		next_hint = "第二章两份报告已齐，预算升至%d/%d。" % [int(budget.expedition), int(budget.battle)]
+	elif not ado.awakened:
+		next_hint = "还缺回声林海报告；阿铎旧忆可经「旧档案」追忆。"
+	return ADO_REPORT_COPY["UI.S201.DLG.FIRST_REWARD"] % next_hint
+
+
 func _hunt_report_lines(hunt: Dictionary) -> PackedStringArray:
 	var lines := PackedStringArray()
 	if hunt.report_ready and hunt.victory_day != null:
@@ -2243,6 +2294,8 @@ func _hunt_report_lines(hunt: Dictionary) -> PackedStringArray:
 		lines.append("报告已交存 · 首交奖励\n" + _hunt_reward(hunt))
 		lines.append("第 %d 日交存" % int(hunt.report_delivery_day))
 		lines.append("「%s」现存 %d 本" % [hunt.report_book.name, int(hunt.report_book.count)])
+		if hunt.id == "MG01":
+			lines.append(ADO_REPORT_COPY["UI.S201.TIP.REPORT_REPLAY"])
 	return lines
 
 
@@ -2262,7 +2315,8 @@ func _hunt_report(hunt: Dictionary) -> void:
 	if hunt.reported:
 		return
 	if hunt.report_ready:
-		_input_action("交存" + title, "quest", ["report", hunt.id, "CONFIRM"],
+		var caption := str(ADO_REPORT_COPY["UI.S201.BTN.SUBMIT_REPORT"]) if hunt.id == "MG01" else ("交存" + title)
+		_input_action(caption, "quest", ["report", hunt.id, "CONFIRM"],
 			"交存安全归城的胜利报告\n首交奖励\n" + _hunt_reward(hunt))
 	else:
 		_label(actions, "已记录胜利，报告等待安全归城。", MUTED, 16)
@@ -2299,10 +2353,13 @@ func _hunt_archive(hunt: Dictionary) -> void:
 		if not hunt.has_item:
 			missing.append(hunt.item)
 		if not hunt.has_testimony:
-			var testimony := {"MG01": "秦姨核实的证词", "MG02": "镇民核实的证词",
+			var testimony := {"MG01": "铜哨证词", "MG02": "镇民核实的证词",
 				"MG03": "医舍核实的证词", "MG04": "工具保管人核实的证词"}
 			missing.append(testimony[hunt.id])
-		_label(actions, "追忆尚缺" + "、".join(missing) + "。", MUTED, 16)
+		if hunt.id == "MG01" and not missing.is_empty():
+			_label(actions, ADO_REPORT_COPY["UI.S201.ERR.RECALL_MISSING"] % "与".join(missing), MUTED, 16)
+		else:
+			_label(actions, "追忆尚缺" + "、".join(missing) + "。", MUTED, 16)
 	if records.any(func(record: Dictionary) -> bool: return record.committed):
 		_button("回看已提交的追忆对白", _remembrance_key(hunt.id), _toggle_remembrance_history.bind(hunt.id))
 
@@ -3126,8 +3183,16 @@ func _settlement_actions() -> void:
 		_protection_report(case)
 	var hunt := _pending_hunt_report(view, true)
 	if view.get("phase") == "RETURNED" and not hunt.is_empty():
-		_label(actions, "%s讨伐报告可在暮汀旧档案交存。" % hunt.name, INK, 17)
-		_input_action("返回暮汀旧档案", "town", [])
+		var prompt := "%s讨伐报告可在暮汀旧档案交存。" % hunt.name
+		var tooltip := ""
+		if hunt.id == "MG01":
+			var copy: Dictionary = ADO_REPORT_COPY["UI.S201.HUD.RETURN_WIN"]
+			var reminder := "。" if hunt.awakened else "；若旧忆未明，日后可补追忆。"
+			prompt = copy.details % reminder
+			tooltip = copy.short
+		_label(actions, prompt, INK, 17)
+		var archive := _input_action("返回暮汀旧档案", "town", [])
+		archive.tooltip_text = tooltip
 	elif scouting_delivered:
 		_label(actions, ChapterCopy.text("UI.S06.HUD.ST102_COMPLETE"), INK, 17)
 		_input_action("返回暮汀旧档案", "town", [])
