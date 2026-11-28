@@ -37,6 +37,7 @@ const GEAR_SLOTS := {"weapon": "武器", "armor": "护甲"}
 const GEAR_STATS := {"hp": "生命上限", "physical_attack": "物攻", "magic_attack": "魔攻",
 	"healing_power": "治疗强度", "physical_defense": "物防", "magic_defense": "魔防"}
 const ADO_MOVE_NAMES := {"MG01-A": "断誓横阵", "MG01-B": "留守壁垒", "MG01-C": "归队点名"}
+const ADO_CHAPTER_REPORT_RECEIPT := "fact-ST-201,CH2_COMPLETE"
 const ADO_REPORT_COPY := {
 	"UI.S201.HUD.RETURN_WIN": {
 		"short": "已击败守誓将·阿铎，请通过「旧档案」提交前线报告。",
@@ -1516,7 +1517,8 @@ func _chapter_goal_text() -> String:
 		if not ado.is_empty() and view.get("town_memory", {}).is_empty():
 			if ado.report_ready and not ado.reported:
 				return ADO_REPORT_COPY["UI.S201.HUD.GOAL_REPORT"]
-			if ado.reported and not ado.awakened:
+			var sev: Dictionary = view.get("sev_hunt", {})
+			if ado.reported and not ado.awakened and not sev.get("report_ready", false):
 				return "可选追忆：在「旧档案」追忆阿铎" if ado.evidence else ADO_REPORT_COPY["UI.S201.HUD.GOAL_RECALL"]
 	elif view.get("phase") == "EXPLORE":
 		var scouting: Dictionary = view.get("scouting", {})
@@ -1532,7 +1534,7 @@ func _render_resources(visible_on_screen: bool) -> void:
 	if not _resource_bar.visible:
 		return
 	var budget: Dictionary = view.budget
-	if _chapter_goal.visible:
+	if _chapter_goal.visible and not view.get("chapter", {}).get("archived", false):
 		_resource_totals.text = ChapterCopy.text("UI.S02.HUD.RES_BAR", [
 			int(resources.copper), int(resources.crystal), int(view.supply), int(view.day)])
 	else:
@@ -1605,8 +1607,12 @@ func _render_subtitle() -> void:
 				notice.text = ""
 			if _is_ado_report_receipt(active):
 				line = line.duplicate()
-				line["text"] = ADO_REPORT_COPY["UI.S201.TIP.REPORT_REPLAY"] \
-					if _ado_first_report_receipt.is_empty() else _ado_first_report_receipt
+				if _ado_first_report_receipt.is_empty():
+					line["text"] = ADO_REPORT_COPY["UI.S201.TIP.REPORT_REPLAY"]
+					if active.id == ADO_CHAPTER_REPORT_RECEIPT:
+						line["text"] += "第二章两份报告已齐。"
+				else:
+					line["text"] = _ado_first_report_receipt
 	var can_read: bool = opened and not captions_open and active is Dictionary and not settings_open \
 		and confirmation.is_empty() and not client.blocked \
 		and view.get("battle_memory", {}).is_empty() and view.get("town_memory", {}).is_empty()
@@ -2270,10 +2276,9 @@ func _hunt_reward(hunt: Dictionary) -> String:
 
 
 func _is_ado_report_receipt(active: Variant) -> bool:
-	if not active is Dictionary or not active.get("line", {}).get("receipt", false):
-		return false
-	var record_id := str(active.get("id", ""))
-	return record_id.begins_with("fact-") and "ST-201" in record_id.trim_prefix("fact-").split(",")
+	return active is Dictionary and active.get("line_count", 0) == 1 \
+		and active.get("line", {}).get("receipt", false) \
+		and active.get("id", "") in ["fact-ST-201", ADO_CHAPTER_REPORT_RECEIPT]
 
 
 func _ado_first_report_reward(ado: Dictionary) -> String:

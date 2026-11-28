@@ -903,6 +903,12 @@ func _check_chapter_delivery() -> void:
 			else "还缺回声林海报告；阿铎旧忆可经「旧档案」追忆。"
 		if app.view.get("sev_hunt", {}).get("reported", false):
 			next_hint = "第二章两份报告已齐，预算升至16/12。"
+			if app._chapter_goal.visible:
+				failure = "The optional Ado goal stayed active after both Chapter 2 reports"
+				return
+		if not _ado_header_shows_cost():
+			failure = "The Ado goal suppressed the actual deployment budget"
+			return
 		if not app._receipt_plate.is_visible_in_tree() or not app._receipt_text.text.ends_with(receipt + next_hint) \
 				or not _panel_has("当前仅作回看，不再发放奖励。") or not app.command_buttons.has("dialogue next") \
 				or not app.command_buttons.has("dialogue skip"):
@@ -918,6 +924,12 @@ func _check_chapter_delivery() -> void:
 	side_checks["seals_added"] = int(app.view.chapter.seals) - seals
 	steps.append({"command": key, "version": version + 1, "digest": app.client.frame.state_digest})
 	await _capture("delivery-receipt")
+
+
+func _ado_header_shows_cost() -> bool:
+	var totals: String = app._resource_totals.text
+	return "出征 %d/%d" % [int(app.view.resources.expedition_used), int(app.view.budget.expedition)] in totals \
+		and "战斗 %d/%d Cost" % [int(app.view.resources.battle_used), int(app.view.budget.battle)] in totals
 
 
 func _check_chapter_book_browser(offers: Array) -> bool:
@@ -1010,11 +1022,22 @@ func _check_archive_progress() -> void:
 			failure = "The return preview did not explain how to unlock delivery"
 			return
 		await _capture("report-return")
-		if not await _press("confirm") or int(app.client.frame.state_version) != version + 1:
-			failure = "The safe return did not settle exactly once"
+		if not await _press("confirm") or int(app.client.frame.state_version) != version + 1 \
+				or app.view.get("phase") != "RETURNED" or not app.view.hunt.get("report_ready", false) \
+				or app.view.hunt.reported:
+			failure = "The safe return did not settle exactly once with a pending report"
 			return
 		steps.append({"command": "return CONFIRM", "version": version + 1, "digest": app.client.frame.state_digest})
 	var saved_hunt: Dictionary = app.view.get("hunt", {})
+	if app.view.get("phase") == "TOWN" and saved_hunt.get("reported", false) \
+			and app.view.get("sev_hunt", {}).get("reported", false):
+		if app._chapter_goal.visible or not _ado_header_shows_cost():
+			failure = "The completed Chapter 2 save lost its budget or restored the optional Ado goal"
+			return
+		if app.model.get("active") is Dictionary and app.model.active.get("id") == "fact-ST-201,CH2_COMPLETE" \
+				and ("首份报告已交存" in app._receipt_text.text or "第二章两份报告已齐" not in app._receipt_text.text):
+			failure = "Reopening a combined receipt lost the chapter completion or repeated the first award"
+			return
 	if app.view.get("phase") == "RETURNED" and saved_hunt.get("report_ready", false) and not saved_hunt.reported:
 		var archive: Button = app.command_buttons.get("town")
 		if archive == null or archive.tooltip_text != "已击败守誓将·阿铎，请通过「旧档案」提交前线报告。" \
