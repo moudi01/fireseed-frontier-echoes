@@ -70,5 +70,41 @@
     "size": 324297466,
     "sha256": "9f79240c2e8af453f4a90f006d7f502cc4b0ade92a6a3ca38a194855f11968d6",
     "files": 146
+  },
+  {
+    "name": "workflow-09-p06-models-14bfc2a.zip",
+    "size": 42736456,
+    "sha256": "f355f2202d293a292fef666cdc4d4b83d7b281b4f8b58d211a14610c2a8d7818",
+    "files": 28
+  },
+  {
+    "name": "workflow-10-p06-textures-14bfc2a.zip",
+    "size": 34924208,
+    "sha256": "948deae940fe2c47aeb295beb63771f17c5456348b91ef28eea9b866073d50b6",
+    "files": 36
+  },
+  {
+    "name": "workflow-11-p06-blender-14bfc2a.zip",
+    "size": 37520630,
+    "sha256": "0ec90a41522cdcd3b86ba1831ff9326e7f7430900e090a5461ef809e5b18bb8a",
+    "files": 13
+  },
+  {
+    "name": "workflow-12-p06-models-04a7356.zip",
+    "size": 215366,
+    "sha256": "3348ddb62eb9018a44d3efde57b903a6e28c9393adaf98c19151cb768968f94a",
+    "files": 2
+  },
+  {
+    "name": "workflow-13-p06-textures-04a7356.zip",
+    "size": 603440,
+    "sha256": "e50bfc769cc41514305fa59c67dc0972c65e1a14191f6b04cebf5aa89856cfb8",
+    "files": 3
+  },
+  {
+    "name": "workflow-14-p06-blender-04a7356.zip",
+    "size": 510514,
+    "sha256": "1d84c7ff2caf8a07eb1217c7141be026eee5c9e0593bb5889705b174a729899d",
+    "files": 2
   }
 ]
